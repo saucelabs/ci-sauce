@@ -1,0 +1,26 @@
+{
+    "Sauce RC": {
+        "version": "1.0",
+        "build": 65,
+        "download_url": "http://saucelabs.com/downloads",
+        "release_date" : "Fri May 28 18:00:00 PST 2010",
+        "OS X": {
+                "version": "1.0",
+                "build": 15,
+                "download_url": "http://saucelabs.com/downloads",
+                "release_date" : "Tue Apr 6 06:00:00 PDT 2010"
+        }
+    },
+    "Sauce Tunnel": {
+        "version": "1.0-build19",
+        "download_url": "http://saucelabs.com/downloads/Sauce-Connect-latest.zip"
+    },
+    "Sauce Connect": {
+        "version": "1.0-r24",
+        "download_url": "http://saucelabs.com/downloads/Sauce-Connect-latest.zip"
+    },
+    "Sauce Connect 2": {
+        "version": "3.0-r17",
+        "download_url": "http://saucelabs.com/downloads/Sauce-Connect-latest.zip"
+    }
+}
