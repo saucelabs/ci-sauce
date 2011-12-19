@@ -21,7 +21,7 @@
         <name>Sauce Labs</name>
         <url>http://www.saucelabs.com/</url>
     </organization>
-    <developers>        
+    <developers>
         <developer>
             <organization>Sauce Labs</organization>
             <organizationUrl>http://www.saucelabs.com/</organizationUrl>
@@ -43,7 +43,7 @@
         <url>git@github.com:saucelabs/ci-sauce.git</url>
     </scm>
     <build>
-        <plugins>            
+        <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
@@ -76,10 +76,28 @@
 
     <dependencies>
         <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>1.4</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.saucelabs</groupId>
+            <artifactId>sauce-rest-api</artifactId>
+            <version>1.5</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>1.2.15</version>
-            <scope>compile</scope>
+            <version>1.2.16</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>de.schlichtherle.truezip</groupId>
@@ -99,14 +117,14 @@
             <version>7.4</version>
             <scope>compile</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
             <version>20080701</version>
             <scope>compile</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-connect</artifactId>
@@ -127,11 +145,41 @@
             <version>2.12.0</version>
             <scope>test</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.6</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.saucelabs.selenium</groupId>
+            <artifactId>sauce-ondemand-driver</artifactId>
+            <version>2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.saucelabs.selenium</groupId>
+            <artifactId>selenium-client-factory</artifactId>
+            <version>2.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>7.2.1.v20101111</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-http</artifactId>
+            <version>7.2.1.v20101111</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>7.2.1.v20101111</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

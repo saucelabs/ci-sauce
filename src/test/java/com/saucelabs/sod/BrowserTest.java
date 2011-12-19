@@ -1,6 +1,5 @@
-package com.saucelabs.bamboo.sod;
+package com.saucelabs.sod;
 
-import com.saucelabs.bamboo.sod.plan.ViewSODAction;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.ci.SauceFactory;
@@ -19,7 +18,9 @@ import static org.junit.Assert.assertFalse;
  * @author Ross Rowe
  */
 public class BrowserTest extends AbstractTestHelper  {
-	@Test
+    private static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/jobs?full=true";
+
+    @Test
 	public void osNames() throws Exception {
         Browser browser = new Browser(null, "Windows 2008", null, null, null);
         assertEquals("Platform is not Windows", browser.getPlatform(), Platform.VISTA);
@@ -50,7 +51,7 @@ public class BrowserTest extends AbstractTestHelper  {
     public void getJobDetails() throws Exception {
         SauceFactory sauceAPIFactory = new SauceFactory();
         Credential credential = new Credential();
-        String jsonResponse = sauceAPIFactory.doREST(String.format(ViewSODAction.JOB_DETAILS_URL, credential.getUsername()), credential.getUsername(), credential.getKey());
+        String jsonResponse = sauceAPIFactory.doREST(String.format(JOB_DETAILS_URL, credential.getUsername()), credential.getUsername(), credential.getKey());
         JSONArray jobResults = new JSONArray(jsonResponse);
     }
 
