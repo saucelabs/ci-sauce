@@ -39,9 +39,15 @@
 
     <scm>
         <connection>scm:git:git://github.com/saucelabs/ci-sauce.git</connection>
-        <developerConnection>>scm:git:git://github.com/saucelabs/ci-sauce.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:jenkinsci/sauce-ondemand-plugin.git</developerConnection>
         <url>git@github.com:saucelabs/ci-sauce.git</url>
     </scm>
+    <distributionManagement>
+        <repository>
+                    <id>cloudbees-private-release-repository</id>
+                    <url>https://repository-saucelabs.forge.cloudbees.com/release</url>
+        </repository>
+    </distributionManagement>
     <build>
         <plugins>
             <plugin>
