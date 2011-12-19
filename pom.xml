@@ -45,7 +45,7 @@
     <distributionManagement>
         <repository>
                     <id>cloudbees-private-release-repository</id>
-                    <url>https://repository-saucelabs.forge.cloudbees.com/release</url>
+                    <url>dav:https://repository-saucelabs.forge.cloudbees.com/release</url>
         </repository>
     </distributionManagement>
     <build>
