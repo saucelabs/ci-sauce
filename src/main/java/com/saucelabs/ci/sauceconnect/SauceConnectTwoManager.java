@@ -10,6 +10,8 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 /**
@@ -158,7 +160,11 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             //shouldn't happen
             logger.error("Exception occured during retrieval of sauce connect jar URL", e);
         }
-        finally
+        catch (InterruptedException e) {
+            //shouldn't happen
+            logger.error("Exception occured during retrieval of sauce connect jar URL", e);
+
+        } finally
         {
             //release the semaphore when we're finished
             semaphore.release();
