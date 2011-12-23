@@ -97,4 +97,8 @@ public class Browser implements Comparable<Browser> {
             return name;
         }
     }
+
+    public String getUri() {
+	    return "sauce-ondemand:?os=" + os + "&browser=" + browserName + "&browser-version=" + version;
+	}
 }
