@@ -27,8 +27,8 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
     private Map<String, List<Process>> tunnelMap;
 
     /**
-    * Lock which attempts to ensure that only one instance of Sauce Connect is running.
-    */
+     * Lock which attempts to ensure that only one instance of Sauce Connect is running.
+     */
     private static final Lock accessLock = new ReentrantLock();
     /**
      * Semaphore initialized with a single permit that is used to ensure that the main worker thread
@@ -105,10 +105,13 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             } else {
                 File jarFile = SauceConnectUtils.extractSauceConnectJarFile();
                 if (jarFile == null) {
-                    printStream.print("Unable to find sauce connect jar");
-                    return null;
+                    if (printStream != null) {
+                        printStream.print("Unable to find sauce connect jar");
+                        return null;
+                    }
+                } else {
+                    builder.append(jarFile.getPath());
                 }
-                builder.append(jarFile.getPath());
             }
 
             String fileSeparator = File.separator;
@@ -122,56 +125,51 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             };
             boolean canAccessLock = accessLock.tryLock(3, TimeUnit.MINUTES);
             if (canAccessLock) {
-            	ProcessBuilder processBuilder = new ProcessBuilder(args);
-	            if (logger.isInfoEnabled()) {
-	                logger.info("Launching Sauce Connect " + Arrays.toString(args));
-	            }
-	            if (printStream != null) {
-	                printStream.println("Launching Sauce Connect " + Arrays.toString(args));
-	            }
-	            final Process process = processBuilder.start();
-	            try {
-	                semaphore.acquire();
-	                StreamGobbler errorGobbler = new SystemErrorGobbler("ErrorGobbler", process.getErrorStream());
-	                errorGobbler.start();
-	                StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream());
-	                outputGobbler.start();
+                ProcessBuilder processBuilder = new ProcessBuilder(args);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Launching Sauce Connect " + Arrays.toString(args));
+                }
+                if (printStream != null) {
+                    printStream.println("Launching Sauce Connect " + Arrays.toString(args));
+                }
+                final Process process = processBuilder.start();
+                try {
+                    semaphore.acquire();
+                    StreamGobbler errorGobbler = new SystemErrorGobbler("ErrorGobbler", process.getErrorStream());
+                    errorGobbler.start();
+                    StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream());
+                    outputGobbler.start();
 
-	                boolean sauceConnectStarted = semaphore.tryAcquire(2, TimeUnit.MINUTES);
-	                if (!sauceConnectStarted) {
-	                    //log an error message
-	                    logger.error("Time out while waiting for Sauce Connect to start, attempting to continue");
-	                }
-	            } catch (InterruptedException e) {
-	                //continue;
-	            }
-	            logger.info("Sauce Connect now launched");
-	            return process;
+                    boolean sauceConnectStarted = semaphore.tryAcquire(2, TimeUnit.MINUTES);
+                    if (!sauceConnectStarted) {
+                        //log an error message
+                        logger.error("Time out while waiting for Sauce Connect to start, attempting to continue");
+                    }
+                } catch (InterruptedException e) {
+                    //continue;
+                }
+                logger.info("Sauce Connect now launched");
+                return process;
             } else {
                 //we were unable to get a lock in the timeout
                 //log an error and continue
                 logger.error("An instance of Sauce Connect is already running, and timeout period expired, attempting to continue");
-			}
+            }
 
-        }
-
-        catch (URISyntaxException e)
-        {
+        } catch (URISyntaxException e) {
             //shouldn't happen
             logger.error("Exception occured during retrieval of sauce connect jar URL", e);
-        }
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             //shouldn't happen
             logger.error("Exception occured during retrieval of sauce connect jar URL", e);
 
-        } finally
-        {
+        } finally {
             //release the semaphore when we're finished
             semaphore.release();
         }
 
         return null;
-    }    
+    }
 
     public Map getTunnelMap() {
         return tunnelMap;

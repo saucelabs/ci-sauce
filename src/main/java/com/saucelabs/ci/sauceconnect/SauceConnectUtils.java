@@ -11,8 +11,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -20,7 +18,7 @@ import java.util.jar.JarFile;
  * @author Ross Rowe
  */
 public final class SauceConnectUtils {
-    public static final String SAUCE_CONNECT_JAR = "sauce-connect-3.0.jar";
+    public static final String SAUCE_CONNECT_JAR = "sauce-connect-3.+jar";
 
     private SauceConnectUtils() {
     }
@@ -35,7 +33,7 @@ public final class SauceConnectUtils {
     }
 
     private static File extractSauceConnectJar(File jarFile) throws IOException {
-        if (jarFile.getName().equals(SAUCE_CONNECT_JAR)) {
+        if (jarFile.getName().matches(SAUCE_CONNECT_JAR)) {
             return jarFile;
         } else {
             JarFile jar = new JarFile(jarFile);
@@ -44,7 +42,7 @@ public final class SauceConnectUtils {
             while (entries.hasMoreElements()) {
                 JarEntry file = (JarEntry) entries.nextElement();
 
-                if (file.getName().endsWith(SAUCE_CONNECT_JAR)) {
+                if (file.getName().matches(SAUCE_CONNECT_JAR)) {
                     File f = new File(destDir, file.getName());
 
                     if (f.exists()) {
