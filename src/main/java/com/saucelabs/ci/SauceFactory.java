@@ -114,7 +114,7 @@ public class SauceFactory {
             con.connect();
 
             is = con.getInputStream(); // throws an IOException
-            
+            return IOUtils.toByteArray(is);
 
         }
         catch (MalformedURLException mue) {
@@ -132,6 +132,6 @@ public class SauceFactory {
                 logger.warn("Error in doHTTPGet", ioe);
             }
         }
-        return IOUtils.toByteArray(is);
+        return null;
     }
 }
