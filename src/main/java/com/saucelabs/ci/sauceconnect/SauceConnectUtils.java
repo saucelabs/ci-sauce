@@ -19,6 +19,7 @@ import java.util.jar.JarFile;
  */
 public final class SauceConnectUtils {
     public static final String SAUCE_CONNECT_JAR = "sauce-connect-3.+jar";
+    public static final String META_INF_SAUCE_CONNECT_JAR = "(META|WEB)-INF/lib/" + SAUCE_CONNECT_JAR;
 
     private SauceConnectUtils() {
     }
@@ -42,7 +43,7 @@ public final class SauceConnectUtils {
             while (entries.hasMoreElements()) {
                 JarEntry file = (JarEntry) entries.nextElement();
 
-                if (file.getName().matches(SAUCE_CONNECT_JAR)) {
+                if (file.getName().matches(META_INF_SAUCE_CONNECT_JAR)) {
                     File f = new File(destDir, file.getName());
 
                     if (f.exists()) {
