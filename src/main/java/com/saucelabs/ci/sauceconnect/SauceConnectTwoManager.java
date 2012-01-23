@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -27,9 +28,9 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
     private Map<String, List<Process>> tunnelMap;
 
     /**
-     * Lock which attempts to ensure that only one instance of Sauce Connect is running.
+     * Map of {@link Lock}s which attempts to ensure that only one instance of Sauce Connect is running.
      */
-    private static final Lock accessLock = new ReentrantLock();
+    private static final Map<String, Lock> lockMap = new ConcurrentHashMap<String, Lock>();
     /**
      * Semaphore initialized with a single permit that is used to ensure that the main worker thread
      * waits until the Sauce Connect process is fully initialized before tests are run.
@@ -42,7 +43,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         this.tunnelMap = new HashMap<String, List<Process>>();
     }
 
-    public void closeTunnelsForPlan(String planKey) {
+    public void closeTunnelsForPlan(String userName, String planKey) {
         if (tunnelMap.containsKey(planKey)) {
             List<Process> tunnelList = tunnelMap.get(planKey);
             for (Process sauceConnect : tunnelList) {
@@ -54,8 +55,15 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             }
 
             tunnelMap.remove(planKey);
-            accessLock.unlock();
+            Lock accessLock = getLockForUser(userName);
+            if (accessLock != null) {
+                accessLock.unlock();
+            }
         }
+    }
+
+    private Lock getLockForUser(String userName) {
+        return lockMap.get(userName);
     }
 
     private void closeStream(OutputStream outputStream) {
@@ -90,11 +98,9 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
      * @return
      * @throws IOException
      */
-    public Object openConnection(String username, String apiKey) throws IOException {
+    public Object openConnection(String username, String apiKey, int port) throws IOException {
 
         try {
-
-            //we are running under a slave
             StringBuilder builder = new StringBuilder();
             if (sauceConnectJar != null && sauceConnectJar.exists()) {
                 //copy the file to the user home, sauce connect fails to run when the jar is held in the temp directory
@@ -121,8 +127,16 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                     builder.toString(),
                     SauceConnect.class.getName(),
                     username,
-                    apiKey
+                    apiKey,
+                    "-P",
+                    String.valueOf(port)
             };
+            Lock accessLock = getLockForUser(username);
+            //if lock doesn't exist, then create one
+            if (accessLock == null) {
+                accessLock = new ReentrantLock();
+                lockMap.put(username, accessLock);
+            }
             boolean canAccessLock = accessLock.tryLock(3, TimeUnit.MINUTES);
             if (canAccessLock) {
                 ProcessBuilder processBuilder = new ProcessBuilder(args);

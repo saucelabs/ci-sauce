@@ -14,11 +14,11 @@ import java.util.Map;
 public interface SauceTunnelManager
 {
 
-    public void closeTunnelsForPlan(String planKey);
+    public void closeTunnelsForPlan(String username, String planKey);
 
     public void addTunnelToMap(String planKey, Object tunnel);
 
-    Object openConnection(String username, String apiKey) throws IOException;
+    Object openConnection(String username, String apiKey, int port) throws IOException;
 
     Map getTunnelMap();
 
