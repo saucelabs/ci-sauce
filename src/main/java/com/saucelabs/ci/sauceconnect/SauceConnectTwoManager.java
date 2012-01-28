@@ -105,7 +105,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             if (sauceConnectJar != null && sauceConnectJar.exists()) {
                 //copy the file to the user home, sauce connect fails to run when the jar is held in the temp directory
                 File userHome = new File(System.getProperty("user.home"));
-                File newJar = new File(userHome, SauceConnectUtils.SAUCE_CONNECT_JAR);
+                File newJar = new File(userHome, "sauce-connect.jar");
                 FileUtils.copyFile(sauceConnectJar, newJar);
                 builder.append(newJar.getPath());
             } else {
