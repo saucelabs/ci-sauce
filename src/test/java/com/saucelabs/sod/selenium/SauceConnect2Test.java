@@ -41,7 +41,7 @@ public class SauceConnect2Test extends AbstractTestHelper {
                     }
             );            
             SauceTunnelManager sauceTunnelManager = new SauceConnectTwoManager();
-            Process sauceConnect = (Process) sauceTunnelManager.openConnection(c.getUsername(), c.getKey(), 4445);
+            Process sauceConnect = (Process) sauceTunnelManager.openConnection(c.getUsername(), c.getKey(), 4445, null, null);
             sauceTunnelManager.addTunnelToMap("TEST", sauceConnect);
             System.out.println("tunnel established");
             String driver = System.getenv("SELENIUM_DRIVER");
@@ -58,7 +58,7 @@ public class SauceConnect2Test extends AbstractTestHelper {
                 // if the server really hit our Jetty, we should see the same title that includes the secret code.
                 assertEquals("test" + code, selenium.getTitle());                
             } finally {
-                sauceTunnelManager.closeTunnelsForPlan(c.getUsername(), "TEST");
+                sauceTunnelManager.closeTunnelsForPlan(c.getUsername());
                 selenium.stop();
                 if (originalUrl != null && !originalUrl.equals("")) {
                      System.setProperty("SELENIUM_STARTING_URL", originalUrl);

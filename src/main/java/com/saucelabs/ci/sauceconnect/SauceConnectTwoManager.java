@@ -8,7 +8,6 @@ import org.apache.log4j.Logger;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -25,45 +24,48 @@ import java.util.concurrent.locks.ReentrantLock;
 public class SauceConnectTwoManager implements SauceTunnelManager {
 
     private static final Logger logger = Logger.getLogger(SauceConnectTwoManager.class);
-    private Map<String, List<Process>> tunnelMap;
+    private Map<String, Process> tunnelMap = new HashMap<String, Process>();
 
-    /**
-     * Map of {@link Lock}s which attempts to ensure that only one instance of Sauce Connect is running.
-     */
-    private static final Map<String, Lock> lockMap = new ConcurrentHashMap<String, Lock>();
     /**
      * Semaphore initialized with a single permit that is used to ensure that the main worker thread
      * waits until the Sauce Connect process is fully initialized before tests are run.
      */
     private final Semaphore semaphore = new Semaphore(1);
-    private PrintStream printStream;
-    private File sauceConnectJar;
+
+    /**
+     * Lock which ensures thread safety for opening and closing tunnels.
+     */
+    private Lock accessLock = new ReentrantLock();
+    private Map<String, Integer> processMap = new HashMap<String, Integer>();
 
     public SauceConnectTwoManager() {
-        this.tunnelMap = new HashMap<String, List<Process>>();
     }
 
-    public void closeTunnelsForPlan(String userName, String planKey) {
-        if (tunnelMap.containsKey(planKey)) {
-            List<Process> tunnelList = tunnelMap.get(planKey);
-            for (Process sauceConnect : tunnelList) {
-                logger.info("Closing Sauce Connect");
-                closeStream(sauceConnect.getInputStream());
-                closeStream(sauceConnect.getOutputStream());
-                closeStream(sauceConnect.getErrorStream());
-                sauceConnect.destroy();
+    public void closeTunnelsForPlan(String userName) {
+        try {
+            accessLock.lock();
+            if (tunnelMap.containsKey(userName)) {
+                Integer count = decrementProcessCountForUser(userName);
+                if (count == 0) {
+                    //we can now close the process
+                    Process sauceConnect = tunnelMap.get(userName);
+                    logger.info("Closing Sauce Connect");
+                    closeStream(sauceConnect.getInputStream());
+                    closeStream(sauceConnect.getOutputStream());
+                    closeStream(sauceConnect.getErrorStream());
+                    sauceConnect.destroy();
+                    tunnelMap.remove(userName);
+                }
             }
-
-            tunnelMap.remove(planKey);
-            Lock accessLock = getLockForUser(userName);
-            if (accessLock != null) {
-                accessLock.unlock();
-            }
+        } finally {
+            accessLock.unlock();
         }
     }
 
-    private Lock getLockForUser(String userName) {
-        return lockMap.get(userName);
+    private Integer decrementProcessCountForUser(String userName) {
+        Integer count = getProcessCountForUser(userName) - 1;
+        processMap.put(userName, count);
+        return count;
     }
 
     private void closeStream(OutputStream outputStream) {
@@ -82,25 +84,36 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         }
     }
 
-    public void addTunnelToMap(String planKey, Object tunnel) {
-        if (!tunnelMap.containsKey(planKey)) {
-            tunnelMap.put(planKey, new ArrayList<Process>());
+    public void addTunnelToMap(String userName, Object tunnel) {
+        if (!tunnelMap.containsKey(userName)) {
+            tunnelMap.put(userName, (Process) tunnel);
         }
-
-        tunnelMap.get(planKey).add((Process) tunnel);
     }
 
     /**
      * Creates a new Java process to run the Sauce Connect 2 library.
      *
-     * @param username
-     * @param apiKey
-     * @return
+     * @param username        the name of the Sauce OnDemand user
+     * @param apiKey          the API Key for the Sauce OnDemand user
+     * @param port            the port which Sauce Connect should be run on
+     * @param sauceConnectJar the Jar file containing Sauce Connect.  If null, then we attempt to find Sauce Connect from the classpath
+     * @param printStream     A print stream in which to redirect the output from Sauce Connect to.  Can be null
+     * @return a {@link Process} instance which represents the Sauce Connect instance
      * @throws IOException
      */
-    public Object openConnection(String username, String apiKey, int port) throws IOException {
+    //@Override
+    public Object openConnection(String username, String apiKey, int port, File sauceConnectJar, PrintStream printStream) throws IOException {
 
+        //ensure that only a single thread attempts to open a connection
         try {
+            accessLock.lock();
+            //do we have an instance for the user?
+            if (getProcessCountForUser(username) != 0) {
+                //if so, increment counter and return
+                incrementProcessCountForUser(username);
+                return tunnelMap.get(username);
+            }
+            //if not, start the process
             StringBuilder builder = new StringBuilder();
             if (sauceConnectJar != null && sauceConnectJar.exists()) {
                 //copy the file to the user home, sauce connect fails to run when the jar is held in the temp directory
@@ -131,70 +144,64 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                     "-P",
                     String.valueOf(port)
             };
-            Lock accessLock = getLockForUser(username);
-            //if lock doesn't exist, then create one
-            if (accessLock == null) {
-                accessLock = new ReentrantLock();
-                lockMap.put(username, accessLock);
-            }
-            boolean canAccessLock = accessLock.tryLock(3, TimeUnit.MINUTES);
-            if (canAccessLock) {
-                ProcessBuilder processBuilder = new ProcessBuilder(args);
-                if (logger.isInfoEnabled()) {
-                    logger.info("Launching Sauce Connect " + Arrays.toString(args));
-                }
-                if (printStream != null) {
-                    printStream.println("Launching Sauce Connect " + Arrays.toString(args));
-                }
-                final Process process = processBuilder.start();
-                try {
-                    semaphore.acquire();
-                    StreamGobbler errorGobbler = new SystemErrorGobbler("ErrorGobbler", process.getErrorStream());
-                    errorGobbler.start();
-                    StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream());
-                    outputGobbler.start();
 
-                    boolean sauceConnectStarted = semaphore.tryAcquire(2, TimeUnit.MINUTES);
-                    if (!sauceConnectStarted) {
-                        //log an error message
-                        logger.error("Time out while waiting for Sauce Connect to start, attempting to continue");
-                    }
-                } catch (InterruptedException e) {
-                    //continue;
-                }
-                logger.info("Sauce Connect now launched");
-                return process;
-            } else {
-                //we were unable to get a lock in the timeout
-                //log an error and continue
-                logger.error("An instance of Sauce Connect is already running, and timeout period expired, attempting to continue");
+            ProcessBuilder processBuilder = new ProcessBuilder(args);
+            if (logger.isInfoEnabled()) {
+                logger.info("Launching Sauce Connect " + Arrays.toString(args));
             }
+            if (printStream != null) {
+                printStream.println("Launching Sauce Connect " + Arrays.toString(args));
+            }
+            final Process process = processBuilder.start();
+            try {
+                semaphore.acquire();
+                StreamGobbler errorGobbler = new SystemErrorGobbler("ErrorGobbler", process.getErrorStream());
+                errorGobbler.start();
+                StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream(), printStream);
+                outputGobbler.start();
+
+                boolean sauceConnectStarted = semaphore.tryAcquire(2, TimeUnit.MINUTES);
+                if (!sauceConnectStarted) {
+                    //log an error message
+                    logger.error("Time out while waiting for Sauce Connect to start, attempting to continue");
+                }
+            } catch (InterruptedException e) {
+                //continue;
+            }
+            logger.info("Sauce Connect now launched");
+            incrementProcessCountForUser(username);
+            return process;
+
 
         } catch (URISyntaxException e) {
             //shouldn't happen
             logger.error("Exception occured during retrieval of sauce connect jar URL", e);
-        } catch (InterruptedException e) {
-            //shouldn't happen
-            logger.error("Exception occured during retrieval of sauce connect jar URL", e);
-
         } finally {
             //release the semaphore when we're finished
             semaphore.release();
+            //release the access lock
+            accessLock.unlock();
         }
 
         return null;
     }
 
+    private void incrementProcessCountForUser(String username) {
+        Integer count = getProcessCountForUser(username);
+        processMap.put(username, count + 1);
+    }
+
+    private Integer getProcessCountForUser(String username) {
+        Integer count = processMap.get(username);
+        if (count == null) {
+            count = 0;
+            processMap.put(username, count);
+        }
+        return count;
+    }
+
     public Map getTunnelMap() {
         return tunnelMap;
-    }
-
-    public void setPrintStream(PrintStream printStream) {
-        this.printStream = printStream;
-    }
-
-    public void setSauceConnectJar(File sauceConnectJar) {
-        this.sauceConnectJar = sauceConnectJar;
     }
 
     private abstract class StreamGobbler extends Thread {
@@ -221,7 +228,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         protected void processLine(String line) {
             getPrintStream().println(line);
             logger.info(line);
-
         }
 
         public abstract PrintStream getPrintStream();
@@ -229,8 +235,11 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
     private class SystemOutGobbler extends StreamGobbler {
 
-        SystemOutGobbler(String name, InputStream is) {
+        private PrintStream printStream;
+
+        SystemOutGobbler(String name, InputStream is, PrintStream printStream) {
             super(name, is);
+            this.printStream = printStream;
         }
 
         @Override
@@ -250,7 +259,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                 semaphore.release();
             }
         }
-
     }
 
     private class SystemErrorGobbler extends StreamGobbler {
@@ -264,6 +272,4 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             return System.err;
         }
     }
-
-
 }
