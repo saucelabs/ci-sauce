@@ -170,6 +170,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             }
             logger.info("Sauce Connect now launched");
             incrementProcessCountForUser(username);
+            addTunnelToMap(username, process);
             return process;
 
 
