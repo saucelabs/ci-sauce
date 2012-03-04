@@ -3,7 +3,6 @@ package com.saucelabs.ci.sauceconnect;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Map;
 
 /**
  * Interface which defines the behaviour for Sauce Connect Tunnel implementations.
@@ -14,12 +13,8 @@ import java.util.Map;
 public interface SauceTunnelManager
 {
 
-    public void closeTunnelsForPlan(String username);
+    void closeTunnelsForPlan(String username, PrintStream printStream);
 
-    public void addTunnelToMap(String userName, Object tunnel);
-
-    Object openConnection(String username, String apiKey, int port, File sauceConnectJar, PrintStream printStream) throws IOException;
-
-    Map getTunnelMap();
+    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, PrintStream printStream) throws IOException;
 
 }

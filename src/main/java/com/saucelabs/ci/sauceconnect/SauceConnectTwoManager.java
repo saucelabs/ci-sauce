@@ -41,20 +41,22 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
     public SauceConnectTwoManager() {
     }
 
-    public void closeTunnelsForPlan(String userName) {
+    public void closeTunnelsForPlan(String userName, PrintStream printStream) {
         try {
             accessLock.lock();
             if (tunnelMap.containsKey(userName)) {
-                Integer count = decrementProcessCountForUser(userName);
+                Integer count = decrementProcessCountForUser(userName, printStream);
                 if (count == 0) {
                     //we can now close the process
                     Process sauceConnect = tunnelMap.get(userName);
-                    logger.info("Closing Sauce Connect");
+                    logMessage(printStream, "Closing Sauce Connect");
                     closeStream(sauceConnect.getInputStream());
                     closeStream(sauceConnect.getOutputStream());
                     closeStream(sauceConnect.getErrorStream());
                     sauceConnect.destroy();
                     tunnelMap.remove(userName);
+                } else {
+                    logMessage(printStream, "Jobs still running, not closing Sauce Connect");
                 }
             }
         } finally {
@@ -62,10 +64,18 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         }
     }
 
-    private Integer decrementProcessCountForUser(String userName) {
+    private Integer decrementProcessCountForUser(String userName, PrintStream printStream) {
         Integer count = getProcessCountForUser(userName) - 1;
+        logMessage(printStream, "Decremented process count for " + userName + ", now " + count);
         processMap.put(userName, count);
         return count;
+    }
+
+    private void logMessage(PrintStream printStream, String message) {
+        if (printStream != null) {
+            printStream.println(message);
+        }
+        logger.info(message);
     }
 
     private void closeStream(OutputStream outputStream) {
@@ -102,7 +112,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
      * @throws IOException
      */
     //@Override
-    public Object openConnection(String username, String apiKey, int port, File sauceConnectJar, PrintStream printStream) throws IOException {
+    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, PrintStream printStream) throws IOException {
 
         //ensure that only a single thread attempts to open a connection
         try {
@@ -110,7 +120,8 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             //do we have an instance for the user?
             if (getProcessCountForUser(username) != 0) {
                 //if so, increment counter and return
-                incrementProcessCountForUser(username);
+                logMessage(printStream, "Sauce Connect already running for " + username);
+                incrementProcessCountForUser(username, printStream);
                 return tunnelMap.get(username);
             }
             //if not, start the process
@@ -146,18 +157,14 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             };
 
             ProcessBuilder processBuilder = new ProcessBuilder(args);
-            if (logger.isInfoEnabled()) {
-                logger.info("Launching Sauce Connect " + Arrays.toString(args));
-            }
-            if (printStream != null) {
-                printStream.println("Launching Sauce Connect " + Arrays.toString(args));
-            }
+            logMessage(printStream, "Launching Sauce Connect " + Arrays.toString(args));
+
             final Process process = processBuilder.start();
             try {
                 semaphore.acquire();
                 StreamGobbler errorGobbler = new SystemErrorGobbler("ErrorGobbler", process.getErrorStream());
                 errorGobbler.start();
-                StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream(), printStream);
+                StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream());
                 outputGobbler.start();
 
                 boolean sauceConnectStarted = semaphore.tryAcquire(2, TimeUnit.MINUTES);
@@ -169,7 +176,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                 //continue;
             }
             logger.info("Sauce Connect now launched");
-            incrementProcessCountForUser(username);
+            incrementProcessCountForUser(username, printStream);
             addTunnelToMap(username, process);
             return process;
 
@@ -187,9 +194,11 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         return null;
     }
 
-    private void incrementProcessCountForUser(String username) {
+    private void incrementProcessCountForUser(String username, PrintStream printStream) {
         Integer count = getProcessCountForUser(username);
-        processMap.put(username, count + 1);
+        count = count + 1;
+        logMessage(printStream, "Incremented process count for " + username + ", now" + count);
+        processMap.put(username, count);
     }
 
     private Integer getProcessCountForUser(String username) {
@@ -236,20 +245,13 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
     private class SystemOutGobbler extends StreamGobbler {
 
-        private PrintStream printStream;
-
-        SystemOutGobbler(String name, InputStream is, PrintStream printStream) {
+        SystemOutGobbler(String name, InputStream is) {
             super(name, is);
-            this.printStream = printStream;
         }
 
         @Override
         public PrintStream getPrintStream() {
-            if (printStream != null) {
-                return printStream;
-            } else {
-                return System.out;
-            }
+            return System.out;
         }
 
         @Override
