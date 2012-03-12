@@ -7,11 +7,14 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 
 
 /**
@@ -24,18 +27,15 @@ import java.util.concurrent.locks.ReentrantLock;
 public class SauceConnectTwoManager implements SauceTunnelManager {
 
     private static final Logger logger = Logger.getLogger(SauceConnectTwoManager.class);
-    private Map<String, Process> tunnelMap = new HashMap<String, Process>();
 
-    /**
-     * Semaphore initialized with a single permit that is used to ensure that the main worker thread
-     * waits until the Sauce Connect process is fully initialized before tests are run.
-     */
-    private final Semaphore semaphore = new Semaphore(1);
+    private static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(SauceConnectTwoManager.class.getName());
+    private Map<String, Process> tunnelMap = new HashMap<String, Process>();
 
     /**
      * Lock which ensures thread safety for opening and closing tunnels.
      */
     private Lock accessLock = new ReentrantLock();
+
     private Map<String, Integer> processMap = new HashMap<String, Integer>();
 
     public SauceConnectTwoManager() {
@@ -76,6 +76,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             printStream.println(message);
         }
         logger.info(message);
+        julLogger.log(Level.INFO, message);
     }
 
     private void closeStream(OutputStream outputStream) {
@@ -83,6 +84,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             outputStream.close();
         } catch (IOException e) {
             logger.error("Error closing stream", e);
+            julLogger.log(Level.WARNING, "Error closing stream", e);
         }
     }
 
@@ -91,6 +93,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             inputStream.close();
         } catch (IOException e) {
             logger.error("Error closing stream", e);
+            julLogger.log(Level.WARNING, "Error closing stream", e);
         }
     }
 
@@ -161,10 +164,11 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
             final Process process = processBuilder.start();
             try {
+                Semaphore semaphore = new Semaphore(1);
                 semaphore.acquire();
                 StreamGobbler errorGobbler = new SystemErrorGobbler("ErrorGobbler", process.getErrorStream());
                 errorGobbler.start();
-                StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream());
+                StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream(), semaphore);
                 outputGobbler.start();
 
                 boolean sauceConnectStarted = semaphore.tryAcquire(2, TimeUnit.MINUTES);
@@ -175,7 +179,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             } catch (InterruptedException e) {
                 //continue;
             }
-            logger.info("Sauce Connect now launched");
+            logMessage(printStream, "Sauce Connect now launched");
             incrementProcessCountForUser(username, printStream);
             addTunnelToMap(username, process);
             return process;
@@ -184,9 +188,8 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         } catch (URISyntaxException e) {
             //shouldn't happen
             logger.error("Exception occured during retrieval of sauce connect jar URL", e);
+            julLogger.log(Level.WARNING, "Exception occured during retrieval of sauce connect jar URL", e);
         } finally {
-            //release the semaphore when we're finished
-            semaphore.release();
             //release the access lock
             accessLock.unlock();
         }
@@ -245,8 +248,11 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
     private class SystemOutGobbler extends StreamGobbler {
 
-        SystemOutGobbler(String name, InputStream is) {
+        private final Semaphore semaphore;
+
+        SystemOutGobbler(String name, InputStream is, final Semaphore semaphore) {
             super(name, is);
+            this.semaphore = semaphore;
         }
 
         @Override
