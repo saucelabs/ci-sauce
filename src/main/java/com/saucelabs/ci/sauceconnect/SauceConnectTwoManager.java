@@ -174,7 +174,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                 boolean sauceConnectStarted = semaphore.tryAcquire(2, TimeUnit.MINUTES);
                 if (!sauceConnectStarted) {
                     //log an error message
-                    logger.error("Time out while waiting for Sauce Connect to start, attempting to continue");
+                    logMessage(printStream, "Time out while waiting for Sauce Connect to start, attempting to continue");
                 }
             } catch (InterruptedException e) {
                 //continue;
