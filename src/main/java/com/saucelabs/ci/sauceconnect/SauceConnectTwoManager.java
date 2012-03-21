@@ -234,7 +234,10 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                     processLine(line);
                 }
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                //ignore stream closed errors
+                if (!(ioe.getMessage().equalsIgnoreCase("stream closed"))) {
+                    ioe.printStackTrace();
+                }
             }
         }
 
