@@ -28,8 +28,20 @@ public final class SauceConnectUtils {
         Class clazz = SauceConnect.class;
         ProtectionDomain protectionDomain = clazz.getProtectionDomain();
         CodeSource codeSource = protectionDomain.getCodeSource();
-        URL location = codeSource.getLocation();        
-        File jarFile = new File(location.toURI());
+        File jarFile = null;
+
+        URL location = codeSource.getLocation();
+        if (location == null) {
+            location = SauceConnectUtils.class.getClassLoader().getResource("com/saucelabs/sauceconnect/SauceConnect.class");
+            String name = location.toString();
+            name = name.substring(0, name.indexOf("!"));
+            name = name.substring(name.lastIndexOf(':')+1);
+            jarFile = new File(name);
+        } else {
+            jarFile = new File(location.toURI());
+        }
+
+
         return extractSauceConnectJar(jarFile);
     }
 

@@ -160,6 +160,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             };
 
             ProcessBuilder processBuilder = new ProcessBuilder(args);
+            processBuilder.directory(new File(System.getProperty("user.home")));
             logMessage(printStream, "Launching Sauce Connect " + Arrays.toString(args));
 
             final Process process = processBuilder.start();
