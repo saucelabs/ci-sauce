@@ -131,7 +131,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             StringBuilder builder = new StringBuilder();
             if (sauceConnectJar != null && sauceConnectJar.exists()) {
                 //copy the file to the user home, sauce connect fails to run when the jar is held in the temp directory
-                File userHome = new File(System.getProperty("user.home"));
+                File userHome = new File(getSauceConnectWorkingDirectory());
                 File newJar = new File(userHome, "sauce-connect.jar");
                 FileUtils.copyFile(sauceConnectJar, newJar);
                 builder.append(newJar.getPath());
@@ -160,7 +160,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             };
 
             ProcessBuilder processBuilder = new ProcessBuilder(args);
-            processBuilder.directory(new File(System.getProperty("user.home")));
+            processBuilder.directory(new File(getSauceConnectWorkingDirectory()));
             logMessage(printStream, "Launching Sauce Connect " + Arrays.toString(args));
 
             final Process process = processBuilder.start();
@@ -196,6 +196,10 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         }
 
         return null;
+    }
+
+    public String getSauceConnectWorkingDirectory() {
+        return System.getProperty("user.home");
     }
 
     private void incrementProcessCountForUser(String username, PrintStream printStream) {
