@@ -1,7 +1,6 @@
 package com.saucelabs.ci.sauceconnect;
 
 import com.saucelabs.sauceconnect.SauceConnect;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -48,11 +47,14 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                 Integer count = decrementProcessCountForUser(userName, printStream);
                 if (count == 0) {
                     //we can now close the process
-                    Process sauceConnect = tunnelMap.get(userName);
-                    logMessage(printStream, "Closing Sauce Connect");
+                    final Process sauceConnect = tunnelMap.get(userName);
+                    logMessage(printStream, "Closing Sauce Connect Input Stream");
                     closeStream(sauceConnect.getInputStream());
+                    logMessage(printStream, "Closing Sauce Connect Output Stream");
                     closeStream(sauceConnect.getOutputStream());
+                    logMessage(printStream, "Closing Sauce Connect Error Stream");
                     closeStream(sauceConnect.getErrorStream());
+                    logMessage(printStream, "Closing Sauce Connect process");
                     sauceConnect.destroy();
                     tunnelMap.remove(userName);
                 } else {
@@ -128,13 +130,15 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                 return tunnelMap.get(username);
             }
             //if not, start the process
+            File workingDirectory = null;
             StringBuilder builder = new StringBuilder();
             if (sauceConnectJar != null && sauceConnectJar.exists()) {
                 //copy the file to the user home, sauce connect fails to run when the jar is held in the temp directory
-                File userHome = new File(getSauceConnectWorkingDirectory());
-                File newJar = new File(userHome, "sauce-connect.jar");
-                FileUtils.copyFile(sauceConnectJar, newJar);
-                builder.append(newJar.getPath());
+//                File userHome = new File(getSauceConnectWorkingDirectory());
+//                File newJar = new File(userHome, "sauce-connect.jar");
+//                FileUtils.copyFile(sauceConnectJar, newJar);
+                builder.append(sauceConnectJar.getPath());
+                workingDirectory = sauceConnectJar.getParentFile();
             } else {
                 File jarFile = SauceConnectUtils.extractSauceConnectJarFile();
                 if (jarFile == null) {
@@ -160,7 +164,10 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             };
 
             ProcessBuilder processBuilder = new ProcessBuilder(args);
-            processBuilder.directory(new File(getSauceConnectWorkingDirectory()));
+            if (workingDirectory == null) {
+                workingDirectory = new File(getSauceConnectWorkingDirectory());
+            }
+            processBuilder.directory(workingDirectory);
             logMessage(printStream, "Launching Sauce Connect " + Arrays.toString(args));
 
             final Process process = processBuilder.start();
