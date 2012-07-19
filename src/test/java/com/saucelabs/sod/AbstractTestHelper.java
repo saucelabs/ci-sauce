@@ -1,6 +1,6 @@
 package com.saucelabs.sod;
 
-import com.saucelabs.rest.Credential;
+import com.saucelabs.common.SauceOnDemandAuthentication;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -39,7 +39,7 @@ public abstract class AbstractTestHelper extends HttpServlet {
             String userName = System.getProperty("sauce.user");
             String accessKey = System.getProperty("access.key");
             if (StringUtils.isNotBlank(userName) && StringUtils.isNotBlank(accessKey)) {
-                Credential credential = new Credential(userName, accessKey);
+                SauceOnDemandAuthentication credential = new SauceOnDemandAuthentication(userName, accessKey);
                 credential.saveTo(sauceSettings);
             }
         }

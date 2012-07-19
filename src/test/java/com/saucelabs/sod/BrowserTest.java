@@ -2,10 +2,7 @@ package com.saucelabs.sod;
 
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
-import com.saucelabs.ci.SauceFactory;
-import com.saucelabs.rest.Credential;
 import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
 import org.junit.Test;
 import org.openqa.selenium.Platform;
 
@@ -41,18 +38,11 @@ public class BrowserTest extends AbstractTestHelper  {
 
     @Test
 	public void browserFromSaucelabs() throws Exception {
-        SauceFactory sauceAPIFactory = new SauceFactory();
         BrowserFactory factory = new BrowserFactory();
         List<Browser> browsers = factory.values();
         assertFalse("browsers is empty", browsers.isEmpty());
 	}
 
-    @Test
-    public void getJobDetails() throws Exception {
-        SauceFactory sauceAPIFactory = new SauceFactory();
-        Credential credential = new Credential();
-        String jsonResponse = sauceAPIFactory.doREST(String.format(JOB_DETAILS_URL, credential.getUsername()), credential.getUsername(), credential.getKey());
-        JSONArray jobResults = new JSONArray(jsonResponse);
-    }
+
 
 }

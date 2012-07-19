@@ -3,7 +3,7 @@ package com.saucelabs.sod.selenium;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectTwoManager;
 import com.saucelabs.ci.sauceconnect.SauceTunnelManager;
-import com.saucelabs.rest.Credential;
+import com.saucelabs.common.SauceOnDemandAuthentication;
 import com.saucelabs.selenium.client.factory.SeleniumFactory;
 import com.saucelabs.sod.AbstractTestHelper;
 import com.thoughtworks.selenium.Selenium;
@@ -31,17 +31,17 @@ public class SauceConnect2Test extends AbstractTestHelper {
         try {
             // start a tunnel
             System.out.println("Starting a tunnel");
-            final Credential c = new Credential();
+            final SauceOnDemandAuthentication c = new SauceOnDemandAuthentication();
             Authenticator.setDefault(
                     new Authenticator() {
                         public PasswordAuthentication getPasswordAuthentication() {
                             return new PasswordAuthentication(
-                                    c.getUsername(), c.getKey().toCharArray());
+                                    c.getUsername(), c.getAccessKey().toCharArray());
                         }
                     }
             );            
             SauceTunnelManager sauceTunnelManager = new SauceConnectTwoManager();
-            Process sauceConnect = sauceTunnelManager.openConnection(c.getUsername(), c.getKey(), 4445, null, null);
+            Process sauceConnect = sauceTunnelManager.openConnection(c.getUsername(), c.getAccessKey(), 4445, null, null);
 
             System.out.println("tunnel established");
             String driver = System.getenv("SELENIUM_DRIVER");

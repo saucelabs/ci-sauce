@@ -101,8 +101,8 @@
         </dependency>
         <dependency>
             <groupId>com.saucelabs</groupId>
-            <artifactId>sauce-rest-api</artifactId>
-            <version>1.5</version>
+            <artifactId>saucerest</artifactId>
+            <version>1.0.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -147,6 +147,13 @@
             <version>2.12.0</version>
             <scope>compile</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.saucelabs</groupId>
+            <artifactId>sauce_java_common</artifactId>
+            <version>1.0.5</version>
+        </dependency>
+
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
