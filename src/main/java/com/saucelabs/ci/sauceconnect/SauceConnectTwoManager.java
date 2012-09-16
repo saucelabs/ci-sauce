@@ -1,6 +1,8 @@
 package com.saucelabs.ci.sauceconnect;
 
 import com.saucelabs.sauceconnect.SauceConnect;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -48,12 +50,26 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                 if (count == 0) {
                     //we can now close the process
                     final Process sauceConnect = tunnelMap.get(userName);
-                    logMessage(printStream, "Closing Sauce Connect Input Stream");
-                    closeStream(sauceConnect.getInputStream());
-                    logMessage(printStream, "Closing Sauce Connect Output Stream");
-                    closeStream(sauceConnect.getOutputStream());
-                    logMessage(printStream, "Closing Sauce Connect Error Stream");
-                    closeStream(sauceConnect.getErrorStream());
+                    logMessage(printStream, "Flushing Sauce Connect Input Stream");
+                    new Thread(new Runnable() {
+                        public void run() {
+                            try {
+                                IOUtils.copy(sauceConnect.getInputStream(), new NullOutputStream());
+                            } catch (IOException e) {
+                                //ignore
+                            }
+                        }
+                    }).start();
+                    logMessage(printStream, "Flushing Sauce Connect Error Stream");
+                    new Thread(new Runnable() {
+                        public void run() {
+                            try {
+                                IOUtils.copy(sauceConnect.getErrorStream(), new NullOutputStream());
+                            } catch (IOException e) {
+                                //ignore
+                            }
+                        }
+                    }).start();
                     logMessage(printStream, "Closing Sauce Connect process");
                     sauceConnect.destroy();
                     tunnelMap.remove(userName);
