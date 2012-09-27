@@ -31,7 +31,8 @@ public class BrowserFactory {
 
     public static final String BROWSER_URL = "http://saucelabs.com/rest/v1/info/browsers";
 
-    private Map<String, Browser> lookup = new HashMap<String, Browser>();
+    private Map<String, Browser> seleniumLookup = new HashMap<String, Browser>();
+    private Map<String, Browser> webDriverLookup = new HashMap<String, Browser>();
     protected Timestamp lastLookup = null;
     private static final String IEHTA = "iehta";
     private static final String CHROME = "chrome";
@@ -39,7 +40,8 @@ public class BrowserFactory {
 
     public BrowserFactory() {
         try {
-            initializeBrowsers();
+            initializeSeleniumBrowsers();
+            initializeWebDriverBrowsers();
         } catch (IOException e) {
             //TODO exception could mean we're behind firewall
             logger.error("Error retrieving browsers, attempting to continue", e);
@@ -48,12 +50,24 @@ public class BrowserFactory {
         }
     }
 
-    public  List<Browser> values() throws IOException, JSONException {
+    public  List<Browser> getSeleniumBrowsers() throws IOException, JSONException {
         List<Browser> browsers;
         if (shouldRetrieveBrowsers()) {
-            browsers = initializeBrowsers();
+            browsers = initializeSeleniumBrowsers();
         } else {
-            browsers = new ArrayList<Browser>(lookup.values());
+            browsers = new ArrayList<Browser>(seleniumLookup.values());
+        }
+        Collections.sort(browsers);
+
+        return browsers;
+    }
+
+    public  List<Browser> getWebDriverBrowsers() throws IOException, JSONException {
+        List<Browser> browsers;
+        if (shouldRetrieveBrowsers()) {
+            browsers = initializeWebDriverBrowsers();
+        } else {
+            browsers = new ArrayList<Browser>(webDriverLookup.values());
         }
         Collections.sort(browsers);
 
@@ -64,18 +78,33 @@ public class BrowserFactory {
         return lastLookup == null;
     }
 
-    private List<Browser> initializeBrowsers() throws IOException, JSONException {
-        List<Browser> browsers = getBrowsersFromSauceLabs();
-        lookup = new HashMap<String,Browser>();
+    private List<Browser> initializeSeleniumBrowsers() throws IOException, JSONException {
+        List<Browser> browsers = getSeleniumBrowsersFromSauceLabs();
+        seleniumLookup = new HashMap<String,Browser>();
         for (Browser browser : browsers) {
-            lookup.put(browser.getKey(), browser);
+            seleniumLookup.put(browser.getKey(), browser);
         }
         lastLookup = new Timestamp(new Date().getTime());
         return browsers;
     }
 
-    private List<Browser> getBrowsersFromSauceLabs() throws IOException, JSONException {
-         String response = getSauceAPIFactory().doREST(BROWSER_URL);
+    private List<Browser> initializeWebDriverBrowsers() throws IOException, JSONException {
+        List<Browser> browsers = getWebDriverBrowsersFromSauceLabs();
+        webDriverLookup = new HashMap<String,Browser>();
+        for (Browser browser : browsers) {
+            webDriverLookup.put(browser.getKey(), browser);
+        }
+        lastLookup = new Timestamp(new Date().getTime());
+        return browsers;
+    }
+
+    private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException, JSONException {
+         String response = getSauceAPIFactory().doREST(BROWSER_URL + "/selenium-rc");
+         return getBrowserListFromJson(response);
+    }
+
+    private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
+         String response = getSauceAPIFactory().doREST(BROWSER_URL + "/webdriver");
          return getBrowserListFromJson(response);
     }
     
@@ -96,7 +125,7 @@ public class BrowserFactory {
         JSONArray browserArray = new JSONArray(browserListJson);
         for (int i = 0; i < browserArray.length(); i++) {
             JSONObject browserObject = browserArray.getJSONObject(i);
-            String seleniumName = browserObject.getString("selenium_name");
+            String seleniumName = browserObject.getString("api_name");
             if (seleniumName.equals(IEHTA) || seleniumName.equals(CHROME)) {
                 //exclude these browsers from the list, as they replicate iexplore and firefox
                 continue;
@@ -113,7 +142,7 @@ public class BrowserFactory {
     }
 
     public Browser forKey(String key) {
-        return lookup.get(key);
+        return seleniumLookup.get(key);
     }
 
 	/**
