@@ -141,8 +141,12 @@ public class BrowserFactory {
         return browsers;
     }
 
-    public Browser forKey(String key) {
+    public Browser seleniumBrowserForKey(String key) {
         return seleniumLookup.get(key);
+    }
+
+    public Browser webDriverBrowserForKey(String key) {
+        return webDriverLookup.get(key);
     }
 
 	/**
