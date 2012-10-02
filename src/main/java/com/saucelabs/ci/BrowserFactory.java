@@ -126,7 +126,7 @@ public class BrowserFactory {
         for (int i = 0; i < browserArray.length(); i++) {
             JSONObject browserObject = browserArray.getJSONObject(i);
             String seleniumName = browserObject.getString("api_name");
-            if (seleniumName.equals(IEHTA) || seleniumName.equals(CHROME)) {
+            if (seleniumName.equals(IEHTA)) {
                 //exclude these browsers from the list, as they replicate iexplore and firefox
                 continue;
             }
