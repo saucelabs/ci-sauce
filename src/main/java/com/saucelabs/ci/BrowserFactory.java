@@ -36,7 +36,7 @@ public class BrowserFactory {
     protected Timestamp lastLookup = null;
     private static final String IEHTA = "iehta";
     private static final String CHROME = "chrome";
-	private static BrowserFactory instance;
+    private static BrowserFactory instance;
 
     public BrowserFactory() {
         try {
@@ -50,7 +50,7 @@ public class BrowserFactory {
         }
     }
 
-    public  List<Browser> getSeleniumBrowsers() throws IOException, JSONException {
+    public List<Browser> getSeleniumBrowsers() throws IOException, JSONException {
         List<Browser> browsers;
         if (shouldRetrieveBrowsers()) {
             browsers = initializeSeleniumBrowsers();
@@ -62,7 +62,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    public  List<Browser> getWebDriverBrowsers() throws IOException, JSONException {
+    public List<Browser> getWebDriverBrowsers() throws IOException, JSONException {
         List<Browser> browsers;
         if (shouldRetrieveBrowsers()) {
             browsers = initializeWebDriverBrowsers();
@@ -80,7 +80,7 @@ public class BrowserFactory {
 
     private List<Browser> initializeSeleniumBrowsers() throws IOException, JSONException {
         List<Browser> browsers = getSeleniumBrowsersFromSauceLabs();
-        seleniumLookup = new HashMap<String,Browser>();
+        seleniumLookup = new HashMap<String, Browser>();
         for (Browser browser : browsers) {
             seleniumLookup.put(browser.getKey(), browser);
         }
@@ -90,7 +90,7 @@ public class BrowserFactory {
 
     private List<Browser> initializeWebDriverBrowsers() throws IOException, JSONException {
         List<Browser> browsers = getWebDriverBrowsersFromSauceLabs();
-        webDriverLookup = new HashMap<String,Browser>();
+        webDriverLookup = new HashMap<String, Browser>();
         for (Browser browser : browsers) {
             webDriverLookup.put(browser.getKey(), browser);
         }
@@ -99,15 +99,25 @@ public class BrowserFactory {
     }
 
     private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException, JSONException {
-         String response = getSauceAPIFactory().doREST(BROWSER_URL + "/selenium-rc");
-         return getBrowserListFromJson(response);
+        String response = getSauceAPIFactory().doREST(BROWSER_URL + "/selenium-rc");
+        List<Browser> browsers = getBrowserListFromJson(response);
+        List<Browser> toRemove = new ArrayList<Browser>();
+        for (Browser browser : browsers) {
+            if (browser.getBrowserName().equals(CHROME)) {
+                toRemove.add(browser);
+            }
+        }
+        for (Browser browser : toRemove) {
+            browsers.remove(browser);
+        }
+        return browsers;
     }
 
     private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
-         String response = getSauceAPIFactory().doREST(BROWSER_URL + "/webdriver");
-         return getBrowserListFromJson(response);
+        String response = getSauceAPIFactory().doREST(BROWSER_URL + "/webdriver");
+        return getBrowserListFromJson(response);
     }
-    
+
     public SauceFactory getSauceAPIFactory() {
         return new SauceFactory();
     }
@@ -149,10 +159,11 @@ public class BrowserFactory {
         return webDriverLookup.get(key);
     }
 
-	/**
+    /**
      * Returns a singleton instance of SauceFactory.  This is required because
      * remote agents don't have the Bamboo component plugin available, so the Spring
-     * auto-wiring doesn't work. 
+     * auto-wiring doesn't work.
+     *
      * @return
      */
     public static BrowserFactory getInstance() {
