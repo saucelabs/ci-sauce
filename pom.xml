@@ -111,24 +111,24 @@
             <version>1.2.16</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>de.schlichtherle.truezip</groupId>
-            <artifactId>truezip-file</artifactId>
-            <version>7.4</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>de.schlichtherle.truezip</groupId>
-            <artifactId>truezip-driver-file</artifactId>
-            <version>7.4</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>de.schlichtherle.truezip</groupId>
-            <artifactId>truezip-driver-zip</artifactId>
-            <version>7.4</version>
-            <scope>compile</scope>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>de.schlichtherle.truezip</groupId>-->
+            <!--<artifactId>truezip-file</artifactId>-->
+            <!--<version>7.4</version>-->
+            <!--<scope>compile</scope>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>de.schlichtherle.truezip</groupId>-->
+            <!--<artifactId>truezip-driver-file</artifactId>-->
+            <!--<version>7.4</version>-->
+            <!--<scope>compile</scope>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>de.schlichtherle.truezip</groupId>-->
+            <!--<artifactId>truezip-driver-zip</artifactId>-->
+            <!--<version>7.4</version>-->
+            <!--<scope>compile</scope>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>

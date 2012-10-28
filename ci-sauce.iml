@@ -16,14 +16,6 @@
     <orderEntry type="library" name="Maven: com.saucelabs:saucerest:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: log4j:log4j:1.2.16" level="project" />
-    <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-file:7.4" level="project" />
-    <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-driver-file:7.4" level="project" />
-    <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-kernel:7.4" level="project" />
-    <orderEntry type="library" name="Maven: findbugs:annotations:1.0.0" level="project" />
-    <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-driver-zip:7.4" level="project" />
-    <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-swing:7.4" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.commons:commons-compress:1.3" level="project" />
-    <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk16:1.46" level="project" />
     <orderEntry type="library" name="Maven: org.json:json:20080701" level="project" />
     <orderEntry type="library" name="Maven: com.saucelabs:sauce-connect:3.0.18" level="project" />
     <orderEntry type="library" name="Maven: org.seleniumhq.selenium:selenium-api:2.12.0" level="project" />

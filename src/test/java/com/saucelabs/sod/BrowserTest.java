@@ -39,7 +39,7 @@ public class BrowserTest extends AbstractTestHelper  {
     @Test
 	public void browserFromSaucelabs() throws Exception {
         BrowserFactory factory = new BrowserFactory();
-        List<Browser> browsers = factory.values();
+        List<Browser> browsers = factory.getSeleniumBrowsers();
         assertFalse("browsers is empty", browsers.isEmpty());
 	}
 
