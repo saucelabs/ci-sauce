@@ -15,6 +15,17 @@ public interface SauceTunnelManager
 
     void closeTunnelsForPlan(String username, PrintStream printStream);
 
-    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, PrintStream printStream) throws IOException;
+    /**
+     *
+     * @param username
+     * @param apiKey
+     * @param port
+     * @param sauceConnectJar
+     * @param httpsProtocol
+     * @param printStream
+     * @return
+     * @throws IOException
+     */
+    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String httpsProtocol, PrintStream printStream) throws IOException;
 
 }

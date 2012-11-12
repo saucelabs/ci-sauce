@@ -133,7 +133,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
      * @throws IOException
      */
     //@Override
-    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, PrintStream printStream) throws IOException {
+    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String httpsProtocol, PrintStream printStream) throws IOException {
 
         //ensure that only a single thread attempts to open a connection
         try {
@@ -166,14 +166,27 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             String fileSeparator = File.separator;
             String path = System.getProperty("java.home")
                     + fileSeparator + "bin" + fileSeparator + "java";
-            String[] args = new String[]{path, "-cp",
-                    builder.toString(),
-                    SauceConnect.class.getName(),
-                    username,
-                    apiKey,
-                    "-P",
-                    String.valueOf(port)
-            };
+            String[] args;
+            if (StringUtils.isBlank(httpsProtocol)) {
+                args = new String[]{path, "-cp",
+                        builder.toString(),
+                        SauceConnect.class.getName(),
+                        username,
+                        apiKey,
+                        "-P",
+                        String.valueOf(port)
+                };
+            } else {
+                args = new String[]{path, "-Dhttps.protocol=\"" + httpsProtocol + "\"", "-cp",
+                        builder.toString(),
+                        SauceConnect.class.getName(),
+                        username,
+                        apiKey,
+                        "-P",
+                        String.valueOf(port)
+                };
+            }
+
 
             ProcessBuilder processBuilder = new ProcessBuilder(args);
             if (workingDirectory == null) {
