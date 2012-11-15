@@ -1,8 +1,17 @@
 package com.saucelabs.ci;
 
-import com.sebuilder.interpreter.SeInterpreter;
+import com.sebuilder.interpreter.IO;
+import com.sebuilder.interpreter.Script;
+import com.sebuilder.interpreter.webdriverfactory.Remote;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.Arrays;
+import java.io.*;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Provides integration with the {@link com.sebuilder.interpreter.SeInterpreter} class for running
@@ -12,47 +21,58 @@ import java.util.Arrays;
  */
 public class SeleniumBuilderManager {
 
-    private static final String REMOTE = "remote";
-    private static final String FIREFOX = "firefox";
+    private static final Logger logger = Logger.getLogger(SeleniumBuilderManager.class.getName());
 
-    public void executeSeleniumBuilder(boolean isRemote, String scriptPath) {
+    private static final String URL = "https://{0}:{1}@{2}:{3}";
 
-        //set driver to either Firefox or Remote
-        String driverType = isRemote ? REMOTE : FIREFOX;
-        String[] args = new String[]{"--driver", driverType};
+    public boolean executeSeleniumBuilder(File scriptFile, Map envVars, PrintStream printStream) {
+
         //add environment variables set by plugin to array
-        String browser = readPropertyOrEnv("SELENIUM_BROWSER", null);
-        String version = readPropertyOrEnv("SELENIUM_VERSION", null);
-        String os = readPropertyOrEnv("SELENIUM_PLATFORM", null);
-        if (browser != null) {
-           args = concat(args, new String[]{"--driver.browser", browser});
-        }if (version != null) {
-           args = concat(args, new String[]{"--driver.version", version});
-        }
-        if (os != null) {
-            args = concat(args, new String[]{"--driver.os", os});
-        }
-        //TODO set selenium host (ondemand.saucelabs.com or localhost:4445)
+        HashMap<String, String> config = new HashMap<String, String>();
+        String browser = readPropertyOrEnv("SELENIUM_BROWSER", envVars, null);
+        String version = readPropertyOrEnv("SELENIUM_VERSION", envVars, null);
+        String os = readPropertyOrEnv("SELENIUM_PLATFORM", envVars, null);
+        String host = readPropertyOrEnv("SELENIUM_HOST", envVars, null);
+        String port = readPropertyOrEnv("SELENIUM_PORT", envVars, null);
+        String username = readPropertyOrEnv("SAUCE_USER_NAME", envVars, null);
+        String accessKey = readPropertyOrEnv("SAUCE_API_KEY", envVars, null);
+        //todo if any variable is null, return false
 
-        //TODO set username/access key
+        config.put("browser", browser);
+        config.put("version", version);
+        config.put("os", os);
+        config.put("name", scriptFile.getName());
+        config.put("url", MessageFormat.format(URL, username, accessKey, host, port));
 
-        SeInterpreter.main(concat(args, new String[]{scriptPath}));
+        BufferedReader br = null;
+        try {
+            Script script = IO.read(br = new BufferedReader(new InputStreamReader(new FileInputStream(scriptFile), "UTF-8")));
+            Log log = LogFactory.getFactory().getInstance(SeleniumBuilderManager.class);
+            return script.run(log, new Remote(), config);
+        } catch (Exception e) {
+            printStream.println("Error running selenium builder command");
+            SeleniumBuilderManager.logger.log(Level.WARNING, "Error running selenium builder command", e);
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return false;
     }
 
-    private String readPropertyOrEnv(String key, String defaultValue) {
-        String v = System.getProperty(key);
+    private String readPropertyOrEnv(String key, Map vars, String defaultValue) {
+        String v = (String) vars.get(key);
+        if (v == null)
+            v = System.getProperty(key);
         if (v == null)
             v = System.getenv(key);
         if (v == null)
             v = defaultValue;
         return v;
     }
-
-    public <T> T[] concat(T[] first, T[] second) {
-        T[] result = Arrays.copyOf(first, first.length + second.length);
-        System.arraycopy(second, 0, result, first.length, second.length);
-        return result;
-    }
-
 
 }
