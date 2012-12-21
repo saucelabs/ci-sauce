@@ -4,7 +4,6 @@ import com.saucelabs.sauceconnect.SauceConnect;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -26,8 +25,6 @@ import java.util.logging.Level;
  * @author Ross Rowe
  */
 public class SauceConnectTwoManager implements SauceTunnelManager {
-
-    private static final Logger logger = Logger.getLogger(SauceConnectTwoManager.class);
 
     private static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(SauceConnectTwoManager.class.getName());
     private Map<String, Process> tunnelMap = new HashMap<String, Process>();
@@ -93,7 +90,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         if (printStream != null) {
             printStream.println(message);
         }
-        logger.info(message);
         julLogger.log(Level.INFO, message);
     }
 
@@ -101,7 +97,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         try {
             outputStream.close();
         } catch (IOException e) {
-            logger.error("Error closing stream", e);
             julLogger.log(Level.WARNING, "Error closing stream", e);
         }
     }
@@ -110,7 +105,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         try {
             inputStream.close();
         } catch (IOException e) {
-            logger.error("Error closing stream", e);
             julLogger.log(Level.WARNING, "Error closing stream", e);
         }
     }
@@ -220,7 +214,6 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
         } catch (URISyntaxException e) {
             //shouldn't happen
-            logger.error("Exception occured during retrieval of sauce connect jar URL", e);
             julLogger.log(Level.WARNING, "Exception occured during retrieval of sauce connect jar URL", e);
         } finally {
             //release the access lock
@@ -280,7 +273,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
 
         protected void processLine(String line) {
             getPrintStream().println(line);
-            logger.info(line);
+            julLogger.info(line);
         }
 
         public abstract PrintStream getPrintStream();

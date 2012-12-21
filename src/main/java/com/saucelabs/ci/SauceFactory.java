@@ -2,30 +2,28 @@ package com.saucelabs.ci;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import sun.misc.BASE64Encoder;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @author Ross Rowe
  */
 public class SauceFactory {
-    private static final Logger logger = Logger.getLogger(SauceFactory.class);
+    private static final Logger logger = Logger.getLogger(SauceFactory.class.getName());
 
     public String doREST(String urlText) throws IOException {
         return doREST(urlText, null, null);
     }
 
     /**
-     * Invokes a Sauce REST API command 
+     * Invokes a Sauce REST API command
+     *
      * @param urlText
      * @param userName
      * @param password
@@ -36,7 +34,13 @@ public class SauceFactory {
 
         URL url = new URL(urlText);
         String auth = userName + ":" + password;
-        BASE64Encoder encoder = new BASE64Encoder();
+        //Handle long strings encoded using BASE64Encoder - see http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6947917
+        BASE64Encoder encoder = new BASE64Encoder() {
+            @Override
+            protected int bytesPerLine() {
+                return 9999;
+            }
+        };
         auth = "Basic " + encoder.encode(auth.getBytes());
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -64,7 +68,7 @@ public class SauceFactory {
                 try {
                     rd.close();
                 } catch (IOException e) {
-                    logger.warn("Exception occurred when closing stream", e);
+                    logger.log(Level.WARNING, "Exception occurred when closing stream", e);
                 }
             }
         }
@@ -72,7 +76,7 @@ public class SauceFactory {
 
     /**
      * Populates the http proxy system properties.
-     * 
+     *
      * @param proxyHost
      * @param proxyPort
      * @param userName
@@ -96,13 +100,12 @@ public class SauceFactory {
     }
 
     /**
-     * 
      * @param downloadUrl
      * @return
      * @throws IOException
      */
     public byte[] doHTTPGet(String downloadUrl) throws IOException {
-         URL u;
+        URL u;
         InputStream is = null;
         OutputStream stream = null;
 
@@ -116,20 +119,16 @@ public class SauceFactory {
             is = con.getInputStream(); // throws an IOException
             return IOUtils.toByteArray(is);
 
-        }
-        catch (MalformedURLException mue) {
-            logger.warn("Error in doHTTPGet", mue);
-        }
-        catch (IOException ioe) {
-            logger.warn("Error in doHTTPGet", ioe);
-        }
-        finally {
+        } catch (MalformedURLException mue) {
+            logger.log(Level.WARNING, "Error in doHTTPGet", mue);
+        } catch (IOException ioe) {
+            logger.log(Level.WARNING, "Error in doHTTPGet", ioe);
+        } finally {
             try {
                 if (is != null)
                     is.close();
-            }
-            catch (IOException ioe) {
-                logger.warn("Error in doHTTPGet", ioe);
+            } catch (IOException ioe) {
+                logger.log(Level.WARNING, "Error in doHTTPGet", ioe);
             }
         }
         return null;

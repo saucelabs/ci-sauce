@@ -99,6 +99,20 @@ public class Browser implements Comparable<Browser> {
     }
 
     public String getUri() {
-	    return "sauce-ondemand:?os=" + os + "&browser=" + browserName + "&browser-version=" + version;
+        return getUri(null, null);
+    }
+
+    public String getUri(String username, String accessKey) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("sauce-ondemand:?os=").append(os).
+                append("&browser=").append(browserName).
+                append("&browser-version=").append(version);
+        if (username != null) {
+            builder.append("&username=").append(username);
+        }
+        if (accessKey != null) {
+            builder.append("&access-key=").append(accessKey);
+        }
+	    return builder.toString();
 	}
 }

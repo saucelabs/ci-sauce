@@ -5,19 +5,15 @@
 
 package com.saucelabs.ci;
 
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Handles invoking the Sauce REST API to retrieve the list of valid Browsers.  The list of browser is cached for
@@ -27,7 +23,7 @@ import java.util.Map;
  */
 public class BrowserFactory {
 
-    private static final Logger logger = Logger.getLogger(BrowserFactory.class);
+    private static final Logger logger = Logger.getLogger(BrowserFactory.class.getName());
 
     public static final String BROWSER_URL = "http://saucelabs.com/rest/v1/info/browsers";
 
@@ -44,9 +40,9 @@ public class BrowserFactory {
             initializeWebDriverBrowsers();
         } catch (IOException e) {
             //TODO exception could mean we're behind firewall
-            logger.error("Error retrieving browsers, attempting to continue", e);
+            logger.log(Level.WARNING, "Error retrieving browsers, attempting to continue", e);
         } catch (JSONException e) {
-            logger.error("Error retrieving browsers, attempting to continue", e);
+            logger.log(Level.WARNING, "Error retrieving browsers, attempting to continue", e);
         }
     }
 

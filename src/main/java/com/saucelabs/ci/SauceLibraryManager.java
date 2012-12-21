@@ -4,16 +4,13 @@ import com.saucelabs.sauceconnect.SauceConnect;
 import de.schlichtherle.truezip.file.TArchiveDetector;
 import de.schlichtherle.truezip.file.TFile;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -22,7 +19,7 @@ import java.util.zip.ZipInputStream;
  */
 public abstract class SauceLibraryManager {
     
-    private static final Logger logger = Logger.getLogger(SauceLibraryManager.class);
+    private static final Logger logger = Logger.getLogger(SauceLibraryManager.class.getName());
     private static final String VERSION_CHECK_URL = "https://saucelabs.com/versions.json";
     private static final int BUFFER = 1024;
     private static final String SAUCE_CONNECT_KEY = "Sauce Connect 2";
@@ -128,7 +125,7 @@ public abstract class SauceLibraryManager {
                 if (!destFile.getParentFile().exists()) {
                     boolean result = destFile.getParentFile().mkdirs();
                     if (!result) {
-                        logger.error("Unable to create directories, attempting to continue");
+                        logger.log(Level.WARNING, "Unable to create directories, attempting to continue");
                     }
                 }
 
@@ -146,7 +143,7 @@ public abstract class SauceLibraryManager {
             zis.close();
         }
         catch (IOException e) {
-            logger.error("Error unzipping contents", e);
+            logger.log(Level.WARNING, "Error unzipping contents", e);
         }
         return jarFile;
     }

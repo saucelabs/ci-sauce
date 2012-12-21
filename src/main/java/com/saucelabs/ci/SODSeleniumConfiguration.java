@@ -2,13 +2,14 @@ package com.saucelabs.ci;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -17,7 +18,7 @@ import java.util.List;
  */
 public class SODSeleniumConfiguration
 {
-    private static final Logger logger = Logger.getLogger(SODSeleniumConfiguration.class);
+    private static final Logger logger = Logger.getLogger(SODSeleniumConfiguration.class.getName());
 
     private String username;
     private String accessKey;
@@ -181,7 +182,7 @@ public class SODSeleniumConfiguration
             } catch (JSONException e)
             {
                 //just print and ignore
-                logger.error("Error parsing JSON string", e);
+                logger.log(Level.WARNING, "Error parsing JSON string", e);
             }
         }
     }
@@ -195,7 +196,7 @@ public class SODSeleniumConfiguration
             } catch (JSONException e)
             {
                 //just print and ignore
-                logger.error("Error parsing JSON string", e);
+                logger.log(Level.WARNING, "Error parsing JSON string", e);
             }
         }
 
