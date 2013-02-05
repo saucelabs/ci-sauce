@@ -141,6 +141,8 @@ public class BrowserFactory {
             String osName = browserObject.getString("os");
             String shortVersion = browserObject.getString("short_version");
             String browserKey = osName + seleniumName + shortVersion;
+            //replace any spaces with _s
+            browserKey = browserKey.replaceAll(" ", "_");
             String label = osName + " " + longName + " " + longVersion;
             browsers.add(new Browser(browserKey, osName, seleniumName, shortVersion, label));
         }
