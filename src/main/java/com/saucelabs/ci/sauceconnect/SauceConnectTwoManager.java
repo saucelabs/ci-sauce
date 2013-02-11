@@ -187,7 +187,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                 workingDirectory = new File(getSauceConnectWorkingDirectory());
             }
             processBuilder.directory(workingDirectory);
-            logMessage(printStream, "Launching Sauce Connect " + Arrays.toString(args));
+            julLogger.log(Level.INFO, "Launching Sauce Connect " + Arrays.toString(args));
 
             final Process process = processBuilder.start();
             try {
