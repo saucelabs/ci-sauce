@@ -146,7 +146,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>sauce-connect</artifactId>
-            <version>3.0.18</version>
+            <version>3.0.24</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
