@@ -35,15 +35,16 @@ public class SeleniumBuilderManager {
     private static final String URL = "http://{0}:{1}@{2}:{3}/wd/hub";
 
     /**
+     * Creates and invokes a new {@link Script} instance for the given <code>scriptFile</code>.
      *
-     * @param scriptFile
-     * @param envVars
+     * @param scriptFile The se-builder script file to invoke
+     * @param envVars Contains the available environment variables set by the CI environment.  The Sauce CI
+     *                plugin will set envvars that contain information about the browser/user/url to use.
      * @param printStream
-     * @return
+     * @return boolean indicating whether the invocation of the se-builder script was successful
      */
     public boolean executeSeleniumBuilder(File scriptFile, Map envVars, PrintStream printStream) {
 
-        //add environment variables set by plugin to array
         HashMap<String, String> config = new HashMap<String, String>();
         String browser = readPropertyOrEnv("SELENIUM_BROWSER", envVars, null);
         String version = readPropertyOrEnv("SELENIUM_VERSION", envVars, null);
@@ -66,7 +67,7 @@ public class SeleniumBuilderManager {
             Script script = IO.read(br = new BufferedReader(new InputStreamReader(new FileInputStream(scriptFile), "UTF-8")));
             Log log = LogFactory.getFactory().getInstance(SeInterpreter.class);
             printStream.println("Starting to run selenium builder command");
-            return script.run(new PrintStreamLogger(log, printStream), createRemoteDriver(config.get("url"), log), config);
+            return script.run(new PrintStreamLogger(log, printStream), createRemoteDriver(config.get("url"), printStream), config);
         } catch (Exception e) {
             printStream.println("Error running selenium builder command");
             SeleniumBuilderManager.logger.log(Level.WARNING, "Error running selenium builder command", e);
@@ -75,19 +76,25 @@ public class SeleniumBuilderManager {
                 try {
                     br.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    SeleniumBuilderManager.logger.log(Level.WARNING, "Error closing script file", e);
                 }
             }
         }
         return false;
     }
 
-    private WebDriverFactory createRemoteDriver(String url, Log log) {
+    /**
+     * Returns the {@link WebDriverFactory} instance to be used to run the script against.
+     *
+     * @param url
+     * @return
+     */
+    private WebDriverFactory createRemoteDriver(String url, PrintStream printStream) {
         if (url.equals("")) {
             //run against firefox
             return new Firefox();
         } else {
-            return new SauceRemoteDriver(log);
+            return new SauceRemoteDriver(printStream);
         }
     }
 
@@ -155,16 +162,16 @@ public class SeleniumBuilderManager {
 
         public void debug(Object o) {
             log.debug(o);
-            //if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {
                 printStream.println(o);
-            //}
+            }
         }
 
         public void debug(Object o, Throwable throwable) {
             log.debug(o, throwable);
-            //if (log.isDebugEnabled()) {
+            if (log.isDebugEnabled()) {
                 printStream.println(o);
-            //}
+            }
         }
 
         public void info(Object o) {
@@ -230,16 +237,18 @@ public class SeleniumBuilderManager {
      */
     private class SauceRemoteDriver extends Remote {
 
-        private Log log;
 
-        public SauceRemoteDriver(Log log) {
-            this.log = log;
+        private PrintStream printStream;
+
+        public SauceRemoteDriver(PrintStream printStream) {
+            this.printStream = printStream;
+
         }
 
         @Override
         public RemoteWebDriver make(HashMap<String, String> config) throws MalformedURLException {
             RemoteWebDriver driver = super.make(config);
-            log.info(MessageFormat.format("SauceOnDemandSessionID={0} job-name={1}", driver.getSessionId(), config.get("name")));
+            printStream.println(MessageFormat.format("SauceOnDemandSessionID={0} job-name={1}", driver.getSessionId(), config.get("name")));
             return driver;
         }
     }
