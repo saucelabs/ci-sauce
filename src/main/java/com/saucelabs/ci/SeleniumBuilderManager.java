@@ -65,7 +65,7 @@ public class SeleniumBuilderManager {
             config.put("platform", platform.toString());
         }
         config.put("name", scriptFile.getName());
-        if (host != null && accessKey != null && username != null && port == null)
+        if (host != null && accessKey != null && username != null && port != null)
             config.put("url", MessageFormat.format(URL, username, accessKey, host, port));
 
         BufferedReader br = null;
@@ -96,7 +96,7 @@ public class SeleniumBuilderManager {
      * @return
      */
     private WebDriverFactory createRemoteDriver(String url, PrintStream printStream) {
-        if (url.equals("")) {
+        if (url == null || url.equals("")) {
             //run against firefox
             return new Firefox();
         } else {
