@@ -37,10 +37,10 @@ public class SeleniumBuilderManager {
     /**
      * Creates and invokes a new {@link Script} instance for the given <code>scriptFile</code>.
      *
-     * @param scriptFile The se-builder script file to invoke
-     * @param envVars Contains the available environment variables set by the CI environment.  The Sauce CI
-     *                plugin will set envvars that contain information about the browser/user/url to use.
-     * @param printStream
+     * @param scriptFile  The se-builder script file to invoke
+     * @param envVars     Contains the available environment variables set by the CI environment.  The Sauce CI
+     *                    plugin will set envvars that contain information about the browser/user/url to use.
+     * @param printStream Where messages will be logged to
      * @return boolean indicating whether the invocation of the se-builder script was successful
      */
     public boolean executeSeleniumBuilder(File scriptFile, Map envVars, PrintStream printStream) {
@@ -53,14 +53,20 @@ public class SeleniumBuilderManager {
         String port = readPropertyOrEnv("SELENIUM_PORT", envVars, null);
         String username = readPropertyOrEnv("SAUCE_USER_NAME", envVars, null);
         String accessKey = readPropertyOrEnv("SAUCE_API_KEY", envVars, null);
-        //todo if any variable is null, run against Firefox
 
-        Platform platform = Platform.extractFromSysProperty(os);
-        config.put("browserName", browser);
-        config.put("version", version);
-        config.put("platform", platform.toString());
+        if (browser != null) {
+            config.put("browserName", browser);
+        }
+        if (version != null) {
+            config.put("version", version);
+        }
+        if (os != null) {
+            Platform platform = Platform.extractFromSysProperty(os);
+            config.put("platform", platform.toString());
+        }
         config.put("name", scriptFile.getName());
-        config.put("url", MessageFormat.format(URL, username, accessKey, host, port));
+        if (host != null && accessKey != null && username != null && port == null)
+            config.put("url", MessageFormat.format(URL, username, accessKey, host, port));
 
         BufferedReader br = null;
         try {
@@ -237,12 +243,10 @@ public class SeleniumBuilderManager {
      */
     private class SauceRemoteDriver extends Remote {
 
-
         private PrintStream printStream;
 
         public SauceRemoteDriver(PrintStream printStream) {
             this.printStream = printStream;
-
         }
 
         @Override
