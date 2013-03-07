@@ -26,6 +26,6 @@ public interface SauceTunnelManager
      * @return
      * @throws IOException
      */
-    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String httpsProtocol, PrintStream printStream) throws IOException;
+    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws IOException;
 
 }
