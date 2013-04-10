@@ -168,72 +168,62 @@ public class SeleniumBuilderManager {
 
         public void debug(Object o) {
             log.debug(o);
-            if (log.isDebugEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
 
         public void debug(Object o, Throwable throwable) {
             log.debug(o, throwable);
-            if (log.isDebugEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
 
         public void info(Object o) {
             log.info(o);
-            if (log.isInfoEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
 
         public void info(Object o, Throwable throwable) {
             log.info(o, throwable);
-            if (log.isInfoEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
 
         public void warn(Object o) {
             log.warn(o);
-            if (log.isWarnEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
 
         public void warn(Object o, Throwable throwable) {
             log.warn(o, throwable);
-            if (log.isWarnEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
 
         public void error(Object o) {
             log.error(o);
-            if (log.isErrorEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
 
         public void error(Object o, Throwable throwable) {
             log.error(o, throwable);
-            if (log.isErrorEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
 
         public void fatal(Object o) {
             log.fatal(o);
-            if (log.isFatalEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
 
         public void fatal(Object o, Throwable throwable) {
             log.fatal(o, throwable);
-            if (log.isFatalEnabled()) {
-                printStream.println(o);
-            }
+            printStream.println(o);
+
         }
     }
 
