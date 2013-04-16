@@ -16,6 +16,7 @@ import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -242,6 +243,7 @@ public class SeleniumBuilderManager {
         @Override
         public RemoteWebDriver make(HashMap<String, String> config) throws MalformedURLException {
             RemoteWebDriver driver = super.make(config);
+            driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
             printStream.println(MessageFormat.format("SauceOnDemandSessionID={0} job-name={1}", driver.getSessionId(), config.get("name")));
             return driver;
         }
