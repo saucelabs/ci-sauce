@@ -50,6 +50,10 @@ public class SeleniumBuilderManager {
         String browser = readPropertyOrEnv("SELENIUM_BROWSER", envVars, null);
         String version = readPropertyOrEnv("SELENIUM_VERSION", envVars, null);
         String os = readPropertyOrEnv("SELENIUM_PLATFORM", envVars, null);
+        //TODO hack: Win8 is being returned as Windows 2012
+        if (os != null && os.equals("Windows 2012")) {
+            os = "windows 8";
+        }
         String host = readPropertyOrEnv("SELENIUM_HOST", envVars, null);
         String port = readPropertyOrEnv("SELENIUM_PORT", envVars, null);
         String username = readPropertyOrEnv("SAUCE_USER_NAME", envVars, null);
