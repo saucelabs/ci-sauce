@@ -171,7 +171,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
                         String.valueOf(port),
                 };
             } else {
-                args = new String[]{path, "-Dhttps.protocol=\"" + httpsProtocol + "\"", "-cp",
+                args = new String[]{path, "-Dhttps.protocols=" + httpsProtocol, "-cp",
                         builder.toString(),
                         SauceConnect.class.getName(),
                         username,
