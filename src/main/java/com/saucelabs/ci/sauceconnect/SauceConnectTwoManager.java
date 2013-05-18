@@ -27,6 +27,7 @@ import java.util.logging.Level;
 public class SauceConnectTwoManager implements SauceTunnelManager {
 
     private static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(SauceConnectTwoManager.class.getName());
+    private final boolean quietMode;
     private Map<String, Process> tunnelMap = new HashMap<String, Process>();
 
     /**
@@ -37,6 +38,11 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
     private Map<String, Integer> processMap = new HashMap<String, Integer>();
 
     public SauceConnectTwoManager() {
+        this(false);
+    }
+
+    public SauceConnectTwoManager(boolean quietMode) {
+        this.quietMode = quietMode;
     }
 
     public void closeTunnelsForPlan(String userName, PrintStream printStream) {
@@ -227,7 +233,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
     }
 
     private String[] addElement(String[] org, String added) {
-        String[] result = Arrays.copyOf(org, org.length +1);
+        String[] result = Arrays.copyOf(org, org.length + 1);
         result[org.length] = added;
         return result;
     }
@@ -281,8 +287,10 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         }
 
         protected void processLine(String line) {
-            getPrintStream().println(line);
-            julLogger.info(line);
+            if (!quietMode) {
+                getPrintStream().println(line);
+                julLogger.info(line);
+            }
         }
 
         public abstract PrintStream getPrintStream();
