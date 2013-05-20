@@ -232,9 +232,15 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
         return null;
     }
 
-    private String[] addElement(String[] org, String added) {
-        String[] result = Arrays.copyOf(org, org.length + 1);
-        result[org.length] = added;
+    private String[] addElement(String[] original, String added) {
+        //split added on space
+        String[] split = added.split(" ");
+        String[] result = original;
+        for (String arg : split) {
+            String[] newResult = Arrays.copyOf(result, result.length + 1);
+            newResult[result.length] = arg;
+            result = newResult;
+        }
         return result;
     }
 
