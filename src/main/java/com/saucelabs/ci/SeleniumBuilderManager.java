@@ -3,6 +3,7 @@ package com.saucelabs.ci;
 import com.sebuilder.interpreter.IO;
 import com.sebuilder.interpreter.Script;
 import com.sebuilder.interpreter.SeInterpreter;
+import com.sebuilder.interpreter.SuiteException;
 import com.sebuilder.interpreter.webdriverfactory.Firefox;
 import com.sebuilder.interpreter.webdriverfactory.Remote;
 import com.sebuilder.interpreter.webdriverfactory.WebDriverFactory;
@@ -15,6 +16,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -73,12 +75,37 @@ public class SeleniumBuilderManager {
         if (host != null && accessKey != null && username != null && port != null)
             config.put("url", MessageFormat.format(URL, username, accessKey, host, port));
 
+        Log log = LogFactory.getFactory().getInstance(SeInterpreter.class);
         BufferedReader br = null;
         try {
             Script script = IO.read(br = new BufferedReader(new InputStreamReader(new FileInputStream(scriptFile), "UTF-8")));
-            Log log = LogFactory.getFactory().getInstance(SeInterpreter.class);
+
             printStream.println("Starting to run selenium builder command");
-            return script.run(new PrintStreamLogger(log, printStream), createRemoteDriver(config.get("url"), printStream), config);
+            script.run(new PrintStreamLogger(log, printStream), createRemoteDriver(config.get("url"), printStream), config);
+        } catch (IO.SuiteException e) {
+
+            boolean result = true;
+            for (String path : e.getPaths()) {
+                BufferedReader reader = null;
+                try {
+                    Script script = IO.read(reader = new BufferedReader(new InputStreamReader(new FileInputStream(new File(scriptFile.getParentFile(), path)), "UTF-8")));
+                    result = result || script.run(new PrintStreamLogger(log, printStream), createRemoteDriver(config.get("url"), printStream), config);
+                } catch (Exception e1) {
+                    result = false;
+                    printStream.println("Error running selenium builder command");
+                    SeleniumBuilderManager.logger.log(Level.WARNING, "Error running selenium builder command", e1);
+                } finally {
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e1) {
+                            //ignore
+                        }
+                    }
+                }
+
+            }
+            return result;
         } catch (Exception e) {
             printStream.println("Error running selenium builder command");
             SeleniumBuilderManager.logger.log(Level.WARNING, "Error running selenium builder command", e);
