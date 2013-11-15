@@ -82,6 +82,7 @@ public class SeleniumBuilderManager {
 
             printStream.println("Starting to run selenium builder command");
             script.run(new PrintStreamLogger(log, printStream), createRemoteDriver(config.get("url"), printStream), config);
+            return true;
         } catch (IO.SuiteException e) {
 
             boolean result = true;
