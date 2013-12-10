@@ -1,6 +1,5 @@
 package com.saucelabs.ci.sauceconnect;
 
-import com.saucelabs.sauceconnect.SauceConnect;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.StringUtils;
@@ -27,6 +26,7 @@ import java.util.logging.Level;
 public class SauceConnectTwoManager implements SauceTunnelManager {
 
     private static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(SauceConnectTwoManager.class.getName());
+    private static final String SAUCE_CONNECT_CLASS = "com.saucelabs.sauceconnect.SauceConnect";
     private final boolean quietMode;
     private Map<String, Process> tunnelMap = new HashMap<String, Process>();
 
@@ -170,7 +170,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             if (StringUtils.isBlank(httpsProtocol)) {
                 args = new String[]{path, "-cp",
                         builder.toString(),
-                        SauceConnect.class.getName(),
+                        SAUCE_CONNECT_CLASS,
                         username,
                         apiKey,
                         "-P",
@@ -179,7 +179,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
             } else {
                 args = new String[]{path, "-Dhttps.protocols=" + httpsProtocol, "-cp",
                         builder.toString(),
-                        SauceConnect.class.getName(),
+                        SAUCE_CONNECT_CLASS,
                         username,
                         apiKey,
                         "-P",
