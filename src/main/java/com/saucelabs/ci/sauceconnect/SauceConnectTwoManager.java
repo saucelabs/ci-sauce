@@ -251,7 +251,7 @@ public class SauceConnectTwoManager implements SauceTunnelManager {
     private void incrementProcessCountForUser(String username, PrintStream printStream) {
         Integer count = getProcessCountForUser(username);
         count = count + 1;
-        logMessage(printStream, "Incremented process count for " + username + ", now" + count);
+        logMessage(printStream, "Incremented process count for " + username + ", now " + count);
         processMap.put(username, count);
     }
 
