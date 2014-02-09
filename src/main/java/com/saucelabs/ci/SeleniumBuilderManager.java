@@ -3,20 +3,20 @@ package com.saucelabs.ci;
 import com.sebuilder.interpreter.IO;
 import com.sebuilder.interpreter.Script;
 import com.sebuilder.interpreter.SeInterpreter;
-import com.sebuilder.interpreter.SuiteException;
 import com.sebuilder.interpreter.webdriverfactory.Firefox;
 import com.sebuilder.interpreter.webdriverfactory.Remote;
 import com.sebuilder.interpreter.webdriverfactory.WebDriverFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.openqa.selenium.Platform;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -30,12 +30,18 @@ import java.util.logging.Logger;
  */
 public class SeleniumBuilderManager {
 
+    public static final String BROWSER_NAME = "browserName";
+    public static final String VERSION = "version";
+
     private static final Logger logger = Logger.getLogger(SeleniumBuilderManager.class.getName());
 
     /**
      * TODO always use wd/hub?
      */
     private static final String URL = "http://{0}:{1}@{2}:{3}/wd/hub";
+    private static final String PLATFORM = "platform";
+    private static final String NAME = "name";
+    private static final String URL_KEY = "url";
 
     /**
      * Creates and invokes a new {@link Script} instance for the given <code>scriptFile</code>.
@@ -52,28 +58,24 @@ public class SeleniumBuilderManager {
         String browser = readPropertyOrEnv("SELENIUM_BROWSER", envVars, null);
         String version = readPropertyOrEnv("SELENIUM_VERSION", envVars, null);
         String os = readPropertyOrEnv("SELENIUM_PLATFORM", envVars, null);
-        //TODO hack: Win8 is being returned as Windows 2012
-        if (os != null && os.equals("Windows 2012")) {
-            os = "windows 8";
-        }
+
         String host = readPropertyOrEnv("SELENIUM_HOST", envVars, null);
         String port = readPropertyOrEnv("SELENIUM_PORT", envVars, null);
         String username = readPropertyOrEnv("SAUCE_USER_NAME", envVars, null);
         String accessKey = readPropertyOrEnv("SAUCE_API_KEY", envVars, null);
 
         if (browser != null) {
-            config.put("browserName", browser);
+            config.put(BROWSER_NAME, browser);
         }
         if (version != null) {
-            config.put("version", version);
+            config.put(VERSION, version);
         }
         if (os != null) {
-            Platform platform = Platform.extractFromSysProperty(os);
-            config.put("platform", platform.toString());
+            config.put(PLATFORM, os);
         }
-        config.put("name", scriptFile.getName());
+        config.put(NAME, scriptFile.getName());
         if (host != null && accessKey != null && username != null && port != null)
-            config.put("url", MessageFormat.format(URL, username, accessKey, host, port));
+            config.put(URL_KEY, MessageFormat.format(URL, username, accessKey, host, port));
 
         Log log = LogFactory.getFactory().getInstance(SeInterpreter.class);
         BufferedReader br = null;
@@ -81,7 +83,7 @@ public class SeleniumBuilderManager {
             Script script = IO.read(br = new BufferedReader(new InputStreamReader(new FileInputStream(scriptFile), "UTF-8")));
 
             printStream.println("Starting to run selenium builder command");
-            script.run(new PrintStreamLogger(log, printStream), createRemoteDriver(config.get("url"), printStream), config);
+            script.run(new PrintStreamLogger(log, printStream), createRemoteDriver(config.get(URL_KEY), printStream), config);
             return true;
         } catch (IO.SuiteException e) {
 
@@ -266,6 +268,8 @@ public class SeleniumBuilderManager {
      */
     private class SauceRemoteDriver extends Remote {
 
+
+        public static final String PLATFORM = "platform";
         private PrintStream printStream;
 
         public SauceRemoteDriver(PrintStream printStream) {
@@ -274,7 +278,21 @@ public class SeleniumBuilderManager {
 
         @Override
         public RemoteWebDriver make(HashMap<String, String> config) throws MalformedURLException {
-            RemoteWebDriver driver = super.make(config);
+
+            java.net.URL url = config.containsKey(URL_KEY)
+                    ? new URL(config.get(URL_KEY))
+                    : null;
+            HashMap<String, String> caps = new HashMap<String, String>(config);
+            caps.remove(URL_KEY);
+            DesiredCapabilities capabilities = new DesiredCapabilities();
+            capabilities.setCapability(CapabilityType.BROWSER_NAME, config.remove(BROWSER_NAME));
+            if (config.containsKey(VERSION)) {
+                capabilities.setCapability(CapabilityType.VERSION, config.remove(VERSION));
+            }
+            capabilities.setCapability(CapabilityType.PLATFORM, config.remove(PLATFORM));
+            capabilities.setCapability(NAME, config.remove(NAME));
+            RemoteWebDriver driver = new RemoteWebDriver(url, capabilities);
+
             driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
             printStream.println(MessageFormat.format("SauceOnDemandSessionID={0} job-name={1}", driver.getSessionId(), config.get("name")));
             return driver;
