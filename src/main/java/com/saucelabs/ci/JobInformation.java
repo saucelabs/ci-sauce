@@ -1,19 +1,24 @@
 package com.saucelabs.ci;
 
 
+import java.io.Serializable;
+
 /**
  * Simple class used to represent Sauce Job Id and corresponding HMAC token that is used
  * for the display of embedded job results.
  *
  * @author Ross Rowe
  */
-public class JobInformation {
+public class JobInformation implements Serializable {
 
     private String jobId;
 
     private String hmac;
     private String status;
     private String name;
+
+    private transient boolean hasBuildNumber = true;
+    private transient boolean hasJobName = false;
 
     public JobInformation(String jobId, String hmac) {
         this.jobId = jobId;
@@ -50,5 +55,21 @@ public class JobInformation {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isHasBuildNumber() {
+        return hasBuildNumber;
+    }
+
+    public void setHasBuildNumber(boolean hasBuildNumber) {
+        this.hasBuildNumber = hasBuildNumber;
+    }
+
+    public boolean isHasJobName() {
+        return hasJobName;
+    }
+
+    public void setHasJobName(boolean hasJobName) {
+        this.hasJobName = hasJobName;
     }
 }
