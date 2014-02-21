@@ -39,7 +39,6 @@
     <orderEntry type="library" name="Maven: net.java.dev.jna:platform:3.4.0" level="project" />
     <orderEntry type="library" name="Maven: com.saucelabs:sebuilder-interpreter:1.0.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-java:2.32.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-android-driver:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-chrome-driver:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-htmlunit-driver:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: net.sourceforge.htmlunit:htmlunit:2.12" level="project" />
@@ -60,12 +59,13 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-http:7.2.1.v20101111" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-firefox-driver:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-ie-driver:2.32.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-iphone-driver:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-safari-driver:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.webbitserver:webbit:0.4.14" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: io.netty:netty:3.5.2.Final" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-support:2.32.0" level="project" />
     <orderEntry type="library" name="Maven: com.saucelabs:sauce_java_common:1.0.5" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-android-driver:2.32.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-iphone-driver:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.6" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.saucelabs.selenium:sauce-ondemand-driver:2.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.saucelabs.selenium:selenium-client-factory:2.0" level="project" />

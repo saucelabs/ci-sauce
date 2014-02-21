@@ -181,21 +181,24 @@ public class BrowserFactory {
                 String longVersion = browserObject.getString("long_version");
                 String osName = browserObject.getString("os");
                 String shortVersion = browserObject.getString("short_version");
-                String tablet = null;
-                if (browserObject.has("tablet")) {
-                    tablet = browserObject.getString("tablet");
+
+                String deviceType = null;
+
+                if (browserObject.has("device-type")) {
+                    deviceType = browserObject.getString("device-type");
                 }
                 String browserKey = osName + seleniumName + shortVersion;
                 //replace any spaces with _s
                 browserKey = browserKey.replaceAll(" ", "_");
                 StringBuilder label = new StringBuilder();
                 label.append(longName).append(' ');
-                if (tablet != null) {
-                    label.append(tablet).append(' ');
+                if (deviceType != null) {
+                    label.append(deviceType).append(' ');
                 }
                 label.append(longVersion);
                 Browser browser = new Browser(browserKey, osName, seleniumName, shortVersion, label.toString());
                 browser.setDevice(browserObject.getString("device"));
+                browser.setDeviceType(deviceType);
                 browsers.add(browser);
 
             } else {

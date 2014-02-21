@@ -17,6 +17,7 @@ public class Browser implements Comparable<Browser> {
     private final String version;
     private final String name;
     private String device;
+    private String deviceType;
 
     public Browser(String key, String os, String browserName, String version, String name) {
         this.key = key;
@@ -64,6 +65,7 @@ public class Browser implements Comparable<Browser> {
                 (browserName == null ? browser.browserName == null : browserName.equals(browser.browserName)) &&
                 (name == null ? browser.name == null : name.equals(browser.name)) &&
                 (os == null ? browser.os == null : os.equals(browser.os)) &&
+                (deviceType == null ? browser.deviceType == null : deviceType.equals(browser.deviceType)) &&
                 (version == null ? browser.version == null : version.equals(browser.version));
     }
 
@@ -83,6 +85,9 @@ public class Browser implements Comparable<Browser> {
         }
         if (version != null) {
             result = 31 * result + version.hashCode();
+        }
+        if (deviceType != null) {
+            result = 31 * result + deviceType.hashCode();
         }
         return result;
     }
@@ -107,15 +112,15 @@ public class Browser implements Comparable<Browser> {
         StringBuilder builder = new StringBuilder();
         builder.append("sauce-ondemand:?os=").append(os).
                 append("&browser=").append(browserName).
-                append("&browser-version=").append(version);
+        append("&browser-version=").append(version);
         if (username != null) {
             builder.append("&username=").append(username);
         }
         if (accessKey != null) {
             builder.append("&access-key=").append(accessKey);
         }
-	    return builder.toString();
-	}
+        return builder.toString();
+    }
 
     public void setDevice(String device) {
         this.device = device;
@@ -123,5 +128,13 @@ public class Browser implements Comparable<Browser> {
 
     public String getDevice() {
         return device;
+    }
+
+    public void setDeviceType(String deviceType) {
+        this.deviceType = deviceType;
+    }
+
+    public String getDeviceType() {
+        return deviceType;
     }
 }
