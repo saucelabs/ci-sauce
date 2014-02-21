@@ -103,7 +103,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
-            <version>1.0.10-SNAPSHOT</version>
+            <version>1.0.10</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
