@@ -1,0 +1,139 @@
+[
+    {
+        "short_version": "7",
+        "long_name": "iPad",
+        "api_name": "ipad",
+        "long_version": "7.0",
+        "device-orientation": "portrait",
+        "device": "iPad Simulator",
+        "os": "Mac 10.9"
+    },
+    {
+        "short_version": "6",
+        "long_name": "iPad",
+        "api_name": "ipad",
+        "long_version": "6.0",
+        "device-orientation": "portrait",
+        "device": "iPad Simulator",
+        "os": "Mac 10.8"
+    },
+    {
+        "short_version": "7",
+        "long_name": "iPhone",
+        "api_name": "iphone",
+        "long_version": "7.0",
+        "device-orientation": "portrait",
+        "device": "iPhone Simulator",
+        "os": "Mac 10.9"
+    },
+    {
+        "short_version": "6",
+        "long_name": "iPhone",
+        "api_name": "iphone",
+        "long_version": "6.0",
+        "device-orientation": "portrait",
+        "device": "iPhone Simulator",
+        "os": "Mac 10.8"
+    },
+    {
+        "short_version": "4.3",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.3",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "os": "Linux"
+    },
+
+    {
+        "short_version": "4.3",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.3",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "device-type": "tablet",
+        "os": "Linux"
+    },
+    {
+        "short_version": "4.2",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.2",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "os": "Linux"
+    },
+
+    {
+        "short_version": "4.2",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.2",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "device-type": "tablet",
+        "os": "Linux"
+    },
+    {
+        "short_version": "4.1",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.1",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "os": "Linux"
+    },
+
+    {
+        "short_version": "4.1",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.1",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "device-type": "tablet",
+        "os": "Linux"
+    }
+    ,
+    {
+        "short_version": "4.0",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.0",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "os": "Linux"
+    },
+
+    {
+        "short_version": "4.0",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.0",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "device-type": "tablet",
+        "os": "Linux"
+    },
+    {
+        "short_version": "2.3",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "2.3",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "os": "Linux"
+    },
+
+    {
+        "short_version": "2.3",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "2.3",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "device-type": "tablet",
+        "os": "Linux"
+    }
+]

@@ -16,6 +16,7 @@ public class Browser implements Comparable<Browser> {
     private final String browserName;
     private final String version;
     private final String name;
+    private String device;
 
     public Browser(String key, String os, String browserName, String version, String name) {
         this.key = key;
@@ -115,4 +116,12 @@ public class Browser implements Comparable<Browser> {
         }
 	    return builder.toString();
 	}
+
+    public void setDevice(String device) {
+        this.device = device;
+    }
+
+    public String getDevice() {
+        return device;
+    }
 }

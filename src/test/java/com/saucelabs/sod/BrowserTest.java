@@ -29,7 +29,7 @@ public class BrowserTest extends AbstractTestHelper  {
 
     @Test
 	public void browserList() throws Exception {
-        BrowserFactory factory = new BrowserFactory();
+        BrowserFactory factory = new BrowserFactory(sauceREST);
         String browserText = IOUtils.toString(getClass().getResourceAsStream("/browsers.js"));
         List<Browser> browsers = factory.getBrowserListFromJson(browserText);
         assertFalse("browsers is empty", browsers.isEmpty());
@@ -38,7 +38,7 @@ public class BrowserTest extends AbstractTestHelper  {
 
     @Test
 	public void browserFromSaucelabs() throws Exception {
-        BrowserFactory factory = new BrowserFactory();
+        BrowserFactory factory = new BrowserFactory(sauceREST);
         List<Browser> browsers = factory.getWebDriverBrowsers();
         assertFalse("browsers is empty", browsers.isEmpty());
 	}

@@ -5,11 +5,14 @@
 
 package com.saucelabs.ci;
 
+import com.saucelabs.saucerest.SauceREST;
+import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.URL;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
@@ -27,17 +30,26 @@ public class BrowserFactory {
 
     public static final String BROWSER_URL = "http://saucelabs.com/rest/v1/info/browsers";
 
+    private SauceREST sauceREST;
+
     private Map<String, Browser> seleniumLookup = new HashMap<String, Browser>();
+    private Map<String, Browser> appiumLookup = new HashMap<String, Browser>();
     private Map<String, Browser> webDriverLookup = new HashMap<String, Browser>();
     protected Timestamp lastLookup = null;
     private static final String IEHTA = "iehta";
     private static final String CHROME = "chrome";
     private static BrowserFactory instance;
 
-    public BrowserFactory() {
+    public BrowserFactory(SauceREST sauceREST) {
+        if (sauceREST == null) {
+            this.sauceREST = new SauceREST(null, null);
+        } else {
+            this.sauceREST = sauceREST;
+        }
         try {
             initializeSeleniumBrowsers();
             initializeWebDriverBrowsers();
+            initializeAppiumBrowsers();
         } catch (IOException e) {
             //TODO exception could mean we're behind firewall
             logger.log(Level.WARNING, "Error retrieving browsers, attempting to continue", e);
@@ -52,6 +64,18 @@ public class BrowserFactory {
             browsers = initializeSeleniumBrowsers();
         } else {
             browsers = new ArrayList<Browser>(seleniumLookup.values());
+        }
+        Collections.sort(browsers);
+
+        return browsers;
+    }
+
+    public List<Browser> getAppiumBrowsers() throws IOException, JSONException {
+        List<Browser> browsers;
+        if (shouldRetrieveBrowsers()) {
+            browsers = initializeAppiumBrowsers();
+        } else {
+            browsers = new ArrayList<Browser>(appiumLookup.values());
         }
         Collections.sort(browsers);
 
@@ -84,6 +108,16 @@ public class BrowserFactory {
         return browsers;
     }
 
+    private List<Browser> initializeAppiumBrowsers() throws IOException, JSONException {
+        List<Browser> browsers = getAppiumBrowsersFromSauceLabs();
+        appiumLookup = new HashMap<String, Browser>();
+        for (Browser browser : browsers) {
+            appiumLookup.put(browser.getKey(), browser);
+        }
+        lastLookup = new Timestamp(new Date().getTime());
+        return browsers;
+    }
+
     private List<Browser> initializeWebDriverBrowsers() throws IOException, JSONException {
         List<Browser> browsers = getWebDriverBrowsersFromSauceLabs();
         webDriverLookup = new HashMap<String, Browser>();
@@ -95,7 +129,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = getSauceAPIFactory().doREST(BROWSER_URL + "/selenium-rc");
+        String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/selenium-rc"));
         List<Browser> browsers = getBrowserListFromJson(response);
         List<Browser> toRemove = new ArrayList<Browser>();
         for (Browser browser : browsers) {
@@ -111,6 +145,11 @@ public class BrowserFactory {
 
     private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
         String response = getSauceAPIFactory().doREST(BROWSER_URL + "/webdriver");
+        return getBrowserListFromJson(response);
+    }
+
+    private List<Browser> getAppiumBrowsersFromSauceLabs() throws IOException, JSONException {
+        String response = IOUtils.toString(getClass().getResourceAsStream("/appium_browsers.json"));
         return getBrowserListFromJson(response);
     }
 
@@ -136,15 +175,41 @@ public class BrowserFactory {
                 //exclude these browsers from the list, as they replicate iexplore and firefox
                 continue;
             }
-            String longName = browserObject.getString("long_name");
-            String longVersion = browserObject.getString("long_version");
-            String osName = browserObject.getString("os");
-            String shortVersion = browserObject.getString("short_version");
-            String browserKey = osName + seleniumName + shortVersion;
-            //replace any spaces with _s
-            browserKey = browserKey.replaceAll(" ", "_");
-            String label = osName + " " + longName + " " + longVersion;
-            browsers.add(new Browser(browserKey, osName, seleniumName, shortVersion, label));
+            if (browserObject.has("device")) {
+                //appium browser
+                String longName = browserObject.getString("long_name");
+                String longVersion = browserObject.getString("long_version");
+                String osName = browserObject.getString("os");
+                String shortVersion = browserObject.getString("short_version");
+                String tablet = null;
+                if (browserObject.has("tablet")) {
+                    tablet = browserObject.getString("tablet");
+                }
+                String browserKey = osName + seleniumName + shortVersion;
+                //replace any spaces with _s
+                browserKey = browserKey.replaceAll(" ", "_");
+                StringBuilder label = new StringBuilder();
+                label.append(longName).append(' ');
+                if (tablet != null) {
+                    label.append(tablet).append(' ');
+                }
+                label.append(longVersion);
+                Browser browser = new Browser(browserKey, osName, seleniumName, shortVersion, label.toString());
+                browser.setDevice(browserObject.getString("device"));
+                browsers.add(browser);
+
+            } else {
+                //webdriver/selenium browser
+                String longName = browserObject.getString("long_name");
+                String longVersion = browserObject.getString("long_version");
+                String osName = browserObject.getString("os");
+                String shortVersion = browserObject.getString("short_version");
+                String browserKey = osName + seleniumName + shortVersion;
+                //replace any spaces with _s
+                browserKey = browserKey.replaceAll(" ", "_");
+                String label = osName + " " + longName + " " + longVersion;
+                browsers.add(new Browser(browserKey, osName, seleniumName, shortVersion, label));
+            }
         }
         return browsers;
     }
@@ -165,8 +230,12 @@ public class BrowserFactory {
      * @return
      */
     public static BrowserFactory getInstance() {
+        return getInstance(null);
+    }
+
+    public static BrowserFactory getInstance(SauceREST sauceREST) {
         if (instance == null) {
-            instance = new BrowserFactory();
+            instance = new BrowserFactory(sauceREST);
         }
         return instance;
     }

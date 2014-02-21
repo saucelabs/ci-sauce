@@ -41,7 +41,7 @@ public class SauceConnect2Test extends AbstractTestHelper {
                     }
             );            
             SauceTunnelManager sauceTunnelManager = new SauceConnectTwoManager();
-            Process sauceConnect = sauceTunnelManager.openConnection(c.getUsername(), c.getAccessKey(), 4445, null, null, null);
+            Process sauceConnect = sauceTunnelManager.openConnection(c.getUsername(), c.getAccessKey(), 4445, null, null, null, null);
 
             System.out.println("tunnel established");
             String driver = System.getenv("SELENIUM_DRIVER");
