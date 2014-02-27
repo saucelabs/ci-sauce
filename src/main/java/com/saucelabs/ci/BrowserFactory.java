@@ -217,12 +217,31 @@ public class BrowserFactory {
         return browsers;
     }
 
+    /**
+     * Return the selenium rc browser which matches the key.
+     * @param key
+     * @return
+     */
     public Browser seleniumBrowserForKey(String key) {
         return seleniumLookup.get(key);
     }
 
+    /**
+     * Return the web driver browser which matches the key.
+     * @param key
+     * @return
+     */
     public Browser webDriverBrowserForKey(String key) {
         return webDriverLookup.get(key);
+    }
+
+    /**
+     * Return the appium browser which matches the key.
+     * @param key
+     * @return
+     */
+    public Browser appiumBrowserForKey(String key) {
+        return appiumLookup.get(key);
     }
 
     /**
