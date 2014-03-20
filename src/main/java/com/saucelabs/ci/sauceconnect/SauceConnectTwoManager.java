@@ -23,7 +23,7 @@ import java.util.logging.Level;
  *
  * @author Ross Rowe
  */
-public class SauceConnectTwoManager implements SauceTunnelManager {
+public class SauceConnectTwoManager extends AbstractSauceTunnelManager implements SauceTunnelManager {
 
     private static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(SauceConnectTwoManager.class.getName());
     private static final String SAUCE_CONNECT_CLASS = "com.saucelabs.sauceconnect.SauceConnect";
