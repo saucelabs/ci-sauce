@@ -19,7 +19,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
     private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
 
-    private enum OperatingSystem {
+    public enum OperatingSystem {
         OSX(OSX_DIR, OSX_FILE),
         WINDOWS(WINDOWS_DIR, WINDOWS_FILE),
         LINUX(LINUX_DIR, LINUX_FILE);
@@ -120,9 +120,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
     public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
 
-        String os = System.getProperty("os.name").toLowerCase();
-        File zipFile = null;
-        zipFile = extractFile(workingDirectory, operatingSystem.getFileName());
+        File zipFile = extractFile(workingDirectory, operatingSystem.getFileName());
         if (operatingSystem.equals(OperatingSystem.OSX) | operatingSystem.equals(OperatingSystem.WINDOWS)) {
             unzipFile(zipFile, workingDirectory);
         } else if (operatingSystem.equals(OperatingSystem.LINUX)) {

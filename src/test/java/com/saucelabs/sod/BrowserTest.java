@@ -2,6 +2,7 @@ package com.saucelabs.sod;
 
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
+import com.saucelabs.saucerest.SauceREST;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.openqa.selenium.Platform;
@@ -16,6 +17,7 @@ import static org.junit.Assert.assertFalse;
  */
 public class BrowserTest extends AbstractTestHelper  {
     private static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/jobs?full=true";
+    private SauceREST sauceREST;
 
     @Test
 	public void osNames() throws Exception {
@@ -29,6 +31,7 @@ public class BrowserTest extends AbstractTestHelper  {
 
     @Test
 	public void browserList() throws Exception {
+
         BrowserFactory factory = new BrowserFactory(sauceREST);
         String browserText = IOUtils.toString(getClass().getResourceAsStream("/browsers.js"));
         List<Browser> browsers = factory.getBrowserListFromJson(browserText);
