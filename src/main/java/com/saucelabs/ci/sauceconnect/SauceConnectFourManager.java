@@ -21,14 +21,20 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
     public enum OperatingSystem {
         OSX(OSX_DIR, OSX_FILE),
-        WINDOWS(WINDOWS_DIR, WINDOWS_FILE),
+        WINDOWS(WINDOWS_DIR, WINDOWS_FILE, ".exe"),
         LINUX(LINUX_DIR, LINUX_FILE);
         private final String directory;
         private final String fileName;
+        private final String suffix;
 
-        OperatingSystem(String directory, String fileName) {
+        OperatingSystem(String directory, String fileName, String suffix) {
             this.directory = directory;
             this.fileName = fileName;
+            this.suffix = suffix;
+        }
+
+        OperatingSystem(String directory, String fileName) {
+            this(directory, fileName, "");
         }
 
         public static OperatingSystem getOperatingSystem() {
@@ -62,6 +68,10 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         private String getFileName() {
             return fileName;
         }
+
+        public String getSuffix() {
+            return suffix;
+        }
     }
 
 
@@ -94,7 +104,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         }
         extractZipFile(workingDirectory, operatingSystem);
         File unzipDirectory = new File(workingDirectory, operatingSystem.getDirectory());
-        String[] args = new String[]{"bin/sc"};
+        String[] args = new String[]{"bin/sc" + operatingSystem.getSuffix()};
         args = generateSauceConnectArgs(args, username, apiKey, port, options);
 
         ProcessBuilder processBuilder = new ProcessBuilder(args);
