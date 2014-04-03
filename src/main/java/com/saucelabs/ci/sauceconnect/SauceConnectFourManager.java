@@ -96,7 +96,13 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws URISyntaxException, IOException {
 
         //find zip file to extract
-        File workingDirectory = new File(getSauceConnectWorkingDirectory());
+        File workingDirectory = null;
+        if (sauceConnectJar != null && sauceConnectJar.exists()) {
+            workingDirectory = sauceConnectJar.getParentFile();
+        }
+        if (workingDirectory == null) {
+            workingDirectory = new File(getSauceConnectWorkingDirectory());
+        }
         OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
         if (operatingSystem == null) {
             //TODO log an error
