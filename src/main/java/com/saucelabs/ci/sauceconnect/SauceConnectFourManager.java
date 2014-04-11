@@ -79,7 +79,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     private static final String OSX_DIR = SAUCE_CONNECT_4 + "-osx";
     private static final String WINDOWS_DIR = SAUCE_CONNECT_4 + "-win";
     private static final String LINUX_DIR = SAUCE_CONNECT_4 + "-linux";
-    private static final String BASE_FILE_NAME = SAUCE_CONNECT_4 + "";
+    private static final String BASE_FILE_NAME = SAUCE_CONNECT_4 + "-";
     private static final String LINUX_FILE = BASE_FILE_NAME + "linux.tar.gz";
     private static final String OSX_FILE = BASE_FILE_NAME + "osx.zip";
     private static final String WINDOWS_FILE = BASE_FILE_NAME + "win32.zip";
