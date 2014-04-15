@@ -40,6 +40,10 @@ public class BrowserFactory {
     private static final String CHROME = "chrome";
     private static BrowserFactory instance;
 
+    public BrowserFactory() {
+        this(null);
+    }
+
     public BrowserFactory(SauceREST sauceREST) {
         if (sauceREST == null) {
             this.sauceREST = new SauceREST(null, null);
