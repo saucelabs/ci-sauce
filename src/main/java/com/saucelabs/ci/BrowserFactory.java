@@ -148,7 +148,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = sauceREST.retrieveResults(BROWSER_URL + "/webdriver");
+        String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/webdriver"));
         return getBrowserListFromJson(response);
     }
 
