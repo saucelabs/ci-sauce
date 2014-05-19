@@ -185,13 +185,14 @@ public class BrowserFactory {
                 String longVersion = browserObject.getString("long_version");
                 String osName = browserObject.getString("os");
                 String shortVersion = browserObject.getString("short_version");
+                String device = browserObject.getString("device");
 
                 String deviceType = null;
 
                 if (browserObject.has("device-type")) {
                     deviceType = browserObject.getString("device-type");
                 }
-                String browserKey = osName + seleniumName + shortVersion;
+                String browserKey = device + seleniumName + longVersion;
                 //replace any spaces with _s
                 browserKey = browserKey.replaceAll(" ", "_");
                 StringBuilder label = new StringBuilder();
@@ -200,8 +201,8 @@ public class BrowserFactory {
                     label.append(deviceType).append(' ');
                 }
                 label.append(longVersion);
-                Browser browser = new Browser(browserKey, osName, seleniumName, shortVersion, label.toString());
-                browser.setDevice(browserObject.getString("device"));
+                Browser browser = new Browser(browserKey, osName, seleniumName, longVersion, label.toString());
+                browser.setDevice(device);
                 browser.setDeviceType(deviceType);
                 browsers.add(browser);
 
