@@ -35,14 +35,15 @@ public abstract class AbstractSauceTunnelManager {
         this.quietMode = quietMode;
     }
 
-    public void closeTunnelsForPlan(String userName, PrintStream printStream) {
+    public void closeTunnelsForPlan(String userName, String options, PrintStream printStream) {
         try {
             accessLock.lock();
-            if (tunnelMap.containsKey(userName)) {
+            String identifier = getTunnelIdentifier(options, userName);
+            if (tunnelMap.containsKey(identifier)) {
                 Integer count = decrementProcessCountForUser(userName, printStream);
                 if (count == 0) {
                     //we can now close the process
-                    final Process sauceConnect = tunnelMap.get(userName);
+                    final Process sauceConnect = tunnelMap.get(identifier);
                     logMessage(printStream, "Flushing Sauce Connect Input Stream");
                     new Thread(new Runnable() {
                         public void run() {
@@ -114,10 +115,26 @@ public abstract class AbstractSauceTunnelManager {
         }
     }
 
-    public void addTunnelToMap(String userName, Object tunnel) {
-        if (!tunnelMap.containsKey(userName)) {
-            tunnelMap.put(userName, (Process) tunnel);
+    public void addTunnelToMap(String userName, String options, Object tunnel) {
+        //parse the options, if a tunnel identifer has been specified, use it as the key
+        String identifier = getTunnelIdentifier(options, userName);
+
+        if (!tunnelMap.containsKey(identifier)) {
+            tunnelMap.put(identifier, (Process) tunnel);
         }
+    }
+
+    private String getTunnelIdentifier(String options, String defaultValue) {
+        String[] split = options.split(" ");
+        for (int i=0;i<split.length;i++)
+        {
+            String option = split[i];
+            if (option.equals("-i") || option.equals("--tunnel-identifier")) {
+                //next option is identifier
+                return split[i + 1];
+            }
+        }
+        return defaultValue;
     }
 
     protected String[] addElement(String[] original, String added) {
@@ -192,7 +209,7 @@ public abstract class AbstractSauceTunnelManager {
             }
             logMessage(printStream, "Sauce Connect now launched");
             incrementProcessCountForUser(username, printStream);
-            addTunnelToMap(username, process);
+            addTunnelToMap(username, options, process);
             return process;
 
 

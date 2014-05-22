@@ -13,7 +13,13 @@ import java.io.PrintStream;
 public interface SauceTunnelManager
 {
 
-    void closeTunnelsForPlan(String username, PrintStream printStream);
+    /**
+     *
+     * @param username
+     * @param options
+     * @param printStream
+     */
+    void closeTunnelsForPlan(String username, String options, PrintStream printStream);
 
     /**
      *
