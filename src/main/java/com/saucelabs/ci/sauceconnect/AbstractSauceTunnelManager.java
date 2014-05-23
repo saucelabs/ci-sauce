@@ -125,13 +125,14 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     private String getTunnelIdentifier(String options, String defaultValue) {
-        String[] split = options.split(" ");
-        for (int i=0;i<split.length;i++)
-        {
-            String option = split[i];
-            if (option.equals("-i") || option.equals("--tunnel-identifier")) {
-                //next option is identifier
-                return split[i + 1];
+        if (options != null && !options.equals("")) {
+            String[] split = options.split(" ");
+            for (int i = 0; i < split.length; i++) {
+                String option = split[i];
+                if (option.equals("-i") || option.equals("--tunnel-identifier")) {
+                    //next option is identifier
+                    return split[i + 1];
+                }
             }
         }
         return defaultValue;

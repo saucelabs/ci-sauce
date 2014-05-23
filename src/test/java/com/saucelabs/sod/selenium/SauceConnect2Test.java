@@ -56,9 +56,9 @@ public class SauceConnect2Test extends AbstractTestHelper {
                 selenium.start();
                 selenium.open("/");
                 // if the server really hit our Jetty, we should see the same title that includes the secret code.
-                assertEquals("test" + code, selenium.getTitle());                
+                assertEquals("test" + code, selenium.getTitle());
             } finally {
-                sauceTunnelManager.closeTunnelsForPlan(c.getUsername(), null);
+                sauceTunnelManager.closeTunnelsForPlan(c.getUsername(), null, null);
                 selenium.stop();
                 if (originalUrl != null && !originalUrl.equals("")) {
                      System.setProperty("SELENIUM_STARTING_URL", originalUrl);
