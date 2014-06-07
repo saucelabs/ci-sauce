@@ -17,7 +17,7 @@ import java.util.logging.Level;
 
 /**
  * Provides common logic for the invocation of Sauce Connect v3 and v4 processes.  The class maintains a cache of {@link Process } instances mapped against
-  * the corresponding Sauce user which invoked Sauce Connect.
+ * the corresponding Sauce user which invoked Sauce Connect.
  *
  * @author Ross Rowe
  */
@@ -28,7 +28,9 @@ public abstract class AbstractSauceTunnelManager {
      */
     protected static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(SauceConnectTwoManager.class.getName());
 
-    /** Should Sauce Connect output be suppressed? */
+    /**
+     * Should Sauce Connect output be suppressed?
+     */
     protected boolean quietMode;
 
     /**
@@ -47,6 +49,7 @@ public abstract class AbstractSauceTunnelManager {
 
     /**
      * Constructs a new instance.
+     *
      * @param quietMode indicates whether Sauce Connect output should be suppressed
      */
     public AbstractSauceTunnelManager(boolean quietMode) {
@@ -56,8 +59,8 @@ public abstract class AbstractSauceTunnelManager {
     /**
      * Closes the Sauce Connect process
      *
-     * @param userName name of the user which launched Sauce Connect
-     * @param options the command line options used to launch Sauce Connect
+     * @param userName    name of the user which launched Sauce Connect
+     * @param options     the command line options used to launch Sauce Connect
      * @param printStream the output stream to send log messages
      */
     public void closeTunnelsForPlan(String userName, String options, PrintStream printStream) {
@@ -103,7 +106,8 @@ public abstract class AbstractSauceTunnelManager {
 
     /**
      * Reduces the count of active Sauce Connect processes for the user by 1.
-     * @param userName name of the user which launched Sauce Connect
+     *
+     * @param userName    name of the user which launched Sauce Connect
      * @param printStream the output stream to send log messages
      * @return current count of active Sauce Connect processes for the user
      */
@@ -115,9 +119,8 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     /**
-     *
      * @param printStream the output stream to send log messages
-     * @param message the message to be logged
+     * @param message     the message to be logged
      */
     protected void logMessage(PrintStream printStream, String message) {
         if (printStream != null) {
@@ -127,7 +130,6 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     /**
-     *
      * @param username name of the user which launched Sauce Connect
      * @return current count of active Sauce Connect processes for the user
      */
@@ -141,9 +143,8 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     /**
-     *
      * @param userName name of the user which launched Sauce Connect
-     * @param options the command line options used to launch Sauce Connect
+     * @param options  the command line options used to launch Sauce Connect
      * @param tunnel
      */
     public void addTunnelToMap(String userName, String options, Object tunnel) {
@@ -156,8 +157,7 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     /**
-     *
-     * @param options the command line options used to launch Sauce Connect
+     * @param options      the command line options used to launch Sauce Connect
      * @param defaultValue
      * @return
      */
@@ -177,8 +177,9 @@ public abstract class AbstractSauceTunnelManager {
 
     /**
      * Adds an element to an array
+     *
      * @param original the original array
-     * @param added the element to add
+     * @param added    the element to add
      * @return a new array with the element added to the end
      */
     protected String[] addElement(String[] original, String added) {
@@ -195,7 +196,8 @@ public abstract class AbstractSauceTunnelManager {
 
     /**
      * Increases the number of Sauce Connect invocations for the user by 1.
-     * @param username name of the user which launched Sauce Connect
+     *
+     * @param username    name of the user which launched Sauce Connect
      * @param printStream the output stream to send log messages
      */
     protected void incrementProcessCountForUser(String username, PrintStream printStream) {
@@ -206,14 +208,13 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     /**
-     *
-     * @param username name of the user which launched Sauce Connect
-     * @param apiKey api key corresponding to the user
-     * @param port port which Sauce Connect should be launched on
+     * @param username        name of the user which launched Sauce Connect
+     * @param apiKey          api key corresponding to the user
+     * @param port            port which Sauce Connect should be launched on
      * @param sauceConnectJar File which contains the Sauce Connect executables (typically the CI plugin Jar file)
-     * @param options the command line options used to launch Sauce Connect
-     * @param httpsProtocol Value to be used for -Dhttps.protocol command line argument
-     * @param printStream the output stream to send log messages
+     * @param options         the command line options used to launch Sauce Connect
+     * @param httpsProtocol   Value to be used for -Dhttps.protocol command line argument
+     * @param printStream     the output stream to send log messages
      * @return new ProcessBuilder instance which will launch Sauce Connect
      * @throws URISyntaxException
      * @throws IOException
@@ -236,8 +237,7 @@ public abstract class AbstractSauceTunnelManager {
         //ensure that only a single thread attempts to open a connection
         try {
             accessLock.lock();
-            if (verboseLogging != null)
-            {
+            if (verboseLogging != null) {
                 this.quietMode = !verboseLogging;
             }
             //do we have an instance for the user?
@@ -287,11 +287,12 @@ public abstract class AbstractSauceTunnelManager {
 
     /**
      * Returns the arguments to be used to launch Sauce Connect
+     *
      * @param args
      * @param username name of the user which launched Sauce Connect
      * @param apiKey
      * @param port
-     * @param options command line args specified by the user
+     * @param options  command line args specified by the user
      * @return
      */
     protected String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port, String options) {
@@ -307,7 +308,6 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     /**
-     *
      * @return the user's home directory
      */
     public String getSauceConnectWorkingDirectory() {
@@ -348,11 +348,14 @@ public abstract class AbstractSauceTunnelManager {
 
         /**
          * Processes a line of output received by the stream gobbler.
+         *
          * @param line
          */
         protected void processLine(String line) {
             if (!quietMode) {
-                printStream.println(line);
+                if (printStream != null) {
+                    printStream.println(line);
+                }
                 System.out.println(line);
                 julLogger.info(line);
             }
@@ -373,7 +376,7 @@ public abstract class AbstractSauceTunnelManager {
 
         /**
          * {@inheritDoc}
-         *
+         * <p/>
          * If the line contains the Sauce Connect started message, then release the semaphone, which will allow the
          * build to resume.
          *
@@ -390,7 +393,6 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     /**
-     *
      * @return Text which indicates that Sauce Connect has started
      */
     protected abstract String getSauceStartedMessage();
