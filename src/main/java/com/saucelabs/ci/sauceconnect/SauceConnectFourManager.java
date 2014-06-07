@@ -8,17 +8,21 @@ import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.logging.Level;
 
 /**
+ * Handles launching Sauce Connect v4 (binary executable).
+ *
  * @author Ross Rowe
  */
 public class SauceConnectFourManager extends AbstractSauceTunnelManager implements SauceTunnelManager {
 
     private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
 
+    /**
+     *
+     */
     public enum OperatingSystem {
         OSX(OSX_DIR, OSX_FILE),
         WINDOWS(WINDOWS_DIR, WINDOWS_FILE, "bin\\sc.exe"),
@@ -84,16 +88,36 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     private static final String OSX_FILE = BASE_FILE_NAME + "osx.zip";
     private static final String WINDOWS_FILE = BASE_FILE_NAME + "win32.zip";
 
+    /**
+     * Constructs a new instance with quiet mode disabled.
+     */
     public SauceConnectFourManager() {
         this(false);
     }
 
+    /**
+     * Constructs a new instance.
+     *
+     * @param quietMode indicates whether Sauce Connect output should be suppressed
+     */
     public SauceConnectFourManager(boolean quietMode) {
         super(quietMode);
     }
 
+    /**
+     *
+     * @param username name of the user which launched Sauce Connect
+     * @param apiKey api key corresponding to the user
+     * @param port port which Sauce Connect should be launched on
+     * @param sauceConnectJar File which contains the Sauce Connect executables (typically the CI plugin Jar file)
+     * @param options the command line options used to launch Sauce Connect
+     * @param httpsProtocol Value to be used for -Dhttps.protocol command line argument, not used by this class
+     * @param printStream the output stream to send log messages
+     * @return new ProcessBuilder instance which will launch Sauce Connect
+     * @throws IOException thrown if an error occurs extracting the Sauce Connect binary from the CI jar file
+     */
     @Override
-    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws URISyntaxException, IOException {
+    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws IOException {
 
         //find zip file to extract
         File workingDirectory = null;
@@ -120,6 +144,15 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         return processBuilder;
     }
 
+    /**
+     *
+     * @param args
+     * @param username name of the user which launched Sauce Connect
+     * @param apiKey
+     * @param port
+     * @param options command line args specified by the user
+     * @return
+     */
     protected String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port, String options) {
 
         args = addElement(args, "-u");
@@ -134,6 +167,13 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         return args;
     }
 
+    /**
+     *
+     * @param workingDirectory
+     * @param operatingSystem
+     * @return
+     * @throws IOException
+     */
     public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
 
         File zipFile = extractFile(workingDirectory, operatingSystem.getFileName());
@@ -145,6 +185,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         return zipFile;
     }
 
+    /**
+     *
+     * @param zipFile
+     * @param destination
+     */
     private void untarGzFile(File zipFile, File destination) {
         final TarGZipUnArchiver unArchiver = new TarGZipUnArchiver();
         unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, "Sauce"));
@@ -154,6 +199,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
     }
 
+    /**
+     *
+     * @param zipFile
+     * @param destination
+     */
     private void unzipFile(File zipFile, File destination) {
         final ZipUnArchiver unArchiver = new ZipUnArchiver();
         unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, "Sauce"));
@@ -162,6 +212,13 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         unArchiver.extract();
     }
 
+    /**
+     *
+     * @param workingDirectory
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
     private File extractFile(File workingDirectory, String fileName) throws IOException {
 
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(fileName);
@@ -172,6 +229,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         return destination;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     protected String getSauceStartedMessage() {
         return SAUCE_CONNECT_4_STARTED;
     }
