@@ -94,7 +94,7 @@ public abstract class AbstractSauceTunnelManager {
                     }).start();
                     logMessage(printStream, "Closing Sauce Connect process");
                     sauceConnect.destroy();
-                    tunnelMap.remove(userName);
+                    tunnelMap.remove(identifier);
                 } else {
                     logMessage(printStream, "Jobs still running, not closing Sauce Connect");
                 }
