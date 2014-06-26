@@ -237,6 +237,9 @@ public abstract class AbstractSauceTunnelManager {
         //ensure that only a single thread attempts to open a connection
         try {
             accessLock.lock();
+            if(options == null){
+                options = "";
+            }
             if (verboseLogging != null) {
                 this.quietMode = !verboseLogging;
             }
