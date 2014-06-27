@@ -21,7 +21,7 @@ import java.util.Random;
 public abstract class AbstractTestHelper extends HttpServlet {
 
     public static final int PORT = 5000;
-    protected static final String DEFAULT_SAUCE_DRIVER = "sauce-ondemand:?max-duration=60&os=windows 2008&browser=firefox&browser-version=4.";
+    protected static final String DEFAULT_SAUCE_DRIVER = "sauce-ondemand:?max-duration=60&os=windows 2008&browser=firefox&browser-version=30.";
     public static int code;
     private Server server;
 
