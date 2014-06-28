@@ -237,6 +237,9 @@ public abstract class AbstractSauceTunnelManager {
         //ensure that only a single thread attempts to open a connection
         try {
             accessLock.lock();
+            if(options == null){
+                options = "";
+            }
             if (verboseLogging != null) {
                 this.quietMode = !verboseLogging;
             }
@@ -264,8 +267,9 @@ public abstract class AbstractSauceTunnelManager {
                 if (sauceConnectStarted) {
                     logMessage(printStream, "Sauce Connect now launched");
                 } else {
-                    //log an error message
-                    logMessage(printStream, "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log");
+                    String message = "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
+                    logMessage(printStream, message);
+                    throw new SauceConnectDidNotStartException(message);
                 }
             } catch (InterruptedException e) {
                 //continue;
@@ -404,6 +408,12 @@ public abstract class AbstractSauceTunnelManager {
 
         SystemErrorGobbler(String name, InputStream is, PrintStream printStream) {
             super(name, is, printStream);
+        }
+    }
+
+    public static class SauceConnectDidNotStartException extends RuntimeException {
+        SauceConnectDidNotStartException(String message){
+            super(message);
         }
     }
 }
