@@ -134,6 +134,9 @@ public class BrowserFactory {
 
     private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException, JSONException {
         String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/selenium-rc"));
+        if (response.equals("")) {
+            response = "[]";
+        }
         List<Browser> browsers = getBrowserListFromJson(response);
         List<Browser> toRemove = new ArrayList<Browser>();
         for (Browser browser : browsers) {
@@ -149,6 +152,9 @@ public class BrowserFactory {
 
     private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
         String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/webdriver"));
+        if (response.equals("")) {
+            response = "[]";
+        }
         return getBrowserListFromJson(response);
     }
 
@@ -224,6 +230,7 @@ public class BrowserFactory {
 
     /**
      * Return the selenium rc browser which matches the key.
+     *
      * @param key
      * @return
      */
@@ -233,6 +240,7 @@ public class BrowserFactory {
 
     /**
      * Return the web driver browser which matches the key.
+     *
      * @param key
      * @return
      */
@@ -242,6 +250,7 @@ public class BrowserFactory {
 
     /**
      * Return the appium browser which matches the key.
+     *
      * @param key
      * @return
      */

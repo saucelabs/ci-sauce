@@ -230,14 +230,14 @@ public abstract class AbstractSauceTunnelManager {
      * @param sauceConnectJar the Jar file containing Sauce Connect.  If null, then we attempt to find Sauce Connect from the classpath
      * @param printStream     A print stream in which to redirect the output from Sauce Connect to.  Can be null
      * @return a {@link Process} instance which represents the Sauce Connect instance
-     * @throws java.io.IOException
+     * @throws SauceConnectException  thrown if an error occurs launching Sauce Connect
      */
-    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws IOException {
+    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
 
         //ensure that only a single thread attempts to open a connection
         try {
             accessLock.lock();
-            if(options == null){
+            if (options == null) {
                 options = "";
             }
             if (verboseLogging != null) {
@@ -278,15 +278,19 @@ public abstract class AbstractSauceTunnelManager {
             incrementProcessCountForUser(username, printStream);
             addTunnelToMap(username, options, process);
             return process;
+        } catch (IOException e) {
+            //shouldn't happen
+            julLogger.log(Level.WARNING, "Exception occurred during invocation of Sauce Connect", e);
+            throw new SauceConnectException(e);
         } catch (URISyntaxException e) {
             //shouldn't happen
             julLogger.log(Level.WARNING, "Exception occurred during retrieval of sauce connect jar URL", e);
+            throw new SauceConnectException(e);
         } finally {
             //release the access lock
             accessLock.unlock();
         }
 
-        return null;
     }
 
     /**
@@ -411,8 +415,25 @@ public abstract class AbstractSauceTunnelManager {
         }
     }
 
-    public static class SauceConnectDidNotStartException extends RuntimeException {
-        SauceConnectDidNotStartException(String message){
+    /**
+     * Base exception class which is thrown if an error occurs launching Sauce Connect.
+     */
+    public static class SauceConnectException extends IOException {
+
+        public SauceConnectException(String message) {
+            super(message);
+        }
+
+        public SauceConnectException(Exception cause) {
+            super(cause);
+        }
+    }
+
+    /**
+     * Exception which is thrown when Sauce Connect does not start within the timeout period.
+     */
+    public static class SauceConnectDidNotStartException extends SauceConnectException {
+        public SauceConnectDidNotStartException(String message) {
             super(message);
         }
     }
