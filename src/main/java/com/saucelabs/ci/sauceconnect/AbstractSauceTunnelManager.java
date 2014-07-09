@@ -148,7 +148,7 @@ public abstract class AbstractSauceTunnelManager {
      * @param tunnel
      */
     public void addTunnelToMap(String userName, String options, Object tunnel) {
-        //parse the options, if a tunnel identifer has been specified, use it as the key
+        //parse the options, if a tunnel identifier has been specified, use it as the key
         String identifier = getTunnelIdentifier(options, userName);
 
         if (!tunnelMap.containsKey(identifier)) {
@@ -263,7 +263,7 @@ public abstract class AbstractSauceTunnelManager {
                 StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream(), semaphore, printStream);
                 outputGobbler.start();
 
-                boolean sauceConnectStarted = semaphore.tryAcquire(2, TimeUnit.MINUTES);
+                boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
                 if (sauceConnectStarted) {
                     logMessage(printStream, "Sauce Connect now launched");
                 } else {

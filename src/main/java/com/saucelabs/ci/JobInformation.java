@@ -72,4 +72,21 @@ public class JobInformation implements Serializable {
     public void setHasJobName(boolean hasJobName) {
         this.hasJobName = hasJobName;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JobInformation)) return false;
+
+        JobInformation that = (JobInformation) o;
+
+        if (jobId != null ? !jobId.equals(that.jobId) : that.jobId != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return jobId != null ? jobId.hashCode() : 0;
+    }
 }
