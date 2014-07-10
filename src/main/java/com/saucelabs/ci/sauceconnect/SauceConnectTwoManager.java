@@ -50,7 +50,7 @@ public class SauceConnectTwoManager extends AbstractSauceTunnelManager implement
      * @throws IOException
      */
     @Override
-    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws URISyntaxException, IOException {
+    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws SauceConnectException {
         //if not, start the process
         File workingDirectory = null;
         StringBuilder builder = new StringBuilder();
@@ -58,7 +58,14 @@ public class SauceConnectTwoManager extends AbstractSauceTunnelManager implement
             builder.append(sauceConnectJar.getPath());
             workingDirectory = sauceConnectJar.getParentFile();
         } else {
-            File jarFile = SauceConnectUtils.extractSauceConnectJarFile();
+            File jarFile;
+            try {
+                jarFile = SauceConnectUtils.extractSauceConnectJarFile();
+            } catch (URISyntaxException e) {
+                throw new SauceConnectException(e);
+            } catch (IOException e) {
+                throw new SauceConnectException(e);
+            }
             if (jarFile == null) {
                 if (printStream != null) {
                     printStream.print("Unable to find sauce connect jar");

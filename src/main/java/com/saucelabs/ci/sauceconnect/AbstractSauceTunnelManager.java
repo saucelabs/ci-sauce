@@ -5,7 +5,6 @@ import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,33 +67,13 @@ public abstract class AbstractSauceTunnelManager {
             accessLock.lock();
             String identifier = getTunnelIdentifier(options, userName);
             if (tunnelMap.containsKey(identifier)) {
-                Integer count = decrementProcessCountForUser(userName, printStream);
+                Integer count = decrementProcessCountForUser(identifier, printStream);
                 if (count == 0) {
                     //we can now close the process
                     final Process sauceConnect = tunnelMap.get(identifier);
-                    logMessage(printStream, "Flushing Sauce Connect Input Stream");
-                    new Thread(new Runnable() {
-                        public void run() {
-                            try {
-                                IOUtils.copy(sauceConnect.getInputStream(), new NullOutputStream());
-                            } catch (IOException e) {
-                                //ignore
-                            }
-                        }
-                    }).start();
-                    logMessage(printStream, "Flushing Sauce Connect Error Stream");
-                    new Thread(new Runnable() {
-                        public void run() {
-                            try {
-                                IOUtils.copy(sauceConnect.getErrorStream(), new NullOutputStream());
-                            } catch (IOException e) {
-                                //ignore
-                            }
-                        }
-                    }).start();
-                    logMessage(printStream, "Closing Sauce Connect process");
-                    sauceConnect.destroy();
+                    closeSauceConnectProcess(printStream, sauceConnect);
                     tunnelMap.remove(identifier);
+                    logMessage(printStream, "Sauce Connect stopped for: " + identifier);
                 } else {
                     logMessage(printStream, "Jobs still running, not closing Sauce Connect");
                 }
@@ -104,21 +83,48 @@ public abstract class AbstractSauceTunnelManager {
         }
     }
 
+    private void closeSauceConnectProcess(PrintStream printStream, final Process sauceConnect) {
+        logMessage(printStream, "Flushing Sauce Connect Input Stream");
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    IOUtils.copy(sauceConnect.getInputStream(), new NullOutputStream());
+                } catch (IOException e) {
+                    //ignore
+                }
+            }
+        }).start();
+        logMessage(printStream, "Flushing Sauce Connect Error Stream");
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    IOUtils.copy(sauceConnect.getErrorStream(), new NullOutputStream());
+                } catch (IOException e) {
+                    //ignore
+                }
+            }
+        }).start();
+        logMessage(printStream, "Closing Sauce Connect process");
+        sauceConnect.destroy();
+    }
+
     /**
      * Reduces the count of active Sauce Connect processes for the user by 1.
      *
-     * @param userName    name of the user which launched Sauce Connect
+     * @param identifier  the tunnel identifier
      * @param printStream the output stream to send log messages
      * @return current count of active Sauce Connect processes for the user
      */
-    private Integer decrementProcessCountForUser(String userName, PrintStream printStream) {
-        Integer count = getProcessCountForUser(userName) - 1;
-        logMessage(printStream, "Decremented process count for " + userName + ", now " + count);
-        processMap.put(userName, count);
+    private Integer decrementProcessCountForUser(String identifier, PrintStream printStream) {
+        Integer count = getProcessCountForUser(identifier) - 1;
+        logMessage(printStream, "Decremented process count for " + identifier + ", now " + count);
+        processMap.put(identifier, count);
         return count;
     }
 
     /**
+     * Logs a message to the print stream (if not null), and to the logger instance for the class.
+     *
      * @param printStream the output stream to send log messages
      * @param message     the message to be logged
      */
@@ -130,27 +136,24 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     /**
-     * @param username name of the user which launched Sauce Connect
+     * @param identifier the tunnel identifier
      * @return current count of active Sauce Connect processes for the user
      */
-    protected Integer getProcessCountForUser(String username) {
-        Integer count = processMap.get(username);
+    protected Integer getProcessCountForUser(String identifier) {
+        Integer count = processMap.get(identifier);
         if (count == null) {
             count = 0;
-            processMap.put(username, count);
+            processMap.put(identifier, count);
         }
         return count;
     }
 
     /**
-     * @param userName name of the user which launched Sauce Connect
-     * @param options  the command line options used to launch Sauce Connect
-     * @param tunnel
+     * @param identifier the tunnel identifier
+     * @param tunnel     Sauce Connect process to add
      */
-    public void addTunnelToMap(String userName, String options, Object tunnel) {
+    public void addTunnelToMap(String identifier, Object tunnel) {
         //parse the options, if a tunnel identifier has been specified, use it as the key
-        String identifier = getTunnelIdentifier(options, userName);
-
         if (!tunnelMap.containsKey(identifier)) {
             tunnelMap.put(identifier, (Process) tunnel);
         }
@@ -161,7 +164,7 @@ public abstract class AbstractSauceTunnelManager {
      * @param defaultValue
      * @return
      */
-    private String getTunnelIdentifier(String options, String defaultValue) {
+    public static String getTunnelIdentifier(String options, String defaultValue) {
         if (options != null && !options.equals("")) {
             String[] split = options.split(" ");
             for (int i = 0; i < split.length; i++) {
@@ -197,14 +200,14 @@ public abstract class AbstractSauceTunnelManager {
     /**
      * Increases the number of Sauce Connect invocations for the user by 1.
      *
-     * @param username    name of the user which launched Sauce Connect
+     * @param identifier  the tunnel identifier
      * @param printStream the output stream to send log messages
      */
-    protected void incrementProcessCountForUser(String username, PrintStream printStream) {
-        Integer count = getProcessCountForUser(username);
+    protected void incrementProcessCountForUser(String identifier, PrintStream printStream) {
+        Integer count = getProcessCountForUser(identifier);
         count = count + 1;
-        logMessage(printStream, "Incremented process count for " + username + ", now " + count);
-        processMap.put(username, count);
+        logMessage(printStream, "Incremented process count for " + identifier + ", now " + count);
+        processMap.put(identifier, count);
     }
 
     /**
@@ -216,10 +219,9 @@ public abstract class AbstractSauceTunnelManager {
      * @param httpsProtocol   Value to be used for -Dhttps.protocol command line argument
      * @param printStream     the output stream to send log messages
      * @return new ProcessBuilder instance which will launch Sauce Connect
-     * @throws URISyntaxException
-     * @throws IOException
+     * @throws SauceConnectException thrown if an error occurs launching the Sauce Connect process
      */
-    protected abstract ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws URISyntaxException, IOException;
+    protected abstract ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws SauceConnectException;
 
     /**
      * Creates a new process to run Sauce Connect.
@@ -230,7 +232,7 @@ public abstract class AbstractSauceTunnelManager {
      * @param sauceConnectJar the Jar file containing Sauce Connect.  If null, then we attempt to find Sauce Connect from the classpath
      * @param printStream     A print stream in which to redirect the output from Sauce Connect to.  Can be null
      * @return a {@link Process} instance which represents the Sauce Connect instance
-     * @throws SauceConnectException  thrown if an error occurs launching Sauce Connect
+     * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
      */
     public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
 
@@ -243,12 +245,13 @@ public abstract class AbstractSauceTunnelManager {
             if (verboseLogging != null) {
                 this.quietMode = !verboseLogging;
             }
-            //do we have an instance for the user?
-            if (getProcessCountForUser(username) != 0) {
+            String identifier = getTunnelIdentifier(options, username);
+            //do we have an instance for the tunnel identifier?
+            if (getProcessCountForUser(identifier) != 0) {
                 //if so, increment counter and return
-                logMessage(printStream, "Sauce Connect already running for " + username);
-                incrementProcessCountForUser(username, printStream);
-                return tunnelMap.get(username);
+                logMessage(printStream, "Sauce Connect already running for " + identifier);
+                incrementProcessCountForUser(identifier, printStream);
+                return tunnelMap.get(identifier);
             }
             ProcessBuilder processBuilder = createProcessBuilder(username, apiKey, port, sauceConnectJar, options, httpsProtocol, printStream);
             if (processBuilder == null) return null;
@@ -265,26 +268,29 @@ public abstract class AbstractSauceTunnelManager {
 
                 boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
                 if (sauceConnectStarted) {
-                    logMessage(printStream, "Sauce Connect now launched");
+                    logMessage(printStream, "Sauce Connect now launched for: " + identifier);
                 } else {
                     String message = "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
                     logMessage(printStream, message);
+                    //ensure that Sauce Connect process is closed
+                    closeSauceConnectProcess(printStream, process);
                     throw new SauceConnectDidNotStartException(message);
                 }
             } catch (InterruptedException e) {
                 //continue;
+                julLogger.log(Level.WARNING, "Exception occurred during invocation of Sauce Connect", e);
             }
 
-            incrementProcessCountForUser(username, printStream);
-            addTunnelToMap(username, options, process);
+            incrementProcessCountForUser(identifier, printStream);
+            addTunnelToMap(identifier, process);
             return process;
-        } catch (IOException e) {
-            //shouldn't happen
+        }
+        catch (SauceConnectException e) {
+            throw e;
+        }
+        catch (IOException e) {
+            //thrown if an error occurs starting the process builder
             julLogger.log(Level.WARNING, "Exception occurred during invocation of Sauce Connect", e);
-            throw new SauceConnectException(e);
-        } catch (URISyntaxException e) {
-            //shouldn't happen
-            julLogger.log(Level.WARNING, "Exception occurred during retrieval of sauce connect jar URL", e);
             throw new SauceConnectException(e);
         } finally {
             //release the access lock
@@ -296,12 +302,12 @@ public abstract class AbstractSauceTunnelManager {
     /**
      * Returns the arguments to be used to launch Sauce Connect
      *
-     * @param args
+     * @param args     the initial Sauce Connect command line args
      * @param username name of the user which launched Sauce Connect
-     * @param apiKey
-     * @param port
+     * @param apiKey   the access key for the Sauce user
+     * @param port     the port that Sauce Connect should be launched on
      * @param options  command line args specified by the user
-     * @return
+     * @return String array representing the command line args to be used to launch Sauce Connect
      */
     protected String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port, String options) {
 
@@ -323,7 +329,7 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     /**
-     *
+     * Handles receiving and processing the output of an external process.
      */
     protected abstract class StreamGobbler extends Thread {
         private final PrintStream printStream;
@@ -336,7 +342,7 @@ public abstract class AbstractSauceTunnelManager {
         }
 
         /**
-         *
+         * Opens a BufferedReader over the input stream, reads and processes each line.
          */
         public void run() {
             try {
@@ -357,7 +363,7 @@ public abstract class AbstractSauceTunnelManager {
         /**
          * Processes a line of output received by the stream gobbler.
          *
-         * @param line
+         * @param line line to process
          */
         protected void processLine(String line) {
             if (!quietMode) {
