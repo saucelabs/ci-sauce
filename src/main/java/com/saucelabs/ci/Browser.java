@@ -2,6 +2,8 @@ package com.saucelabs.ci;
 
 import org.openqa.selenium.Platform;
 
+import java.util.Locale;
+
 
 /**
  * Represents a Sauce Browser instance.
@@ -48,9 +50,19 @@ public class Browser implements Comparable<Browser> {
     }
 
     public Platform getPlatform() {
-        if (os.equalsIgnoreCase("windows 2008")) {
-            //use the 'VISTA' Platform
-            return Platform.extractFromSysProperty("windows vista");
+        //convert the operating system into the Platform enum
+        if (os.toLowerCase(Locale.getDefault()).contains("windows 2008")) {
+
+            return Platform.VISTA;
+        } else if (os.toLowerCase(Locale.getDefault()).contains("windows 2012 r2")) {
+
+            return Platform.WIN8_1;
+        } else if (os.toLowerCase(Locale.getDefault()).contains("windows 2012")) {
+
+            return Platform.WIN8;
+        } else if (os.toLowerCase(Locale.getDefault()).contains("windows 2003")) {
+
+            return Platform.XP;
         }
         //otherwise just return the os
         return Platform.extractFromSysProperty(os);
@@ -112,7 +124,7 @@ public class Browser implements Comparable<Browser> {
         StringBuilder builder = new StringBuilder();
         builder.append("sauce-ondemand:?os=").append(os).
                 append("&browser=").append(browserName).
-        append("&browser-version=").append(version);
+                append("&browser-version=").append(version);
         if (username != null) {
             builder.append("&username=").append(username);
         }

@@ -41,9 +41,9 @@
     <orderEntry type="library" name="Maven: de.schlichtherle.truezip:truezip-swing:7.4" level="project" />
     <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk16:1.46" level="project" />
     <orderEntry type="library" name="Maven: com.saucelabs:sauce-connect:3.1.32" level="project" />
-    <orderEntry type="library" name="Maven: org.seleniumhq.selenium:selenium-api:2.32.0" level="project" />
-    <orderEntry type="library" name="Maven: com.google.guava:guava:14.0" level="project" />
-    <orderEntry type="library" name="Maven: org.seleniumhq.selenium:selenium-remote-driver:2.32.0" level="project" />
+    <orderEntry type="library" name="Maven: org.seleniumhq.selenium:selenium-api:2.42.2" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava:15.0" level="project" />
+    <orderEntry type="library" name="Maven: org.seleniumhq.selenium:selenium-remote-driver:2.42.2" level="project" />
     <orderEntry type="library" name="Maven: cglib:cglib-nodep:2.1_3" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-exec:1.1" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:3.4.0" level="project" />
