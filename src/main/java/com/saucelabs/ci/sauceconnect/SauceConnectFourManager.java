@@ -28,7 +28,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      */
     public enum OperatingSystem {
         OSX(OSX_DIR, OSX_FILE),
-        WINDOWS(WINDOWS_DIR, WINDOWS_FILE, "bin\\sc.exe"),
+        WINDOWS(WINDOWS_DIR, WINDOWS_FILE, "bin" + File.separator + "sc.exe"),
         LINUX(LINUX_DIR, LINUX_FILE);
         private final String directory;
         private final String fileName;
@@ -144,7 +144,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             throw new SauceConnectException(e);
         }
         File unzipDirectory = new File(workingDirectory, operatingSystem.getDirectory());
-        String[] args = new String[]{operatingSystem.getExecutable()};
+        //although we are setting the working directory, we need to specify the full path to the exe
+        String[] args = new String[]{new File(unzipDirectory, operatingSystem.getExecutable()).getPath()};
         args = generateSauceConnectArgs(args, username, apiKey, port, options);
 
         ProcessBuilder processBuilder = new ProcessBuilder(args);
