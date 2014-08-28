@@ -1,5 +1,6 @@
 package com.saucelabs.ci.sauceconnect;
 
+import com.saucelabs.saucerest.SauceREST;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.StringUtils;
@@ -36,6 +37,8 @@ public abstract class AbstractSauceTunnelManager {
      * Maps the Sauce Connect process to the user which invoked it.
      */
     protected Map<String, Process> tunnelMap = new HashMap<String, Process>();
+
+    protected Map<String, String> tunnelIdentifierMap = new HashMap<String, String>();
     /**
      * Lock which ensures thread safety for opening and closing tunnels.
      */
@@ -45,6 +48,8 @@ public abstract class AbstractSauceTunnelManager {
      * Maps the number of invocations of Sauce Connect to the user which invoked it.
      */
     protected Map<String, Integer> processMap = new HashMap<String, Integer>();
+
+    private SauceREST sauceRest;
 
     /**
      * Constructs a new instance.
@@ -73,6 +78,11 @@ public abstract class AbstractSauceTunnelManager {
                     final Process sauceConnect = tunnelMap.get(identifier);
                     closeSauceConnectProcess(printStream, sauceConnect);
                     tunnelMap.remove(identifier);
+                    String tunnelId = tunnelIdentifierMap.remove(identifier);
+                    if (tunnelId != null && sauceRest != null) {
+                        //forcibly delete tunnel
+                        sauceRest.deleteTunnel(tunnelId);
+                    }
                     logMessage(printStream, "Sauce Connect stopped for: " + identifier);
                 } else {
                     logMessage(printStream, "Jobs still running, not closing Sauce Connect");
@@ -263,11 +273,15 @@ public abstract class AbstractSauceTunnelManager {
                 semaphore.acquire();
                 StreamGobbler errorGobbler = new SystemErrorGobbler("ErrorGobbler", process.getErrorStream(), printStream);
                 errorGobbler.start();
-                StreamGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream(), semaphore, printStream);
+                SystemOutGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream(), semaphore, printStream);
                 outputGobbler.start();
 
                 boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
                 if (sauceConnectStarted) {
+                    if (outputGobbler.getTunnelId() != null) {
+                        tunnelIdentifierMap.put(identifier, outputGobbler.getTunnelId());
+                        sauceRest = new SauceREST(username, apiKey);
+                    }
                     logMessage(printStream, "Sauce Connect now launched for: " + identifier);
                 } else {
                     String message = "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
@@ -284,11 +298,9 @@ public abstract class AbstractSauceTunnelManager {
             incrementProcessCountForUser(identifier, printStream);
             addTunnelToMap(identifier, process);
             return process;
-        }
-        catch (SauceConnectException e) {
+        } catch (SauceConnectException e) {
             throw e;
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             //thrown if an error occurs starting the process builder
             julLogger.log(Level.WARNING, "Exception occurred during invocation of Sauce Connect", e);
             throw new SauceConnectException(e);
@@ -383,6 +395,8 @@ public abstract class AbstractSauceTunnelManager {
 
         private final Semaphore semaphore;
 
+        private String tunnelId;
+
         SystemOutGobbler(String name, InputStream is, final Semaphore semaphore, PrintStream printStream) {
             super(name, is, printStream);
             this.semaphore = semaphore;
@@ -399,11 +413,19 @@ public abstract class AbstractSauceTunnelManager {
         @Override
         protected void processLine(String line) {
             super.processLine(line);
+            if (StringUtils.containsIgnoreCase(line, "Tunnel ID:")) {
+                tunnelId = StringUtils.substringAfter(line, "Tunnel ID: ");
+            }
             if (StringUtils.containsIgnoreCase(line, getSauceStartedMessage())) {
                 //unlock processMonitor
                 semaphore.release();
             }
         }
+
+        public String getTunnelId() {
+            return tunnelId;
+        }
+
     }
 
     /**
