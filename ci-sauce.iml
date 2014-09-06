@@ -22,7 +22,7 @@
     <orderEntry type="library" name="Maven: org.tukaani:xz:1.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: commons-io:commons-io:1.4" level="project" />
     <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.6" level="project" />
-    <orderEntry type="library" name="Maven: com.saucelabs:saucerest:1.0.19-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.saucelabs:saucerest:1.0.22" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpclient:4.3.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.httpcomponents:httpcore:4.3" level="project" />
@@ -71,11 +71,9 @@
     <orderEntry type="library" scope="TEST" name="Maven: io.netty:netty:3.5.2.Final" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-support:2.32.0" level="project" />
     <orderEntry type="library" name="Maven: net.sf.opencsv:opencsv:2.3" level="project" />
-    <orderEntry type="library" name="Maven: com.saucelabs:sauce_java_common:1.0.5" level="project" />
+    <orderEntry type="library" name="Maven: com.saucelabs:sauce_java_common:2.1.8" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-android-driver:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-iphone-driver:2.32.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.saucelabs.selenium:sauce-ondemand-driver:2.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: com.saucelabs.selenium:selenium-client-factory:2.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-server:7.2.1.v20101111" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: javax.servlet:servlet-api:2.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.eclipse.jetty:jetty-continuation:7.2.1.v20101111" level="project" />

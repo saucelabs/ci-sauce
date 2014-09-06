@@ -198,19 +198,11 @@ public class BrowserFactory {
                 if (browserObject.has("device-type")) {
                     deviceType = browserObject.getString("device-type");
                 }
-                String browserKey = device + seleniumName + longVersion;
-                //replace any spaces with _s
-                browserKey = browserKey.replaceAll(" ", "_");
-                StringBuilder label = new StringBuilder();
-                label.append(longName).append(' ');
-                if (deviceType != null) {
-                    label.append(deviceType).append(' ');
-                }
-                label.append(longVersion);
-                Browser browser = new Browser(browserKey, osName, seleniumName, longVersion, label.toString());
-                browser.setDevice(device);
-                browser.setDeviceType(deviceType);
+                Browser browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, "portrait");
                 browsers.add(browser);
+                browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, "landscape");
+                browsers.add(browser);
+
 
             } else {
                 //webdriver/selenium browser
@@ -226,6 +218,25 @@ public class BrowserFactory {
             }
         }
         return browsers;
+    }
+
+    private Browser createBrowser(String seleniumName, String longName, String longVersion, String osName, String device, String deviceType, String orientation) {
+        String browserKey = device + orientation + seleniumName + longVersion;
+        //replace any spaces with _s
+        browserKey = browserKey.replaceAll(" ", "_");
+        StringBuilder label = new StringBuilder();
+        label.append(longName).append(' ');
+        if (deviceType != null) {
+            label.append(deviceType).append(' ');
+        }
+        label.append(longVersion);
+        label.append('(').append(orientation).append(')');
+        //add browser for both landscape and portrait orientation
+        Browser browser = new Browser(browserKey, osName, seleniumName, longVersion, label.toString());
+        browser.setDevice(device);
+        browser.setDeviceType(deviceType);
+        browser.setDeviceOrientation(orientation);
+        return browser;
     }
 
     /**
