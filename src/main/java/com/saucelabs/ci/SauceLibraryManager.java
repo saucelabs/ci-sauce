@@ -1,8 +1,6 @@
 package com.saucelabs.ci;
 
 import com.saucelabs.sauceconnect.SauceConnect;
-import de.schlichtherle.truezip.file.TArchiveDetector;
-import de.schlichtherle.truezip.file.TFile;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -161,45 +159,5 @@ public abstract class SauceLibraryManager {
         return sauceConnect2.getString(DOWNLOAD_URL_KEY);
     }
 
-    /**
-     * Adds the updatedSauceConnectJarFile to the pluginJarFile.
-     *
-     * @param pluginJarFile
-     * @param updatedSauceConnectJarFile
-     * @throws java.io.IOException
-     */
-    public void addFileToJar(File pluginJarFile, TFile updatedSauceConnectJarFile) throws IOException {
 
-        TFile.setDefaultArchiveDetector(new TArchiveDetector("jar"));
-        search(new TFile(pluginJarFile), updatedSauceConnectJarFile);
-        TFile.umount();
-    }
-
-    /**
-     * Iterates over the contents of the pluginJarFile to find the sauce-connect-3.0.jar file.
-     *
-     * @param jarFileEntry
-     * @param updatedSauceConnectJarFile
-     * @throws java.io.IOException
-     */
-    private void search(TFile jarFileEntry, TFile updatedSauceConnectJarFile) throws IOException {
-        if (jarFileEntry.getName().endsWith("sauce-connect-3.0.jar")) {
-            update(jarFileEntry, updatedSauceConnectJarFile);
-        } else if (jarFileEntry.isDirectory()) {
-            for (TFile member : jarFileEntry.listFiles())
-                search(member, updatedSauceConnectJarFile);
-        }
-    }
-
-    /**
-     * Updates the plugin jar file to include the updatedSauceConnectJarFile.
-     *
-     * @param pluginJarFile
-     * @param updatedSauceConnectJarFile
-     * @throws java.io.IOException
-     */
-    private void update(TFile pluginJarFile, TFile updatedSauceConnectJarFile) throws IOException {
-        logger.info("Modifying plugin jar file");
-        updatedSauceConnectJarFile.cp_rp(pluginJarFile);
-    }
 }

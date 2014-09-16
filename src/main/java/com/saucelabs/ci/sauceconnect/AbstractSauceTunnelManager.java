@@ -278,11 +278,19 @@ public abstract class AbstractSauceTunnelManager {
 
                 boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
                 if (sauceConnectStarted) {
-                    if (outputGobbler.getTunnelId() != null) {
-                        tunnelIdentifierMap.put(identifier, outputGobbler.getTunnelId());
-                        sauceRest = new SauceREST(username, apiKey);
+                    if (outputGobbler.isFailed()) {
+                        String message = "Error launching Sauce Connect";
+                        logMessage(printStream, message);
+                        //ensure that Sauce Connect process is closed
+                        closeSauceConnectProcess(printStream, process);
+                        throw new SauceConnectDidNotStartException(message);
+                    } else {
+                        if (outputGobbler.getTunnelId() != null) {
+                            tunnelIdentifierMap.put(identifier, outputGobbler.getTunnelId());
+                            sauceRest = new SauceREST(username, apiKey);
+                        }
+                        logMessage(printStream, "Sauce Connect now launched for: " + identifier);
                     }
-                    logMessage(printStream, "Sauce Connect now launched for: " + identifier);
                 } else {
                     String message = "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
                     logMessage(printStream, message);
@@ -347,7 +355,7 @@ public abstract class AbstractSauceTunnelManager {
         private final PrintStream printStream;
         private final InputStream is;
 
-        private StreamGobbler(String name, InputStream is, PrintStream printStream) {
+        public StreamGobbler(String name, InputStream is, PrintStream printStream) {
             super(name);
             this.is = is;
             this.printStream = printStream;
@@ -391,13 +399,14 @@ public abstract class AbstractSauceTunnelManager {
     /**
      * Handles processing Sauce Connect output sent to stdout.
      */
-    protected class SystemOutGobbler extends StreamGobbler {
+    public class SystemOutGobbler extends StreamGobbler {
 
         private final Semaphore semaphore;
 
         private String tunnelId;
+        private boolean failed;
 
-        SystemOutGobbler(String name, InputStream is, final Semaphore semaphore, PrintStream printStream) {
+        public SystemOutGobbler(String name, InputStream is, final Semaphore semaphore, PrintStream printStream) {
             super(name, is, printStream);
             this.semaphore = semaphore;
         }
@@ -416,7 +425,10 @@ public abstract class AbstractSauceTunnelManager {
             if (StringUtils.containsIgnoreCase(line, "Tunnel ID:")) {
                 tunnelId = StringUtils.substringAfter(line, "Tunnel ID: ");
             }
-            if (StringUtils.containsIgnoreCase(line, getSauceStartedMessage())) {
+            if (StringUtils.containsIgnoreCase(line, "Goodbye")) {
+                failed = true;
+            }
+            if (StringUtils.containsIgnoreCase(line, getSauceStartedMessage()) || failed) {
                 //unlock processMonitor
                 semaphore.release();
             }
@@ -426,6 +438,9 @@ public abstract class AbstractSauceTunnelManager {
             return tunnelId;
         }
 
+        public boolean isFailed() {
+            return failed;
+        }
     }
 
     /**
@@ -436,9 +451,9 @@ public abstract class AbstractSauceTunnelManager {
     /**
      * Handles processing Sauce Connect output sent to stderr.
      */
-    protected class SystemErrorGobbler extends StreamGobbler {
+    public class SystemErrorGobbler extends StreamGobbler {
 
-        SystemErrorGobbler(String name, InputStream is, PrintStream printStream) {
+        public SystemErrorGobbler(String name, InputStream is, PrintStream printStream) {
             super(name, is, printStream);
         }
     }

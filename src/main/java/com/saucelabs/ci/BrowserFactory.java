@@ -30,6 +30,8 @@ public class BrowserFactory {
 
     public static final String BROWSER_URL = "http://saucelabs.com/rest/v1/info/browsers";
 
+    public static final int ONE_HOUR_IN_MILLIS = 1000 * 60 * 60;
+
     private SauceREST sauceREST;
 
     private Map<String, Browser> seleniumLookup = new HashMap<String, Browser>();
@@ -99,7 +101,7 @@ public class BrowserFactory {
     }
 
     public boolean shouldRetrieveBrowsers() {
-        return lastLookup == null;
+        return lastLookup == null || CacheTimeUtil.pastAcceptableDuration(lastLookup, ONE_HOUR_IN_MILLIS);
     }
 
     private List<Browser> initializeSeleniumBrowsers() throws IOException, JSONException {
@@ -198,9 +200,9 @@ public class BrowserFactory {
                 if (browserObject.has("device-type")) {
                     deviceType = browserObject.getString("device-type");
                 }
-                Browser browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, "portrait");
+                Browser browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait");
                 browsers.add(browser);
-                browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, "landscape");
+                browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "landscape");
                 browsers.add(browser);
 
 
@@ -214,13 +216,13 @@ public class BrowserFactory {
                 //replace any spaces with _s
                 browserKey = browserKey.replaceAll(" ", "_");
                 String label = osName + " " + longName + " " + longVersion;
-                browsers.add(new Browser(browserKey, osName, seleniumName, shortVersion, label));
+                browsers.add(new Browser(browserKey, osName, seleniumName, longVersion, shortVersion, label));
             }
         }
         return browsers;
     }
 
-    private Browser createBrowser(String seleniumName, String longName, String longVersion, String osName, String device, String deviceType, String orientation) {
+    private Browser createBrowser(String seleniumName, String longName, String longVersion, String osName, String device, String deviceType, String shortVersion, String orientation) {
         String browserKey = device + orientation + seleniumName + longVersion;
         //replace any spaces with _s
         browserKey = browserKey.replaceAll(" ", "_");
@@ -232,7 +234,7 @@ public class BrowserFactory {
         label.append(longVersion);
         label.append('(').append(orientation).append(')');
         //add browser for both landscape and portrait orientation
-        Browser browser = new Browser(browserKey, osName, seleniumName, longVersion, label.toString());
+        Browser browser = new Browser(browserKey, osName, seleniumName, longVersion, shortVersion, label.toString());
         browser.setDevice(device);
         browser.setDeviceType(deviceType);
         browser.setDeviceOrientation(orientation);
@@ -249,6 +251,28 @@ public class BrowserFactory {
         return seleniumLookup.get(key);
     }
 
+    public Browser seleniumBrowserForKey(String key, boolean useLatestVersion) {
+        Browser browser = webDriverBrowserForKey(key);
+        if (useLatestVersion) {
+            return getLatestSeleniumBrowserVersion(browser);
+        } else {
+            return browser;
+        }
+    }
+
+    private Browser getLatestSeleniumBrowserVersion(Browser originalBrowser) {
+        Browser candidateBrowser = null;
+        for (Browser browser : seleniumLookup.values()) {
+
+            if (browser.getBrowserName().equals(originalBrowser.getBrowserName())
+                    && browser.getOs().equals(originalBrowser.getOs())
+                    && Integer.parseInt(browser.getShortVersion()) > Integer.parseInt(originalBrowser.getShortVersion())) {
+                candidateBrowser = browser;
+            }
+        }
+        return candidateBrowser == null ? originalBrowser : candidateBrowser;
+    }
+
     /**
      * Return the web driver browser which matches the key.
      *
@@ -259,12 +283,39 @@ public class BrowserFactory {
         return webDriverLookup.get(key);
     }
 
+    public Browser webDriverBrowserForKey(String key, boolean useLatestVersion) {
+        Browser browser = webDriverBrowserForKey(key);
+        if (useLatestVersion) {
+            return getLatestWebDriverBrowserVersion(browser);
+        } else {
+            return browser;
+        }
+    }
+
+    private Browser getLatestWebDriverBrowserVersion(Browser originalBrowser) {
+        Browser candidateBrowser = originalBrowser;
+        for (Browser browser : webDriverLookup.values()) {
+
+            try {
+                if (browser.getBrowserName().equals(originalBrowser.getBrowserName())
+                        && browser.getOs().equals(originalBrowser.getOs())
+                        && Integer.parseInt(browser.getShortVersion()) > Integer.parseInt(candidateBrowser.getShortVersion())) {
+                    candidateBrowser = browser;
+                }
+            } catch (NumberFormatException e) {
+                continue;
+            }
+        }
+        return candidateBrowser;
+    }
+
     /**
      * Return the appium browser which matches the key.
      *
      * @param key
      * @return
      */
+
     public Browser appiumBrowserForKey(String key) {
         return appiumLookup.get(key);
     }
