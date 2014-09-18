@@ -18,7 +18,7 @@ public class Browser implements Comparable<Browser> {
     private final String browserName;
     private final String version;
     private final String name;
-    private final String shortVersion;
+    private final String longVersion;
     private String device;
     private String deviceType;
     private String deviceOrientation;
@@ -28,7 +28,7 @@ public class Browser implements Comparable<Browser> {
         this.os = os;
         this.browserName = browserName;
         this.version = version;
-        this.shortVersion = shortVersion;
+        this.longVersion = shortVersion;
         this.name = name;
     }
 
@@ -161,7 +161,7 @@ public class Browser implements Comparable<Browser> {
         return deviceOrientation;
     }
 
-    public String getShortVersion() {
-        return shortVersion;
+    public String getLongVersion() {
+        return longVersion;
     }
 }
