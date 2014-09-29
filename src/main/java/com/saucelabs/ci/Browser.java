@@ -19,14 +19,16 @@ public class Browser implements Comparable<Browser> {
     private final String version;
     private final String name;
     private final String longVersion;
+    private final String longName;
     private String device;
     private String deviceType;
     private String deviceOrientation;
 
-    public Browser(String key, String os, String browserName, String version, String shortVersion, String name) {
+    public Browser(String key, String os, String browserName, String longName, String version, String shortVersion, String name) {
         this.key = key;
         this.os = os;
         this.browserName = browserName;
+        this.longName = longName;
         this.version = version;
         this.longVersion = shortVersion;
         this.name = name;
@@ -163,5 +165,9 @@ public class Browser implements Comparable<Browser> {
 
     public String getLongVersion() {
         return longVersion;
+    }
+
+    public String getLongName() {
+        return longName;
     }
 }

@@ -216,7 +216,7 @@ public class BrowserFactory {
                 //replace any spaces with _s
                 browserKey = browserKey.replaceAll(" ", "_");
                 String label = osName + " " + longName + " " + longVersion;
-                browsers.add(new Browser(browserKey, osName, seleniumName,  shortVersion, longVersion,label));
+                browsers.add(new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion,label));
             }
         }
         return browsers;
@@ -234,7 +234,7 @@ public class BrowserFactory {
         label.append(longVersion);
         label.append('(').append(orientation).append(')');
         //add browser for both landscape and portrait orientation
-        Browser browser = new Browser(browserKey, osName, seleniumName, shortVersion, longVersion, label.toString());
+        Browser browser = new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion, label.toString());
         browser.setDevice(device);
         browser.setDeviceType(deviceType);
         browser.setDeviceOrientation(orientation);
