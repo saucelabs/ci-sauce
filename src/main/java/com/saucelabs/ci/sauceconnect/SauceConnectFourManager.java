@@ -108,14 +108,13 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     /**
-     *
-     * @param username name of the user which launched Sauce Connect
-     * @param apiKey api key corresponding to the user
-     * @param port port which Sauce Connect should be launched on
+     * @param username        name of the user which launched Sauce Connect
+     * @param apiKey          api key corresponding to the user
+     * @param port            port which Sauce Connect should be launched on
      * @param sauceConnectJar File which contains the Sauce Connect executables (typically the CI plugin Jar file)
-     * @param options the command line options used to launch Sauce Connect
-     * @param httpsProtocol Value to be used for -Dhttps.protocol command line argument, not used by this class
-     * @param printStream the output stream to send log messages
+     * @param options         the command line options used to launch Sauce Connect
+     * @param httpsProtocol   Value to be used for -Dhttps.protocol command line argument, not used by this class
+     * @param printStream     the output stream to send log messages
      * @return new ProcessBuilder instance which will launch Sauce Connect
      * @throws SauceConnectException thrown if an error occurs extracting the Sauce Connect binary from the CI jar file
      */
@@ -123,45 +122,44 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws SauceConnectException {
 
         //find zip file to extract
-        File workingDirectory = null;
-        if (sauceConnectJar != null && sauceConnectJar.exists()) {
-            workingDirectory = sauceConnectJar.getParentFile();
-        }
-        if (workingDirectory == null) {
-            workingDirectory = new File(getSauceConnectWorkingDirectory());
-        }
-        if (!workingDirectory.canWrite()) {
-            throw new SauceConnectException("Can't write to " + workingDirectory.getAbsolutePath() + ", please check the directory permissions");
-        }
-        OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
-        if (operatingSystem == null) {
-            //TODO log an error
-            return null;
-        }
         try {
-            extractZipFile(workingDirectory, operatingSystem);
+            File workingDirectory = null;
+            if (sauceConnectJar != null && sauceConnectJar.exists()) {
+                workingDirectory = sauceConnectJar.getParentFile();
+            }
+            if (workingDirectory == null) {
+                workingDirectory = new File(getSauceConnectWorkingDirectory());
+            }
+            if (!workingDirectory.canWrite()) {
+                throw new SauceConnectException("Can't write to " + workingDirectory.getAbsolutePath() + ", please check the directory permissions");
+            }
+            OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
+            if (operatingSystem == null) {
+                //TODO log an error
+                return null;
+            }
+
+            File unzipDirectory = extractZipFile(workingDirectory, operatingSystem);
+            //although we are setting the working directory, we need to specify the full path to the exe
+            String[] args = new String[]{new File(unzipDirectory, operatingSystem.getExecutable()).getPath()};
+            args = generateSauceConnectArgs(args, username, apiKey, port, options);
+
+            ProcessBuilder processBuilder = new ProcessBuilder(args);
+            processBuilder.directory(unzipDirectory);
+            julLogger.log(Level.INFO, "Launching Sauce Connect " + Arrays.toString(args));
+
+            return processBuilder;
         } catch (IOException e) {
             throw new SauceConnectException(e);
         }
-        File unzipDirectory = new File(workingDirectory, operatingSystem.getDirectory());
-        //although we are setting the working directory, we need to specify the full path to the exe
-        String[] args = new String[]{new File(unzipDirectory, operatingSystem.getExecutable()).getPath()};
-        args = generateSauceConnectArgs(args, username, apiKey, port, options);
-
-        ProcessBuilder processBuilder = new ProcessBuilder(args);
-        processBuilder.directory(unzipDirectory);
-        julLogger.log(Level.INFO, "Launching Sauce Connect " + Arrays.toString(args));
-
-        return processBuilder;
     }
 
     /**
-     *
-     * @param args the initial Sauce Connect command line args
+     * @param args     the initial Sauce Connect command line args
      * @param username name of the user which launched Sauce Connect
-     * @param apiKey  the access key for the Sauce user
-     * @param port the port that Sauce Connect should be launched on
-     * @param options command line args specified by the user
+     * @param apiKey   the access key for the Sauce user
+     * @param port     the port that Sauce Connect should be launched on
+     * @param options  command line args specified by the user
      * @return String array representing the command line args to be used to launch Sauce Connect
      */
     protected String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port, String options) {
@@ -179,9 +177,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     /**
-     *
      * @param workingDirectory the destination directory
-     * @param operatingSystem represents the current operating system
+     * @param operatingSystem  represents the current operating system
      * @return the directory containing the extracted files
      * @throws IOException thrown if an error occurs extracting the files
      */
@@ -193,12 +190,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         } else if (operatingSystem.equals(OperatingSystem.LINUX)) {
             untarGzFile(zipFile, workingDirectory);
         }
-        return zipFile;
+        return new File(workingDirectory, operatingSystem.getDirectory());
     }
 
     /**
-     *
-     * @param zipFile the compressed file to extract
+     * @param zipFile     the compressed file to extract
      * @param destination the destination directory
      */
     private void untarGzFile(File zipFile, File destination) {
@@ -211,8 +207,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     /**
-     *
-     * @param zipFile the compressed file to extract
+     * @param zipFile     the compressed file to extract
      * @param destination the destination directory
      */
     private void unzipFile(File zipFile, File destination) {
@@ -224,9 +219,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     /**
-     *
      * @param workingDirectory the destination directory
-     * @param fileName the name of the file to extract
+     * @param fileName         the name of the file to extract
      * @return the directory containing the extracted files
      * @throws IOException thrown if an error occurs extracting the files
      */
@@ -246,4 +240,5 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     protected String getSauceStartedMessage() {
         return SAUCE_CONNECT_4_STARTED;
     }
+
 }
