@@ -1,5 +1,23 @@
 [
     {
+        "short_version": "8.1",
+        "long_name": "iPad",
+        "api_name": "ipad",
+        "long_version": "8.1",
+        "device-orientation": "portrait",
+        "device": "iPad Simulator",
+        "os": "Mac 10.9"
+    },
+    {
+        "short_version": "8",
+        "long_name": "iPad",
+        "api_name": "ipad",
+        "long_version": "8.0",
+        "device-orientation": "portrait",
+        "device": "iPad Simulator",
+        "os": "Mac 10.9"
+    },
+    {
         "short_version": "7",
         "long_name": "iPad",
         "api_name": "ipad",
@@ -18,6 +36,24 @@
         "os": "Mac 10.8"
     },
     {
+        "short_version": "8.1",
+        "long_name": "iPhone",
+        "api_name": "iphone",
+        "long_version": "8.1",
+        "device-orientation": "portrait",
+        "device": "iPhone Simulator",
+        "os": "Mac 10.9"
+    },
+    {
+        "short_version": "8",
+        "long_name": "iPhone",
+        "api_name": "iphone",
+        "long_version": "8.0",
+        "device-orientation": "portrait",
+        "device": "iPhone Simulator",
+        "os": "Mac 10.9"
+    },
+    {
         "short_version": "7",
         "long_name": "iPhone",
         "api_name": "iphone",
@@ -34,6 +70,26 @@
         "device-orientation": "portrait",
         "device": "iPhone Simulator",
         "os": "Mac 10.8"
+    },
+    {
+        "short_version": "4.4",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.4",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "os": "Linux"
+    },
+
+    {
+        "short_version": "4.4",
+        "long_name": "Android",
+        "api_name": "android",
+        "long_version": "4.4",
+        "device-orientation": "portrait",
+        "device": "Android",
+        "device-type": "tablet",
+        "os": "Linux"
     },
     {
         "short_version": "4.3",
