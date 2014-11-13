@@ -21,11 +21,11 @@ public class BrowserTest extends AbstractTestHelper  {
 
     @Test
 	public void osNames() throws Exception {
-        Browser browser = new Browser(null, "Windows 2008", null, null, null, null);
+        Browser browser = new Browser(null, "Windows 2008", null, null, null, null, null);
         assertEquals("Platform is not Windows", browser.getPlatform(), Platform.VISTA);
-        browser = new Browser(null, "Windows 2003", null, null, null, null);
+        browser = new Browser(null, "Windows 2003", null, null, null, null, null);
         assertEquals("Platform is not Windows", browser.getPlatform(), Platform.XP);
-        browser = new Browser(null, "Linux", null, null, null, null);
+        browser = new Browser(null, "Linux", null, null, null, null, null);
         assertEquals("Platform is not Linux", browser.getPlatform(), Platform.LINUX);
 	}
 
