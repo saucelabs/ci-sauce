@@ -195,7 +195,8 @@ public class BrowserFactory {
                 String longVersion = browserObject.getString("long_version");
                 String osName = browserObject.getString("os");
                 String shortVersion = browserObject.getString("short_version");
-                String device = browserObject.getString("device");
+                //set value used for device to be the long name (ie. if device value is 'Nexus7HD', then actually use 'Google Nexus 7 HD Emulator' ​
+                String device = longName;
 
                 String deviceType = null;
 
