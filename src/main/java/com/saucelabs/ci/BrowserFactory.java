@@ -6,7 +6,6 @@
 package com.saucelabs.ci;
 
 import com.saucelabs.saucerest.SauceREST;
-import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,7 +27,7 @@ public class BrowserFactory {
 
     private static final Logger logger = Logger.getLogger(BrowserFactory.class.getName());
 
-    public static final String BROWSER_URL = "http://saucelabs.com/rest/v1/info/browsers";
+    public static final String BROWSER_URL = "http://saucelabs.com/rest/v1/info/platforms";
 
     public static final int ONE_HOUR_IN_MILLIS = 1000 * 60 * 60;
 
@@ -161,7 +160,10 @@ public class BrowserFactory {
     }
 
     private List<Browser> getAppiumBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = IOUtils.toString(getClass().getResourceAsStream("/appium_browsers.json"));
+        String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/appium"));
+        if (response.equals("")) {
+            response = "[]";
+        }
         return getBrowserListFromJson(response);
     }
 
@@ -216,7 +218,7 @@ public class BrowserFactory {
                 //replace any spaces with _s
                 browserKey = browserKey.replaceAll(" ", "_");
                 String label = osName + " " + longName + " " + longVersion;
-                browsers.add(new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion,label));
+                browsers.add(new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion, label));
             }
         }
         return browsers;
