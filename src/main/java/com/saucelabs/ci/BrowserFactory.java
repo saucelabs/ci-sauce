@@ -203,6 +203,10 @@ public class BrowserFactory {
                 if (browserObject.has("device-type")) {
                     deviceType = browserObject.getString("device-type");
                 }
+                //iOS devices should include 'Simulator' in the device name (not currently included in the Sauce REST API response
+                if (device.equalsIgnoreCase("ipad") || device.equalsIgnoreCase("iphone")) {
+                    device = device + " Simulator";
+                }
                 Browser browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait");
                 browsers.add(browser);
                 browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "landscape");
