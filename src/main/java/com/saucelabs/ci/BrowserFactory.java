@@ -268,16 +268,19 @@ public class BrowserFactory {
     }
 
     private Browser getLatestSeleniumBrowserVersion(Browser originalBrowser) {
-        Browser candidateBrowser = null;
+        Browser candidateBrowser = originalBrowser;
         for (Browser browser : seleniumLookup.values()) {
-
-            if (browser.getBrowserName().equals(originalBrowser.getBrowserName())
-                    && browser.getOs().equals(originalBrowser.getOs())
-                    && Integer.parseInt(browser.getLongVersion()) > Integer.parseInt(originalBrowser.getLongVersion())) {
-                candidateBrowser = browser;
+            try {
+                if (browser.getBrowserName().equals(originalBrowser.getBrowserName())
+                        && browser.getOs().equals(originalBrowser.getOs())
+                        && Integer.parseInt(browser.getLongVersion()) > Integer.parseInt(candidateBrowser.getLongVersion())) {
+                    candidateBrowser = browser;
+                }
+            } catch (NumberFormatException e) {
+                continue;
             }
         }
-        return candidateBrowser == null ? originalBrowser : candidateBrowser;
+        return candidateBrowser;
     }
 
     /**
