@@ -22,6 +22,7 @@ public class ExtractFiles {
     public void linux() throws Exception {
         File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
         manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.LINUX);
+        manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.LINUX);
     }
 
     @Test
