@@ -20,6 +20,7 @@ public class SauceConnectTwoManager extends AbstractSauceTunnelManager implement
     private static final String SAUCE_CONNECT_CLASS = "com.saucelabs.sauceconnect.SauceConnect";
 
     private static final String SAUCE_CONNECT_STARTED = "Connected! You may start your tests";
+    private static final String CURRENT_SC_VERSION = "3.1.26";
 
     /**
      * Constructs an instance with quiet mode disabled.
@@ -113,5 +114,10 @@ public class SauceConnectTwoManager extends AbstractSauceTunnelManager implement
     @Override
     protected String getSauceStartedMessage() {
         return SAUCE_CONNECT_STARTED;
+    }
+
+    @Override
+    protected String getCurrentVersion() {
+        return CURRENT_SC_VERSION;
     }
 }

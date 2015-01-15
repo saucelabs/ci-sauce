@@ -82,6 +82,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
 
+    public static final String CURRENT_SC_VERSION = "4.3.6";
     public static final String SAUCE_CONNECT_4 = "sc-4.3";
     private static final String OSX_DIR = SAUCE_CONNECT_4 + ".6-osx";
     private static final String WINDOWS_DIR = SAUCE_CONNECT_4 + ".6-win32";
@@ -146,7 +147,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
             ProcessBuilder processBuilder = new ProcessBuilder(args);
             processBuilder.directory(unzipDirectory);
-            julLogger.log(Level.INFO, "Launching Sauce Connect " + Arrays.toString(args));
+            julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + Arrays.toString(args));
 
             return processBuilder;
         } catch (IOException e) {
@@ -198,6 +199,12 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @param destination the destination directory
      */
     private void untarGzFile(File zipFile, File destination) {
+        //remove tar file if it exists first
+        File tarFile = new File(zipFile.getParentFile(), zipFile.getName().replaceAll(".gz", ""));
+        if (tarFile.exists()) {
+            tarFile.delete();
+        }
+
         final TarGZipUnArchiver unArchiver = new TarGZipUnArchiver();
         unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, "Sauce"));
         unArchiver.setSourceFile(zipFile);
@@ -229,6 +236,10 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream(fileName);
         //copy input stream to a file
         File destination = new File(workingDirectory, fileName);
+        //remove file if it already exists
+        if (destination.exists()) {
+            destination.delete();
+        }
         FileOutputStream outputStream = new FileOutputStream(destination);
         IOUtils.copy(inputStream, outputStream);
         return destination;
@@ -241,4 +252,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         return SAUCE_CONNECT_4_STARTED;
     }
 
+    @Override
+    protected String getCurrentVersion() {
+        return CURRENT_SC_VERSION;
+    }
 }

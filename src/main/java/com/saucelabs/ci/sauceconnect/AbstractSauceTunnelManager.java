@@ -289,7 +289,7 @@ public abstract class AbstractSauceTunnelManager {
                             tunnelIdentifierMap.put(identifier, outputGobbler.getTunnelId());
                             sauceRest = new SauceREST(username, apiKey);
                         }
-                        logMessage(printStream, "Sauce Connect now launched for: " + identifier);
+                        logMessage(printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + identifier);
                     }
                 } else {
                     String message = "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
@@ -318,6 +318,8 @@ public abstract class AbstractSauceTunnelManager {
         }
 
     }
+
+    protected abstract String getCurrentVersion();
 
     /**
      * Returns the arguments to be used to launch Sauce Connect
