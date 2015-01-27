@@ -4,6 +4,9 @@ import com.saucelabs.saucerest.SauceREST;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.util.Arrays;
@@ -58,6 +61,10 @@ public abstract class AbstractSauceTunnelManager {
      */
     public AbstractSauceTunnelManager(boolean quietMode) {
         this.quietMode = quietMode;
+    }
+
+    public void setSauceRest(SauceREST sauceRest) {
+        this.sauceRest = sauceRest;
     }
 
     /**
@@ -247,6 +254,9 @@ public abstract class AbstractSauceTunnelManager {
     public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws SauceConnectException {
 
         //ensure that only a single thread attempts to open a connection
+        if (sauceRest == null) {
+            sauceRest = new SauceREST(username, apiKey);
+        }
         try {
             accessLock.lock();
             if (options == null) {
@@ -257,11 +267,36 @@ public abstract class AbstractSauceTunnelManager {
             }
             String identifier = getTunnelIdentifier(options, username);
             //do we have an instance for the tunnel identifier?
-            if (getProcessCountForUser(identifier) != 0) {
-                //if so, increment counter and return
-                logMessage(printStream, "Sauce Connect already running for " + identifier);
-                incrementProcessCountForUser(identifier, printStream);
-                return tunnelMap.get(identifier);
+            String tunnelIdentifier = activeTunnelIdentifier(username, identifier);
+            if (getProcessCountForUser(identifier) == 0) {
+                //if the count is zero, check to see if there are any active tunnels
+
+                if (tunnelIdentifier != null)
+                {
+                    //if we have an active tunnel, but the process count is zero, we have an orphaned SC process
+                    //issue a delete tunnel command
+                    sauceRest.deleteTunnel(tunnelIdentifier);
+                    //wait a few minutes? (or log that user needs to wait?)
+                    logMessage(printStream, "Process count zero, but detected active tunnel: " + tunnelIdentifier);
+                    logMessage(printStream, "Deleting tunnel: " + tunnelIdentifier);
+                    //continue creating tunnel
+                }
+            }
+            else {
+
+                //check active tunnels via Sauce REST API
+                if (tunnelIdentifier == null) {
+                    logMessage(printStream, "Process count non-zero, but no active tunnels found" );
+                    logMessage(printStream, "Process count reset to zero" );
+                    //if no active tunnels, we have a mismatch of the tunnel count
+                    //reset tunnel count to zero and continue to launch Sauce Connect
+                    processMap.put(identifier, 0);
+                } else {
+                    //if we have an active tunnel, increment counter and return
+                    logMessage(printStream, "Sauce Connect already running for " + identifier);
+                    incrementProcessCountForUser(identifier, printStream);
+                    return tunnelMap.get(identifier);
+                }
             }
             ProcessBuilder processBuilder = createProcessBuilder(username, apiKey, port, sauceConnectJar, options, httpsProtocol, printStream);
             if (processBuilder == null) return null;
@@ -287,7 +322,6 @@ public abstract class AbstractSauceTunnelManager {
                     } else {
                         if (outputGobbler.getTunnelId() != null) {
                             tunnelIdentifierMap.put(identifier, outputGobbler.getTunnelId());
-                            sauceRest = new SauceREST(username, apiKey);
                         }
                         logMessage(printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + identifier);
                     }
@@ -317,6 +351,46 @@ public abstract class AbstractSauceTunnelManager {
             accessLock.unlock();
         }
 
+    }
+
+    /**
+     * Queries the Sauce REST API to find the active tunnel for the user/tunnel identifier.
+     * @param username the Sauce username
+     * @param identifier tunnel identifier, can be the same as the username
+     * @return String the internal Sauce tunnel id
+     */
+    private String activeTunnelIdentifier(String username, String identifier) {
+        if (sauceRest == null)
+        {
+            //TODO how to handle?
+            return null;
+        }
+        try {
+            JSONArray tunnelArray = new JSONArray(sauceRest.getTunnels());
+            if (tunnelArray.length() == 0)
+            {
+                //no active tunnels
+                return null;
+            }
+            //iterate over elements
+            for (int i = 0; i < tunnelArray.length(); i++) {
+                String tunnelId = tunnelArray.getString(i);
+                JSONObject tunnelInformation = new JSONObject(sauceRest.getTunnelInformation(tunnelId));
+                String tunnelIdentifier = tunnelInformation.getString("tunnel_identifier");
+                String status = tunnelInformation.getString("status");
+                if (status.equals("running") &&
+                        (tunnelIdentifier == null && identifier.equals(username)) ||
+                        tunnelIdentifier != null && tunnelIdentifier.equals(identifier)) {
+                    //we have an active tunnel
+                    return tunnelId;
+                }
+
+            }
+        } catch (JSONException e) {
+            //log error and return false
+            julLogger.log(Level.WARNING, "Exception occurred retrieving tunnel information", e);
+        }
+        return null;
     }
 
     protected abstract String getCurrentVersion();
@@ -482,4 +556,6 @@ public abstract class AbstractSauceTunnelManager {
             super(message);
         }
     }
+
+
 }
