@@ -29,7 +29,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     public enum OperatingSystem {
         OSX(OSX_DIR, OSX_FILE),
         WINDOWS(WINDOWS_DIR, WINDOWS_FILE, "bin" + File.separator + "sc.exe"),
-        LINUX(LINUX_DIR, LINUX_FILE);
+        LINUX(LINUX_DIR, LINUX_FILE),
+        LINUX32(LINUX32_DIR, LINUX32_FILE);
         private final String directory;
         private final String fileName;
         private final String executable;
@@ -50,10 +51,45 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
                 return WINDOWS;
             } else if (isMac(os)) {
                 return OSX;
-            } else if (isUnix(os)) {
-                return LINUX;
+            }
+            else if (isUnix(os)) {
+                //check to see if we are on 64 bit
+                if (is64BitLinux()) {
+                    return LINUX;
+                } else {
+                    return LINUX32;
+                }
             }
             return null;
+        }
+
+        /**
+         * Executes 'uname -a', if the result of the command contains '64', then return true
+         * @return boolean indicating whether OS is 64-bit
+         */
+        private static boolean is64BitLinux() {
+            BufferedReader reader = null;
+            try {
+                Runtime runtime = Runtime.getRuntime();
+                Process process = runtime.exec("uname -a");
+                process.waitFor();
+                reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                StringBuilder builder = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    builder.append(line);
+                }
+                return builder.toString().contains("64");
+            } catch (Exception e) {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e1) {
+                        //ignore
+                    }
+                }
+            }
+            return false;
         }
 
         private static boolean isWindows(String os) {
@@ -87,8 +123,10 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     private static final String OSX_DIR = SAUCE_CONNECT_4 + ".6-osx";
     private static final String WINDOWS_DIR = SAUCE_CONNECT_4 + ".6-win32";
     private static final String LINUX_DIR = SAUCE_CONNECT_4 + ".6-linux";
+    private static final String LINUX32_DIR = SAUCE_CONNECT_4 + ".6-linux32";
     private static final String BASE_FILE_NAME = SAUCE_CONNECT_4 + "-";
     private static final String LINUX_FILE = BASE_FILE_NAME + "linux.tar.gz";
+    private static final String LINUX32_FILE = BASE_FILE_NAME + "linux32.tar.gz";
     private static final String OSX_FILE = BASE_FILE_NAME + "osx.zip";
     private static final String WINDOWS_FILE = BASE_FILE_NAME + "win32.zip";
 
@@ -188,7 +226,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         File zipFile = extractFile(workingDirectory, operatingSystem.getFileName());
         if (operatingSystem.equals(OperatingSystem.OSX) | operatingSystem.equals(OperatingSystem.WINDOWS)) {
             unzipFile(zipFile, workingDirectory);
-        } else if (operatingSystem.equals(OperatingSystem.LINUX)) {
+        } else if (operatingSystem.equals(OperatingSystem.LINUX) || operatingSystem.equals(OperatingSystem.LINUX32)) {
             untarGzFile(zipFile, workingDirectory);
         }
         return new File(workingDirectory, operatingSystem.getDirectory());
