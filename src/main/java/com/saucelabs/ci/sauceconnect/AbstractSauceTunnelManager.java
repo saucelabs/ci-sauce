@@ -379,8 +379,8 @@ public abstract class AbstractSauceTunnelManager {
                 String tunnelIdentifier = tunnelInformation.getString("tunnel_identifier");
                 String status = tunnelInformation.getString("status");
                 if (status.equals("running") &&
-                        (tunnelIdentifier == null && identifier.equals(username)) ||
-                        tunnelIdentifier != null && tunnelIdentifier.equals(identifier)) {
+                        (tunnelIdentifier.equals("null") && identifier.equals(username)) ||
+                        !tunnelIdentifier.equals("null") && tunnelIdentifier.equals(identifier)) {
                     //we have an active tunnel
                     return tunnelId;
                 }
