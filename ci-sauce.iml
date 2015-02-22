@@ -12,7 +12,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: com.saucelabs:saucerest:1.0.25-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.saucelabs:sebuilder-interpreter:1.0.6" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.plexus:plexus-archiver:2.4.4" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.plexus:plexus-container-default:1.0-alpha-9-stable-1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.6" level="project" />
@@ -39,7 +39,7 @@
     <orderEntry type="library" name="Maven: org.apache.commons:commons-exec:1.1" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:3.4.0" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:platform:3.4.0" level="project" />
-    <orderEntry type="library" name="Maven: com.saucelabs:sebuilder-interpreter:1.0.6" level="project" />
+    <orderEntry type="module" module-name="sebuilder-interpreter" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-java:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-chrome-driver:2.32.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.seleniumhq.selenium:selenium-htmlunit-driver:2.32.0" level="project" />
