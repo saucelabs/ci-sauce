@@ -20,7 +20,7 @@ public abstract class SauceLibraryManager {
     private static final Logger logger = Logger.getLogger(SauceLibraryManager.class.getName());
     private static final String VERSION_CHECK_URL = "https://saucelabs.com/versions.json";
     private static final int BUFFER = 1024;
-    private static final String SAUCE_CONNECT_KEY = "Sauce Connect 2";
+    private static final String SAUCE_CONNECT_KEY = "Sauce Connect";
     private static final String VERSION_KEY = "version";
     private static final String DOWNLOAD_URL_KEY = "download_url";
 

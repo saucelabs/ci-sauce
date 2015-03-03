@@ -36,18 +36,6 @@ public abstract class AbstractSauceTunnelManager {
      */
     protected boolean quietMode;
 
-//    /**
-//     * Maps the Sauce Connect process to the user which invoked it.
-//     */
-//    protected Map<String, Process> tunnelMap = new HashMap<String, Process>();
-//
-//    protected Map<String, String> tunnelIdentifierMap = new HashMap<String, String>();
-//
-//    /**
-//     * Maps the number of invocations of Sauce Connect to the user which invoked it.
-//     */
-//    protected Map<String, Integer> processMap = new HashMap<String, Integer>();
-
     protected Map<String, TunnelInformation> tunnelInformationMap = new ConcurrentHashMap<String, TunnelInformation>();
 
     private SauceREST sauceRest;
