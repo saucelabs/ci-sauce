@@ -321,7 +321,7 @@ public abstract class AbstractSauceTunnelManager {
     private TunnelInformation getTunnelInformation(String identifier) {
         TunnelInformation tunnelInformation = tunnelInformationMap.get(identifier);
         if (tunnelInformation == null) {
-            tunnelInformation = new TunnelInformation();
+            tunnelInformation = new TunnelInformation(identifier);
             tunnelInformationMap.put(identifier, tunnelInformation);
         }
         return tunnelInformation;
@@ -531,10 +531,15 @@ public abstract class AbstractSauceTunnelManager {
     }
 
     private class TunnelInformation {
+        private final String identifier;
         private Process process;
         private Integer processCount = 0;
         private final Lock lock = new ReentrantLock();
         private String tunnelId;
+
+        public TunnelInformation(String identifier) {
+            this.identifier = identifier;
+        }
 
         private Lock getLock() {
             return lock;
@@ -562,6 +567,11 @@ public abstract class AbstractSauceTunnelManager {
 
         private void setTunnelId(String tunnelId) {
             this.tunnelId = tunnelId;
+        }
+
+        @Override
+        public String toString() {
+            return identifier;
         }
     }
 
