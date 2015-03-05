@@ -222,6 +222,8 @@ public class BrowserFactory {
                 String browserKey = osName + seleniumName + shortVersion;
                 //replace any spaces with _s
                 browserKey = browserKey.replaceAll(" ", "_");
+                //replace any . with _
+                browserKey = browserKey.replaceAll("\\.", "_");
                 String label = osName + " " + longName + " " + longVersion;
                 browsers.add(new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion, label));
             }
@@ -233,6 +235,8 @@ public class BrowserFactory {
         String browserKey = device + orientation + seleniumName + longVersion;
         //replace any spaces with _s
         browserKey = browserKey.replaceAll(" ", "_");
+        //replace any . with _
+        browserKey = browserKey.replaceAll("\\.", "_");
         StringBuilder label = new StringBuilder();
         label.append(longName).append(' ');
         if (deviceType != null) {
