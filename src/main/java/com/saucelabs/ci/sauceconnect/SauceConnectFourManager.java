@@ -19,11 +19,6 @@ import java.util.logging.Level;
 public class SauceConnectFourManager extends AbstractSauceTunnelManager implements SauceTunnelManager {
 
     /**
-     * Output from Sauce Connect process which indicates that it has been started.
-     */
-    private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
-
-    /**
      * Represents the operating system-specific Sauce Connect binary.
      */
     public enum OperatingSystem {
@@ -51,8 +46,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
                 return WINDOWS;
             } else if (isMac(os)) {
                 return OSX;
-            }
-            else if (isUnix(os)) {
+            } else if (isUnix(os)) {
                 //check to see if we are on 64 bit
                 if (is64BitLinux()) {
                     return LINUX;
@@ -65,6 +59,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
         /**
          * Executes 'uname -a', if the result of the command contains '64', then return true
+         *
          * @return boolean indicating whether OS is 64-bit
          */
         private static boolean is64BitLinux() {
@@ -117,7 +112,10 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         }
     }
 
-
+    /**
+     * Output from Sauce Connect process which indicates that it has been started.
+     */
+    private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
     public static final String CURRENT_SC_VERSION = "4.3.7";
     public static final String SAUCE_CONNECT_4 = "sc-4.3";
     private static final String OSX_DIR = SAUCE_CONNECT_4 + ".7-osx";
@@ -147,40 +145,53 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     /**
-     * @param username        name of the user which launched Sauce Connect
-     * @param apiKey          api key corresponding to the user
-     * @param port            port which Sauce Connect should be launched on
-     * @param sauceConnectJar File which contains the Sauce Connect executables (typically the CI plugin Jar file)
-     * @param options         the command line options used to launch Sauce Connect
-     * @param httpsProtocol   Value to be used for -Dhttps.protocol command line argument, not used by this class
-     * @param printStream     the output stream to send log messages
+     * @param username         name of the user which launched Sauce Connect
+     * @param apiKey           api key corresponding to the user
+     * @param port             port which Sauce Connect should be launched on
+     * @param sauceConnectJar  File which contains the Sauce Connect executables (typically the CI plugin Jar file)
+     * @param options          the command line options used to launch Sauce Connect
+     * @param httpsProtocol    Value to be used for -Dhttps.protocol command line argument, not used by this class
+     * @param printStream      the output stream to send log messages
+     * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and won't be extracted from the jar file
      * @return new ProcessBuilder instance which will launch Sauce Connect
      * @throws SauceConnectException thrown if an error occurs extracting the Sauce Connect binary from the CI jar file
      */
     @Override
-    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws SauceConnectException {
+    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, String sauceConnectPath) throws SauceConnectException {
 
         //find zip file to extract
         try {
-            File workingDirectory = null;
-            if (sauceConnectJar != null && sauceConnectJar.exists()) {
-                workingDirectory = sauceConnectJar.getParentFile();
-            }
-            if (workingDirectory == null) {
-                workingDirectory = new File(getSauceConnectWorkingDirectory());
-            }
-            if (!workingDirectory.canWrite()) {
-                throw new SauceConnectException("Can't write to " + workingDirectory.getAbsolutePath() + ", please check the directory permissions");
-            }
-            OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
-            if (operatingSystem == null) {
-                //TODO log an error
-                return null;
+            String[] args;
+            File unzipDirectory;
+            if (sauceConnectPath == null) {
+                File workingDirectory = null;
+                if (sauceConnectJar != null && sauceConnectJar.exists()) {
+                    workingDirectory = sauceConnectJar.getParentFile();
+                }
+                if (workingDirectory == null) {
+                    workingDirectory = new File(getSauceConnectWorkingDirectory());
+                }
+                if (!workingDirectory.canWrite()) {
+                    throw new SauceConnectException("Can't write to " + workingDirectory.getAbsolutePath() + ", please check the directory permissions");
+                }
+                OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
+                if (operatingSystem == null) {
+                    //TODO log an error
+                    return null;
+                }
+
+                unzipDirectory = extractZipFile(workingDirectory, operatingSystem);
+                //although we are setting the working directory, we need to specify the full path to the exe
+                args = new String[]{new File(unzipDirectory, operatingSystem.getExecutable()).getPath()};
+            } else {
+                File sauceConnectBinary = new File(sauceConnectPath);
+                if (!sauceConnectBinary.exists()) {
+                    throw new SauceConnectException(sauceConnectPath + "doesn't exist, please check the location");
+                }
+                unzipDirectory = sauceConnectBinary.getParentFile();
+                args = new String[]{sauceConnectBinary.getPath(), sauceConnectBinary.getName()};
             }
 
-            File unzipDirectory = extractZipFile(workingDirectory, operatingSystem);
-            //although we are setting the working directory, we need to specify the full path to the exe
-            String[] args = new String[]{new File(unzipDirectory, operatingSystem.getExecutable()).getPath()};
             args = generateSauceConnectArgs(args, username, apiKey, port, options);
 
             ProcessBuilder processBuilder = new ProcessBuilder(args);

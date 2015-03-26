@@ -10,28 +10,32 @@ import java.io.PrintStream;
  * @author <a href="http://www.sysbliss.com">Jonathan Doklovic</a>
  * @author Ross Rowe
  */
-public interface SauceTunnelManager
-{
+public interface SauceTunnelManager {
 
     /**
+     * Closes the Sauce Connect process
      *
-     * @param username
-     * @param options
-     * @param printStream
+     * @param username    name of the user which launched Sauce Connect
+     * @param options     the command line options used to launch Sauce Connect
+     * @param printStream the output stream to send log messages
      */
     void closeTunnelsForPlan(String username, String options, PrintStream printStream);
 
     /**
+     * Creates a new process to run Sauce Connect.
      *
-     * @param username
-     * @param apiKey
-     * @param port
-     * @param sauceConnectJar
-     * @param httpsProtocol
-     * @param printStream
-     * @return
-     * @throws IOException
+     * @param username         the name of the Sauce OnDemand user
+     * @param apiKey           the API Key for the Sauce OnDemand user
+     * @param port             the port which Sauce Connect should be run on
+     * @param sauceConnectJar  the Jar file containing Sauce Connect.  If null, then we attempt to find Sauce Connect from the classpath (only used by SauceConnectTwoManager)
+     * @param options          the command line options to pass to Sauce Connect
+     * @param httpsProtocol    the HTTPS protocol options to pass to Sauce Connect (only used by SauceConnectTwoManager)
+     * @param printStream      A print stream in which to redirect the output from Sauce Connect to.  Can be null
+     * @param verboseLogging   indicates whether verbose logging should be output
+     * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and won't be extracted from the jar file
+     * @return a {@link Process} instance which represents the Sauce Connect instance
+     * @throws IOException thrown if an error occurs launching Sauce Connect
      */
-    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging) throws IOException;
+    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws IOException;
 
 }

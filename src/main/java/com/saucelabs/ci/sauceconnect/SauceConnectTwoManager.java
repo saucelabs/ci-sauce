@@ -14,6 +14,7 @@ import java.util.logging.Level;
  * Handles opening a SSH Tunnel using the Sauce Connect v3 (Java based).
  *
  * @author Ross Rowe
+ * @deprecated Sauce Connect v3 is in the process of being EOLd
  */
 public class SauceConnectTwoManager extends AbstractSauceTunnelManager implements SauceTunnelManager {
 
@@ -39,6 +40,7 @@ public class SauceConnectTwoManager extends AbstractSauceTunnelManager implement
     }
 
     /**
+     *
      * @param username        name of the user which launched Sauce Connect
      * @param apiKey          api key corresponding to the user
      * @param port            port which Sauce Connect should be launched on
@@ -46,12 +48,13 @@ public class SauceConnectTwoManager extends AbstractSauceTunnelManager implement
      * @param options         the command line options used to launch Sauce Connect
      * @param httpsProtocol   Value to be used for -Dhttps.protocol command line argument
      * @param printStream     the output stream to send log messages
+     * @param sauceConnectPath
      * @return
      * @throws URISyntaxException thrown if an error occurs extracting the Sauce Connect jar file from the plugin jar file
      * @throws IOException
      */
     @Override
-    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream) throws SauceConnectException {
+    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, String sauceConnectPath) throws SauceConnectException {
         //if not, start the process
         File workingDirectory = null;
         StringBuilder builder = new StringBuilder();
