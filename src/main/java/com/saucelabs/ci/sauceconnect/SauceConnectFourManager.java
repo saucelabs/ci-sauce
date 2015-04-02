@@ -163,7 +163,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         try {
             String[] args;
             File unzipDirectory;
-            if (sauceConnectPath == null) {
+            if (sauceConnectPath == null || sauceConnectPath.equals("")) {
                 File workingDirectory = null;
                 if (sauceConnectJar != null && sauceConnectJar.exists()) {
                     workingDirectory = sauceConnectJar.getParentFile();
