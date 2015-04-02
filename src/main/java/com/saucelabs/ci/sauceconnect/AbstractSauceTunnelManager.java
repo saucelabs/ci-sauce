@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -29,7 +30,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     /**
      * Logger instance.
      */
-    protected static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(SauceConnectTwoManager.class.getName());
+    protected static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(AbstractSauceTunnelManager.class.getName());
 
     /**
      * Should Sauce Connect output be suppressed?
@@ -39,6 +40,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     protected Map<String, TunnelInformation> tunnelInformationMap = new ConcurrentHashMap<String, TunnelInformation>();
 
     private SauceREST sauceRest;
+
+    private AtomicInteger launchAttempts = new AtomicInteger(0);
 
     /**
      * Constructs a new instance.
@@ -63,9 +66,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     public void closeTunnelsForPlan(String userName, String options, PrintStream printStream) {
         String identifier = getTunnelIdentifier(options, userName);
         TunnelInformation tunnelInformation = getTunnelInformation(identifier);
+        if (tunnelInformation == null) {
+            return;
+        }
         try {
             tunnelInformation.getLock().lock();
-
             Integer count = decrementProcessCountForUser(tunnelInformation, printStream);
             if (count == 0) {
                 //we can now close the process
@@ -115,7 +120,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     /**
      * Reduces the count of active Sauce Connect processes for the user by 1.
      *
-     *
      * @param identifier  the tunnel identifier
      * @param printStream the output stream to send log messages
      * @return current count of active Sauce Connect processes for the user
@@ -142,8 +146,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
     /**
      * @param options      the command line options used to launch Sauce Connect
-     * @param defaultValue
-     * @return
+     * @param defaultValue the default value to use for the identifier if none specified in the options
+     * @return String representing the tunnel identifier
      */
     public static String getTunnelIdentifier(String options, String defaultValue) {
         if (options != null && !options.equals("")) {
@@ -192,14 +196,13 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
 
     /**
-     *
-     * @param username        name of the user which launched Sauce Connect
-     * @param apiKey          api key corresponding to the user
-     * @param port            port which Sauce Connect should be launched on
-     * @param sauceConnectJar File which contains the Sauce Connect executables (typically the CI plugin Jar file)
-     * @param options         the command line options used to launch Sauce Connect
-     * @param httpsProtocol   Value to be used for -Dhttps.protocol command line argument
-     * @param printStream     the output stream to send log messages
+     * @param username         name of the user which launched Sauce Connect
+     * @param apiKey           api key corresponding to the user
+     * @param port             port which Sauce Connect should be launched on
+     * @param sauceConnectJar  File which contains the Sauce Connect executables (typically the CI plugin Jar file)
+     * @param options          the command line options used to launch Sauce Connect
+     * @param httpsProtocol    Value to be used for -Dhttps.protocol command line argument
+     * @param printStream      the output stream to send log messages
      * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and won't be extracted from the jar file
      * @return new ProcessBuilder instance which will launch Sauce Connect
      * @throws SauceConnectException thrown if an error occurs launching the Sauce Connect process
@@ -209,14 +212,14 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     /**
      * Creates a new process to run Sauce Connect.
      *
-     * @param username        the name of the Sauce OnDemand user
-     * @param apiKey          the API Key for the Sauce OnDemand user
-     * @param port            the port which Sauce Connect should be run on
-     * @param sauceConnectJar the Jar file containing Sauce Connect.  If null, then we attempt to find Sauce Connect from the classpath (only used by SauceConnectTwoManager)
-     * @param options         the command line options to pass to Sauce Connect
-     * @param httpsProtocol   the HTTPS protocol options to pass to Sauce Connect (only used by SauceConnectTwoManager)
-     * @param printStream     A print stream in which to redirect the output from Sauce Connect to.  Can be null
-     * @param verboseLogging  indicates whether verbose logging should be output
+     * @param username         the name of the Sauce OnDemand user
+     * @param apiKey           the API Key for the Sauce OnDemand user
+     * @param port             the port which Sauce Connect should be run on
+     * @param sauceConnectJar  the Jar file containing Sauce Connect.  If null, then we attempt to find Sauce Connect from the classpath (only used by SauceConnectTwoManager)
+     * @param options          the command line options to pass to Sauce Connect
+     * @param httpsProtocol    the HTTPS protocol options to pass to Sauce Connect (only used by SauceConnectTwoManager)
+     * @param printStream      A print stream in which to redirect the output from Sauce Connect to.  Can be null
+     * @param verboseLogging   indicates whether verbose logging should be output
      * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and won't be extracted from the jar file
      * @return a {@link Process} instance which represents the Sauce Connect instance
      * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
@@ -290,7 +293,23 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                         //ensure that Sauce Connect process is closed
                         closeSauceConnectProcess(printStream, process);
                         throw new SauceConnectDidNotStartException(message);
+                    } else if (outputGobbler.isCantLockPidfile()) {
+                        //Sauce Connect failed to start, possibly because although process has been killed by the plugin, it still remains active for a few seconds
+                        if (launchAttempts.get() < 3) {
+                            //wait for a few seconds to let the process finish closing
+                            Thread.sleep(5000);
+                            //increment launch attempts variable
+                            launchAttempts.incrementAndGet();
+
+                            //call openConnection again to see if the process has closed
+                            return openConnection(username, apiKey, port, sauceConnectJar, options, httpsProtocol, printStream, verboseLogging, sauceConnectPath);
+                        } else {
+                            //we've tried relaunching Sauce Connect 3 times
+                            throw new SauceConnectDidNotStartException("Unable to start Sauce Connect, please see the Sauce Connect log");
+                        }
+
                     } else {
+                        //everything okay, continue the build
                         if (outputGobbler.getTunnelId() != null) {
                             tunnelInformation.setTunnelId(outputGobbler.getTunnelId());
                         }
@@ -320,6 +339,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         } finally {
             //release the access lock
             tunnelInformation.getLock().unlock();
+            launchAttempts.set(0);
         }
 
     }
@@ -460,6 +480,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
         private String tunnelId;
         private boolean failed;
+        private boolean cantLockPidfile;
 
         public SystemOutGobbler(String name, InputStream is, final Semaphore semaphore, PrintStream printStream) {
             super(name, is, printStream);
@@ -477,13 +498,20 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         @Override
         protected void processLine(String line) {
             super.processLine(line);
+
+            if (StringUtils.containsIgnoreCase(line, "can't lock pidfile")) {
+                //this message is generated from Sauce Connect when the pidfile can't be locked, indicating that SC is still running
+                cantLockPidfile = true;
+            }
+
+
             if (StringUtils.containsIgnoreCase(line, "Tunnel ID:")) {
                 tunnelId = StringUtils.substringAfter(line, "Tunnel ID: ");
             }
             if (StringUtils.containsIgnoreCase(line, "Goodbye")) {
                 failed = true;
             }
-            if (StringUtils.containsIgnoreCase(line, getSauceStartedMessage()) || failed) {
+            if (StringUtils.containsIgnoreCase(line, getSauceStartedMessage()) || failed || cantLockPidfile) {
                 //unlock processMonitor
                 semaphore.release();
             }
@@ -495,6 +523,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
         public boolean isFailed() {
             return failed;
+        }
+
+        public boolean isCantLockPidfile() {
+            return cantLockPidfile;
         }
     }
 
