@@ -268,14 +268,14 @@ public class SeleniumBuilderManager {
                     ? new URL(config.get(URL_KEY))
                     : null;
             HashMap<String, String> caps = new HashMap<String, String>(config);
-            caps.remove(URL_KEY);
+            caps.get(URL_KEY);
             DesiredCapabilities capabilities = new DesiredCapabilities();
-            capabilities.setCapability(CapabilityType.BROWSER_NAME, config.remove(BROWSER_NAME));
+            capabilities.setCapability(CapabilityType.BROWSER_NAME, config.get(BROWSER_NAME));
             if (config.containsKey(VERSION)) {
-                capabilities.setCapability(CapabilityType.VERSION, config.remove(VERSION));
+                capabilities.setCapability(CapabilityType.VERSION, config.get(VERSION));
             }
-            capabilities.setCapability(CapabilityType.PLATFORM, config.remove(PLATFORM));
-            capabilities.setCapability(NAME, config.remove(NAME));
+            capabilities.setCapability(CapabilityType.PLATFORM, config.get(PLATFORM));
+            capabilities.setCapability(NAME, config.get(NAME));
             RemoteWebDriver driver = new RemoteWebDriver(url, capabilities);
 
             driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
