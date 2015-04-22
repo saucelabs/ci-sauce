@@ -193,7 +193,7 @@ public class BrowserFactory {
                 //appium browser
                 String longName = browserObject.getString("long_name");
                 String longVersion = browserObject.getString("long_version");
-                String osName = browserObject.getString("os");
+                String osName = browserObject.getString("api_name"); //use api_name instead of os, as os was returning Linux/Mac OS
                 String shortVersion = browserObject.getString("short_version");
                 //set value used for device to be the long name (ie. if device value is 'Nexus7HD', then actually use 'Google Nexus 7 HD Emulator' ​
                 String device = longName;
@@ -203,9 +203,10 @@ public class BrowserFactory {
                 if (browserObject.has("device-type")) {
                     deviceType = browserObject.getString("device-type");
                 }
-                //iOS devices should include 'Simulator' in the device name (not currently included in the Sauce REST API response
+                //iOS devices should include 'Simulator' in the device name (not currently included in the Sauce REST API response.  The platform should also be set to iOS (as per instructions at https://docs.saucelabs.com/reference/platforms-configurator
                 if (device.equalsIgnoreCase("ipad") || device.equalsIgnoreCase("iphone")) {
                     device = device + " Simulator";
+                    osName = "iOS";
                 }
                 Browser browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait");
                 browsers.add(browser);
