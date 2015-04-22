@@ -89,9 +89,9 @@ public class SeleniumBuilderManager {
             TestRunFactory trf = new TestRunFactory();
             sf.setTestRunFactory(trf);
             printStream.println("Starting to run selenium builder command");
+            WebDriverFactory remoteDriver = createRemoteDriver(config.get(URL_KEY), printStream);
             for (Script script : sf.parse(scriptFile)) {
-
-                script.run(new PrintStreamLogger(log, printStream), createRemoteDriver(config.get(URL_KEY), printStream), config);
+                script.run(new PrintStreamLogger(log, printStream), remoteDriver, config);
             }
             return true;
         }  catch (Exception e) {
@@ -253,6 +253,7 @@ public class SeleniumBuilderManager {
      */
     private class SauceRemoteDriver extends Remote {
 
+        private RemoteWebDriver driver;
 
         public static final String PLATFORM = "platform";
         private PrintStream printStream;
@@ -263,6 +264,10 @@ public class SeleniumBuilderManager {
 
         @Override
         public RemoteWebDriver make(HashMap<String, String> config) throws MalformedURLException {
+
+            if (driver != null) {
+                return driver;
+            }
 
             java.net.URL url = config.containsKey(URL_KEY)
                     ? new URL(config.get(URL_KEY))
@@ -276,7 +281,7 @@ public class SeleniumBuilderManager {
             }
             capabilities.setCapability(CapabilityType.PLATFORM, config.get(PLATFORM));
             capabilities.setCapability(NAME, config.get(NAME));
-            RemoteWebDriver driver = new RemoteWebDriver(url, capabilities);
+            driver = new RemoteWebDriver(url, capabilities);
 
             driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
             printStream.println(MessageFormat.format("SauceOnDemandSessionID={0} job-name={1}", driver.getSessionId(), config.get("name")));
