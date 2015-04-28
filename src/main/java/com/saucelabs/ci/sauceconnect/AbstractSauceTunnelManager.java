@@ -9,8 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +35,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * Should Sauce Connect output be suppressed?
      */
     protected boolean quietMode;
+
+    /** Contains all the Sauce Connect {@link Process} instances that have been launched. */
+    private Map<String, List<Process>> openedProcesses = new HashMap<String, List<Process>>();
 
     protected Map<String, TunnelInformation> tunnelInformationMap = new ConcurrentHashMap<String, TunnelInformation>();
 
@@ -82,6 +84,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                     sauceRest.deleteTunnel(tunnelId);
                 }
                 tunnelInformationMap.remove(identifier);
+                List<Process> processes = openedProcesses.get(identifier);
+                if (processes != null)
+                {
+                    processes.remove(sauceConnect);
+                }
                 logMessage(printStream, "Sauce Connect stopped for: " + identifier);
             } else {
                 logMessage(printStream, "Jobs still running, not closing Sauce Connect");
@@ -260,7 +267,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
                 //check active tunnels via Sauce REST API
                 if (tunnelIdentifier == null) {
-                    logMessage(printStream, "Process count non-zero, but no active tunnels found");
+                    logMessage(printStream, "Process count non-zero, but no active tunnels found for identifier: " + tunnelIdentifier);
                     logMessage(printStream, "Process count reset to zero");
                     //if no active tunnels, we have a mismatch of the tunnel count
                     //reset tunnel count to zero and continue to launch Sauce Connect
@@ -277,6 +284,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
 
             final Process process = processBuilder.start();
+            List<Process> openedProcesses = this.openedProcesses.get(tunnelIdentifier);
             try {
                 Semaphore semaphore = new Semaphore(1);
                 semaphore.acquire();
@@ -294,6 +302,12 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                         closeSauceConnectProcess(printStream, process);
                         throw new SauceConnectDidNotStartException(message);
                     } else if (outputGobbler.isCantLockPidfile()) {
+                        logMessage(printStream, "Sauce Connect can't lock pidfile, attempting to close open Sauce Connect processes");
+                        //close any open Sauce Connect processes
+                        for (Process openedProcess : openedProcesses) {
+                            openedProcess.destroy();
+                        }
+
                         //Sauce Connect failed to start, possibly because although process has been killed by the plugin, it still remains active for a few seconds
                         if (launchAttempts.get() < 3) {
                             //wait for a few seconds to let the process finish closing
@@ -329,6 +343,12 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
             incrementProcessCountForUser(tunnelInformation, printStream);
             tunnelInformation.setProcess(process);
+            List<Process> processes = openedProcesses;
+            if (processes == null) {
+                processes = new ArrayList<Process>();
+                this.openedProcesses.put(identifier, processes);
+            }
+            processes.add(process);
             return process;
         } catch (SauceConnectException e) {
             throw e;
