@@ -15,7 +15,7 @@ import static org.junit.Assert.assertFalse;
 /**
  * @author Ross Rowe
  */
-public class BrowserTest extends AbstractTestHelper {
+public class BrowserTest  {
     private static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/jobs?full=true";
     private SauceREST sauceREST;
 

@@ -1,6 +1,6 @@
 package com.saucelabs.ci;
 
-import com.saucelabs.sauceconnect.SauceConnect;
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
 import org.apache.commons.lang.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,10 +38,9 @@ public abstract class SauceLibraryManager {
         
         logger.info("Checking for updates to Sauce Connect");
         String response = getSauceAPIFactory().doREST(VERSION_CHECK_URL);
-//        String response = IOUtils.toString(getClass().getResourceAsStream("/versions.json"));
         int version = extractVersionFromResponse(response);
         //compare version attribute against SauceConnect.RELEASE()
-        return version > (Integer) SauceConnect.RELEASE();
+        return version > Integer.valueOf(SauceConnectFourManager.CURRENT_SC_VERSION);
     }
 
     /**

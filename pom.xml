@@ -166,7 +166,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
-            <version>1.0.25</version>
+            <version>1.0.26</version>
             <scope>compile</scope>
         </dependency>
 
@@ -176,22 +176,17 @@
             <version>20080701</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>com.saucelabs</groupId>
-            <artifactId>sauce-connect</artifactId>
-            <version>3.1.32</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-api</artifactId>
-            <version>2.42.2</version>
+            <version>2.45.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-remote-driver</artifactId>
-            <version>2.42.2</version>
+            <version>2.45.0</version>
             <scope>compile</scope>
         </dependency>
 
@@ -223,23 +218,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>7.2.1.v20101111</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-http</artifactId>
-            <version>7.2.1.v20101111</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>7.2.1.v20101111</version>
-            <scope>test</scope>
-        </dependency>
+
     </dependencies>
 </project>
