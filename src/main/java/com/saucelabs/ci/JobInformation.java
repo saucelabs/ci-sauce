@@ -17,8 +17,15 @@ public class JobInformation implements Serializable {
     private String status;
     private String name;
 
+    private String os;
+    private String browser;
+    private String version;
+
+
     private transient boolean hasBuildNumber = true;
     private transient boolean hasJobName = false;
+    private String videoUrl;
+    private String logUrl;
 
     public JobInformation(String jobId, String hmac) {
         this.jobId = jobId;
@@ -73,6 +80,30 @@ public class JobInformation implements Serializable {
         this.hasJobName = hasJobName;
     }
 
+    public String getBrowser() {
+        return browser;
+    }
+
+    public void setBrowser(String browser) {
+        this.browser = browser;
+    }
+
+    public String getOs() {
+        return os;
+    }
+
+    public void setOs(String os) {
+        this.os = os;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -88,5 +119,21 @@ public class JobInformation implements Serializable {
     @Override
     public int hashCode() {
         return jobId != null ? jobId.hashCode() : 0;
+    }
+
+    public void setVideoUrl(String videoUrl) {
+        this.videoUrl = videoUrl;
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
+    public void setLogUrl(String logUrl) {
+        this.logUrl = logUrl;
+    }
+
+    public String getLogUrl() {
+        return logUrl;
     }
 }

@@ -16,6 +16,7 @@ import java.util.jar.JarFile;
 
 /**
  * @author Ross Rowe
+ * @deprecated Will be removed when Sauce Connect 3 support is dropped
  */
 public final class SauceConnectUtils {
     public static final String SAUCE_CONNECT_JAR = "sauce-connect-3.+jar";
