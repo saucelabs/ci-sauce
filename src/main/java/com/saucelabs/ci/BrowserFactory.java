@@ -207,6 +207,8 @@ public class BrowserFactory {
                 if (device.equalsIgnoreCase("ipad") || device.equalsIgnoreCase("iphone")) {
                     device = device + " Simulator";
                     osName = "iOS";
+                    //JENKINS-29047 set the browserName to 'Safari'
+                    seleniumName = "Safari";
                 }
                 Browser browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait");
                 browsers.add(browser);
@@ -225,7 +227,7 @@ public class BrowserFactory {
                 browserKey = browserKey.replaceAll(" ", "_");
                 //replace any . with _
                 browserKey = browserKey.replaceAll("\\.", "_");
-                String label = osName + " " + longName + " " + longVersion;
+                String label = osName + " " + longName + " " + shortVersion;
                 browsers.add(new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion, label));
             }
         }
@@ -243,8 +245,8 @@ public class BrowserFactory {
         if (deviceType != null) {
             label.append(deviceType).append(' ');
         }
-        label.append(longVersion);
-        label.append('(').append(orientation).append(')');
+        label.append(shortVersion);
+        label.append(" (").append(orientation).append(')');
         //add browser for both landscape and portrait orientation
         Browser browser = new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion, label.toString());
         browser.setDevice(device);
