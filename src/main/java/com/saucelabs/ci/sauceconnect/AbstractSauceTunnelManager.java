@@ -36,7 +36,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      */
     protected boolean quietMode;
 
-    /** Contains all the Sauce Connect {@link Process} instances that have been launched. */
+    /**
+     * Contains all the Sauce Connect {@link Process} instances that have been launched.
+     */
     private Map<String, List<Process>> openedProcesses = new HashMap<String, List<Process>>();
 
     protected Map<String, TunnelInformation> tunnelInformationMap = new ConcurrentHashMap<String, TunnelInformation>();
@@ -85,8 +87,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 }
                 tunnelInformationMap.remove(identifier);
                 List<Process> processes = openedProcesses.get(identifier);
-                if (processes != null)
-                {
+                if (processes != null) {
                     processes.remove(sauceConnect);
                 }
                 logMessage(printStream, "Sauce Connect stopped for: " + identifier);
@@ -168,6 +169,24 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             }
         }
         return defaultValue;
+    }
+
+    /**
+     * @param options      the command line options used to launch Sauce Connect
+     * @return String representing the logfile location
+     */
+    public static String getLogfile(String options) {
+        if (options != null && !options.equals("")) {
+            String[] split = options.split(" ");
+            for (int i = 0; i < split.length; i++) {
+                String option = split[i];
+                if (option.equals("-l") || option.equals("--logfile")) {
+                    //next option is identifier
+                    return split[i + 1];
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -330,7 +349,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                         logMessage(printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + identifier);
                     }
                 } else {
-                    String message = "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
+                    File sauceConnectLogFile = getSauceConnectLogFile(options);
+                    String message = sauceConnectLogFile != null ? "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log located in " + sauceConnectLogFile.getAbsoluteFile() : "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
                     logMessage(printStream, message);
                     //ensure that Sauce Connect process is closed
                     closeSauceConnectProcess(printStream, process);
@@ -442,6 +462,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     public String getSauceConnectWorkingDirectory() {
         return System.getProperty("user.home");
     }
+
+    public abstract File getSauceConnectLogFile(String options);
 
     /**
      * Handles receiving and processing the output of an external process.

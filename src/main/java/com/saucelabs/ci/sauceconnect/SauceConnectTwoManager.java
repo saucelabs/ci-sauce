@@ -123,4 +123,9 @@ public class SauceConnectTwoManager extends AbstractSauceTunnelManager implement
     protected String getCurrentVersion() {
         return CURRENT_SC_VERSION;
     }
+
+    @Override
+    public File getSauceConnectLogFile(String options) {
+        return null;
+    }
 }

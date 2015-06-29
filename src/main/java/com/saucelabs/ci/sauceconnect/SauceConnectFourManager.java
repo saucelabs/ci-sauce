@@ -8,6 +8,7 @@ import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
 
 import java.io.*;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.logging.Level;
 
@@ -22,22 +23,25 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * Represents the operating system-specific Sauce Connect binary.
      */
     public enum OperatingSystem {
-        OSX(OSX_DIR, OSX_FILE),
-        WINDOWS(WINDOWS_DIR, WINDOWS_FILE, "bin" + File.separator + "sc.exe"),
-        LINUX(LINUX_DIR, LINUX_FILE),
-        LINUX32(LINUX32_DIR, LINUX32_FILE);
+
+        OSX(OSX_DIR, OSX_FILE, UNIX_TEMP_DIR),
+        WINDOWS(WINDOWS_DIR, WINDOWS_FILE, WINDOWS_TEMP_DIR, "bin" + File.separator + "sc.exe"),
+        LINUX(LINUX_DIR, LINUX_FILE, UNIX_TEMP_DIR),
+        LINUX32(LINUX32_DIR, LINUX32_FILE, UNIX_TEMP_DIR);
         private final String directory;
         private final String fileName;
         private final String executable;
+        private final String tempDirectory;
 
-        OperatingSystem(String directory, String fileName, String executable) {
+        OperatingSystem(String directory, String fileName, String tempDirectory, String executable) {
             this.directory = directory;
             this.fileName = fileName;
             this.executable = executable;
+            this.tempDirectory = tempDirectory;
         }
 
-        OperatingSystem(String directory, String fileName) {
-            this(directory, fileName, "bin/sc");
+        OperatingSystem(String directory, String fileName, String tempDirectory) {
+            this(directory, fileName, tempDirectory, "bin/sc");
         }
 
         public static OperatingSystem getOperatingSystem() {
@@ -110,18 +114,27 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         public String getExecutable() {
             return executable;
         }
+
+
+        public String getDefaultSauceConnectLogDirectory() {
+            return tempDirectory;
+        }
     }
 
+
+    private static final String UNIX_TEMP_DIR = "/tmp";
+
+    private static final String WINDOWS_TEMP_DIR = System.getProperty("java.io.tempdir");
     /**
      * Output from Sauce Connect process which indicates that it has been started.
      */
     private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
-    public static final String CURRENT_SC_VERSION = "4.3.8";
+    public static final String CURRENT_SC_VERSION = "4.3.9";
     public static final String SAUCE_CONNECT_4 = "sc-4.3";
-    private static final String OSX_DIR = SAUCE_CONNECT_4 + ".8-osx";
-    private static final String WINDOWS_DIR = SAUCE_CONNECT_4 + ".8-win32";
-    private static final String LINUX_DIR = SAUCE_CONNECT_4 + ".8-linux";
-    private static final String LINUX32_DIR = SAUCE_CONNECT_4 + ".8-linux32";
+    private static final String OSX_DIR = SAUCE_CONNECT_4 + ".9-osx";
+    private static final String WINDOWS_DIR = SAUCE_CONNECT_4 + ".9-win32";
+    private static final String LINUX_DIR = SAUCE_CONNECT_4 + ".9-linux";
+    private static final String LINUX32_DIR = SAUCE_CONNECT_4 + ".9-linux32";
     private static final String BASE_FILE_NAME = SAUCE_CONNECT_4 + "-";
     private static final String LINUX_FILE = BASE_FILE_NAME + "linux.tar.gz";
     private static final String LINUX32_FILE = BASE_FILE_NAME + "linux32.tar.gz";
@@ -304,5 +317,48 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     @Override
     protected String getCurrentVersion() {
         return CURRENT_SC_VERSION;
+    }
+
+    /**
+     * Attempts to find the Sauce Connect log file.  If the --logfile argument has been specified, then
+     * use that location, otherwise look at the operating system/tunnel identifer to determine the location.
+     *
+     * @param options the Sauce Connect command line options, can be null
+     *
+     * @return File representing the Sauce Connect log file, can be null
+     */
+    @Override
+    public File getSauceConnectLogFile(String options) {
+
+        //Has --logfile arg been specified
+        String logfile = getLogfile(options);
+        if (logfile != null) {
+
+            File sauceConnectLogFile = new File(logfile);
+            if (sauceConnectLogFile.exists()) {
+                return sauceConnectLogFile;
+            } else {
+                return null;
+            }
+        }
+
+        //otherwise, try to work out location
+        String fileName = "sc.log";
+        File logFileDirectory = new File(OperatingSystem.getOperatingSystem().getDefaultSauceConnectLogDirectory());
+
+        //has --tunnel-identifer been specified?
+        String tunnelIdentifier = getTunnelIdentifier(options, null);
+        if (tunnelIdentifier != null) {
+            fileName = MessageFormat.format("sc-{0}.log", tunnelIdentifier);
+        }
+        File sauceConnectLogFile = new File(logFileDirectory, fileName);
+        if (!sauceConnectLogFile.exists()) {
+            //try working directory
+            sauceConnectLogFile = new File(getSauceConnectWorkingDirectory(), fileName);
+            if (!sauceConnectLogFile.exists()) {
+                return null;
+            }
+        }
+        return sauceConnectLogFile;
     }
 }
