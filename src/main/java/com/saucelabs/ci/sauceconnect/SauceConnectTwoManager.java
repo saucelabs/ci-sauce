@@ -1,9 +1,13 @@
 package com.saucelabs.ci.sauceconnect;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.logging.Level;
 
 
 /**
@@ -13,6 +17,8 @@ import java.net.URISyntaxException;
  * @deprecated Sauce Connect v3 is in the process of being EOLd
  */
 public class SauceConnectTwoManager extends AbstractSauceTunnelManager implements SauceTunnelManager {
+
+    private static final String SAUCE_CONNECT_CLASS = "com.saucelabs.sauceconnect.SauceConnect";
 
     private static final String SAUCE_CONNECT_STARTED = "Connected! You may start your tests";
     private static final String CURRENT_SC_VERSION = "3.1.26";
