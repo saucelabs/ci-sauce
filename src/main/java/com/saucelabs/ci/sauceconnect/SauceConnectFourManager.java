@@ -124,7 +124,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
     private static final String UNIX_TEMP_DIR = "/tmp";
 
-    private static final String WINDOWS_TEMP_DIR = System.getProperty("java.io.tempdir");
+    private static final String WINDOWS_TEMP_DIR = System.getProperty("java.io.tmpdir");
     /**
      * Output from Sauce Connect process which indicates that it has been started.
      */
