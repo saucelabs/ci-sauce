@@ -1,6 +1,9 @@
 package com.saucelabs.ci;
 
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.Serializable;
 
 /**
@@ -135,5 +138,24 @@ public class JobInformation implements Serializable {
 
     public String getLogUrl() {
         return logUrl;
+    }
+
+    public void populateFromJson(JSONObject jobData) throws JSONException {
+        String status = jobData.getString("passed");
+        setStatus(status);
+        String jobName = jobData.getString("name");
+        if (jobName != null) {
+            setHasJobName(true);
+            setName(jobName);
+        }
+        String build = jobData.getString("build");
+        if (build != null) {
+            setHasBuildNumber(true);
+        }
+        setOs(jobData.getString("os"));
+        setBrowser(jobData.getString("browser"));
+        setVersion(jobData.getString("browser_short_version"));
+        setVideoUrl(jobData.getString("video_url"));
+        setLogUrl(jobData.getString("log_url"));
     }
 }
