@@ -3,7 +3,7 @@
 
     <groupId>com.saucelabs</groupId>
     <artifactId>ci-sauce</artifactId>
-    <version>1.105</version>
+    <version>1.106-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 
