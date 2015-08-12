@@ -141,8 +141,12 @@ public class JobInformation implements Serializable {
     }
 
     public void populateFromJson(JSONObject jobData) throws JSONException {
-        String status = jobData.getString("passed");
-        setStatus(status);
+
+        if (jobData.has("passed"))
+        {
+            String status = jobData.getString("passed");
+            setStatus(status.equals("true") ? "Passed" : "Failed");
+        }
         String jobName = jobData.getString("name");
         if (jobName != null) {
             setHasJobName(true);
