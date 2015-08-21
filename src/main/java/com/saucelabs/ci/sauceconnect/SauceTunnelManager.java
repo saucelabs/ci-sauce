@@ -29,13 +29,12 @@ public interface SauceTunnelManager {
      * @param port             the port which Sauce Connect should be run on
      * @param sauceConnectJar  the Jar file containing Sauce Connect.  If null, then we attempt to find Sauce Connect from the classpath (only used by SauceConnectTwoManager)
      * @param options          the command line options to pass to Sauce Connect
-     * @param httpsProtocol    the HTTPS protocol options to pass to Sauce Connect (only used by SauceConnectTwoManager)
      * @param printStream      A print stream in which to redirect the output from Sauce Connect to.  Can be null
      * @param verboseLogging   indicates whether verbose logging should be output
      * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and won't be extracted from the jar file
      * @return a {@link Process} instance which represents the Sauce Connect instance
      * @throws IOException thrown if an error occurs launching Sauce Connect
      */
-    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws IOException;
+    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws IOException;
 
 }

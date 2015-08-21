@@ -163,14 +163,13 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @param port             port which Sauce Connect should be launched on
      * @param sauceConnectJar  File which contains the Sauce Connect executables (typically the CI plugin Jar file)
      * @param options          the command line options used to launch Sauce Connect
-     * @param httpsProtocol    Value to be used for -Dhttps.protocol command line argument, not used by this class
      * @param printStream      the output stream to send log messages
      * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and won't be extracted from the jar file
      * @return new ProcessBuilder instance which will launch Sauce Connect
      * @throws SauceConnectException thrown if an error occurs extracting the Sauce Connect binary from the CI jar file
      */
     @Override
-    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, String httpsProtocol, PrintStream printStream, String sauceConnectPath) throws SauceConnectException {
+    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, String sauceConnectPath) throws SauceConnectException {
 
         //find zip file to extract
         try {
