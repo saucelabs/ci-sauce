@@ -33,7 +33,7 @@ public class BrowserTest  {
     public void browserList() throws Exception {
 
         BrowserFactory factory = new BrowserFactory(sauceREST);
-        String browserText = IOUtils.toString(getClass().getResourceAsStream("/webdriver.json"));
+        String browserText = IOUtils.toString(getClass().getResourceAsStream("/appium_browsers.json"));
         List<Browser> browsers = factory.getBrowserListFromJson(browserText);
         assertFalse("browsers is empty", browsers.isEmpty());
 
