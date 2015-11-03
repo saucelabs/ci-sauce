@@ -28,6 +28,7 @@ public class ExtractFiles {
 
     @Test
     public void windows() throws Exception {
-        manager.extractZipFile(new File("java.io.tmpdir"), SauceConnectFourManager.OperatingSystem.WINDOWS);
+        File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
+        manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.WINDOWS);
     }
 }
