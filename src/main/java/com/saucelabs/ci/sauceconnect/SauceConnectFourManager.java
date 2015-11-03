@@ -129,12 +129,15 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * Output from Sauce Connect process which indicates that it has been started.
      */
     private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
-    public static final String CURRENT_SC_VERSION = "4.3.11";
-    public static final String SAUCE_CONNECT_4 = "sc-4.3";
-    private static final String OSX_DIR = SAUCE_CONNECT_4 + ".11-osx";
-    private static final String WINDOWS_DIR = SAUCE_CONNECT_4 + ".11-win32";
-    private static final String LINUX_DIR = SAUCE_CONNECT_4 + ".11-linux";
-    private static final String LINUX32_DIR = SAUCE_CONNECT_4 + ".11-linux32";
+    
+    public static final String CURRENT_SC_VERSION = "4.3.12";
+    public static final String SAUCE_CONNECT_4 = "sc-" + CURRENT_SC_VERSION;
+
+    private static final String OSX_DIR = SAUCE_CONNECT_4 + "-osx";
+    private static final String WINDOWS_DIR = SAUCE_CONNECT_4 + "-win32";
+    private static final String LINUX_DIR = SAUCE_CONNECT_4 + "-linux";
+    private static final String LINUX32_DIR = SAUCE_CONNECT_4 + "-linux32";
+
     private static final String BASE_FILE_NAME = SAUCE_CONNECT_4 + "-";
     private static final String LINUX_FILE = BASE_FILE_NAME + "linux.tar.gz";
     private static final String LINUX32_FILE = BASE_FILE_NAME + "linux32.tar.gz";
