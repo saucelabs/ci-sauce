@@ -26,9 +26,7 @@ import java.util.logging.Logger;
 public class BrowserFactory {
 
     private static final Logger logger = Logger.getLogger(BrowserFactory.class.getName());
-
-    public static final String BROWSER_URL = "http://saucelabs.com/rest/v1/info/platforms";
-
+    
     public static final int ONE_HOUR_IN_MILLIS = 1000 * 60 * 60;
 
     private SauceREST sauceREST;
@@ -168,7 +166,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/selenium-rc"));
+        String response = sauceREST.getSupportedPlatforms("selenium-rc");
         if (response.equals("")) {
             response = "[]";
         }
@@ -186,7 +184,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/webdriver"));
+        String response = sauceREST.getSupportedPlatforms("webdriver");
         if (response.equals("")) {
             response = "[]";
         }
@@ -194,7 +192,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> getAppiumBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/appium"));
+        String response = sauceREST.getSupportedPlatforms("appium");
         if (response.equals("")) {
             response = "[]";
         }
