@@ -16,7 +16,7 @@ import java.util.zip.ZipInputStream;
  * @author Ross Rowe
  */
 public abstract class SauceLibraryManager {
-    
+
     private static final Logger logger = Logger.getLogger(SauceLibraryManager.class.getName());
     private static final String VERSION_CHECK_URL = "https://saucelabs.com/versions.json";
     private static final int BUFFER = 1024;
@@ -30,12 +30,12 @@ public abstract class SauceLibraryManager {
      * than the current version, then return true.
      *
      * @return boolean indicating whether an updated sauce connect jar is available
-     * @throws java.io.IOException
+     * @throws java.io.IOException         server returns error
      * @throws org.json.JSONException      thrown if an error occurs during the parsing of the JSON response
-     * @throws java.net.URISyntaxException
+     * @throws java.net.URISyntaxException bad url
      */
     public boolean checkForLaterVersion() throws IOException, JSONException, URISyntaxException {
-        
+
         logger.info("Checking for updates to Sauce Connect");
         String response = getSauceAPIFactory().doREST(VERSION_CHECK_URL);
         int version = extractVersionFromResponse(response);
@@ -49,8 +49,8 @@ public abstract class SauceLibraryManager {
      * to include this jar.
      *
      * @throws org.json.JSONException      thrown if an error occurs during the parsing of the JSON response
-     * @throws java.io.IOException
-     * @throws java.net.URISyntaxException
+     * @throws java.io.IOException         thrown if url throws an error
+     * @throws java.net.URISyntaxException thrown if url isn't valid
      */
     public void triggerReload() throws JSONException, IOException, URISyntaxException {
         logger.info("Updating Sauce Connect");
@@ -84,10 +84,10 @@ public abstract class SauceLibraryManager {
      * Performs a HTTP GET to retrieve the contents of the download url (assumed to be a zip
      * file), then unzips the zip file to the file system.
      *
-     * @param response
-     * @return
-     * @throws org.json.JSONException
-     * @throws java.io.IOException
+     * @param response JSON response from version check
+     * @return jar file downloaded from server
+     * @throws org.json.JSONException invalid json from version check
+     * @throws java.io.IOException unable to download or invalid jar file
      */
     public File retrieveNewVersion(String response) throws JSONException, IOException {
         //perform HTTP get for download_url
@@ -97,8 +97,8 @@ public abstract class SauceLibraryManager {
         //unzip contents to temp directory
         return unzipByteArray(bytes);
     }
-    
-    
+
+
 
     /**
      * Extracts the contents of the byte array to the temp drive.

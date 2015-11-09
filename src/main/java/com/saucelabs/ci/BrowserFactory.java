@@ -208,9 +208,9 @@ public class BrowserFactory {
     /**
      * Parses the JSON response and constructs a List of {@link Browser} instances.
      *
-     * @param browserListJson
-     * @return
-     * @throws JSONException
+     * @param browserListJson JSON response with all browsers
+     * @return List of browser objects
+     * @throws JSONException Invalid JSON
      */
     public List<Browser> getBrowserListFromJson(String browserListJson) throws JSONException {
         List<Browser> browsers = new ArrayList<Browser>();
@@ -307,8 +307,8 @@ public class BrowserFactory {
     /**
      * Return the selenium rc browser which matches the key.
      *
-     * @param key
-     * @return
+     * @param key the key
+     * @return the selenium rc browser which matches the key.
      */
     public Browser seleniumBrowserForKey(String key) {
         return seleniumLookup.get(key);
@@ -342,8 +342,8 @@ public class BrowserFactory {
     /**
      * Return the web driver browser which matches the key.
      *
-     * @param key
-     * @return
+     * @param key the key
+     * @return the web driver browser which matches the key.
      */
     public Browser webDriverBrowserForKey(String key) {
         return webDriverLookup.get(key);
@@ -378,8 +378,8 @@ public class BrowserFactory {
     /**
      * Return the appium browser which matches the key.
      *
-     * @param key
-     * @return
+     * @param key the key
+     * @return the appium browser which matches the key.
      */
 
     public Browser appiumBrowserForKey(String key) {
@@ -391,7 +391,7 @@ public class BrowserFactory {
      * remote agents don't have the Bamboo component plugin available, so the Spring
      * auto-wiring doesn't work.
      *
-     * @return
+     * @return the Browser Factory
      */
     public static BrowserFactory getInstance() {
         return getInstance(null);

@@ -24,11 +24,11 @@ public class SauceFactory {
     /**
      * Invokes a Sauce REST API command
      *
-     * @param urlText
-     * @param userName
-     * @param password
+     * @param urlText Saucelabs Rest API url (complete) to do a HTTP get on
+     * @param userName Saucelabs username
+     * @param password Saucelabs password
      * @return results of REST command
-     * @throws java.io.IOException
+     * @throws java.io.IOException URL returns error code
      */
     public synchronized String doREST(String urlText, final String userName, final String password) throws IOException {
 
@@ -77,10 +77,10 @@ public class SauceFactory {
     /**
      * Populates the http proxy system properties.
      *
-     * @param proxyHost
-     * @param proxyPort
-     * @param userName
-     * @param password
+     * @param proxyHost http proxy host
+     * @param proxyPort http proxy port
+     * @param userName http proxy username
+     * @param password http proxy password
      */
     public void setupProxy(String proxyHost, String proxyPort, final String userName, final String password) {
         if (StringUtils.isNotBlank(proxyHost)) {
@@ -100,9 +100,9 @@ public class SauceFactory {
     }
 
     /**
-     * @param downloadUrl
-     * @return
-     * @throws IOException
+     * @param downloadUrl URL to http get
+     * @return All the bytes
+     * @throws IOException Error response from server
      */
     public byte[] doHTTPGet(String downloadUrl) throws IOException {
         URL u;

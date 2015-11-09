@@ -538,7 +538,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
         /**
          * {@inheritDoc}
-         * <p/>
+         *
          * If the line contains the Sauce Connect started message, then release the semaphone, which will allow the
          * build to resume.
          *
