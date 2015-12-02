@@ -64,8 +64,8 @@ public class SauceConnectFourManagerTest {
 
         verify(mockSauceRest).getTunnels();
         verify(tunnelManager).createProcess(
-            new String[] { System.getProperty("user.home") + "/sc-4.3.12-osx/bin/sc", "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345" },
-            new File(System.getProperty("user.home") +  "/sc-4.3.12-osx")
+            new String[] { anyString(), "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345" },
+            new File(anyString())
         );
     }
 
@@ -92,8 +92,8 @@ public class SauceConnectFourManagerTest {
         } finally {
             verify(mockSauceRest).getTunnels();
             verify(tunnelManager).createProcess(
-                new String[]{System.getProperty("user.home") + "/sc-4.3.12-osx/bin/sc", "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345"},
-                new File(System.getProperty("user.home") + "/sc-4.3.12-osx")
+                new String[]{anyString(), "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345"},
+                new File(anyString())
             );
         }
     }
@@ -116,8 +116,8 @@ public class SauceConnectFourManagerTest {
 
         verify(mockSauceRest).getTunnels();
         verify(tunnelManager).createProcess(
-            new String[] { System.getProperty("user.home") + "/sc-4.3.12-osx/bin/sc", "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345" },
-            new File(System.getProperty("user.home") +  "/sc-4.3.12-osx")
+            new String[] { anyString(), "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345" },
+            new File( anyString() )
         );
     }
 }
