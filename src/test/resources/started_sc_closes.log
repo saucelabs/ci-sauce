@@ -17,7 +17,6 @@
 16 Nov 18:05:43 - Starting Selenium listener...
 16 Nov 18:05:43 - Establishing secure TLS connection to tunnel...
 16 Nov 18:05:43 - Selenium listener started on port 4445.
-16 Nov 18:05:44 - Sauce Connect is up, you may start your tests.
 16 Nov 18:06:28 - Cleaning up.
 16 Nov 18:06:28 - Checking domain overlap for my domain sauce-connect.proxy, other tunnel domain sauce-connect.proxy
 16 Nov 18:06:28 - Overlapping domain: sauce-connect.proxy, shutting down tunnel 6987f1030bf2487192d43a9c28f29cb4.
