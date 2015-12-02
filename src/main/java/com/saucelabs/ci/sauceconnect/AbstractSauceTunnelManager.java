@@ -232,7 +232,19 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @return new ProcessBuilder instance which will launch Sauce Connect
      * @throws SauceConnectException thrown if an error occurs launching the Sauce Connect process
      */
-    protected abstract ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, String sauceConnectPath) throws SauceConnectException;
+    protected abstract Process prepAndCreateProcess(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, String sauceConnectPath) throws SauceConnectException;
+
+    /**
+     * @param args Arguments to run
+     * @param directory Directory to run in
+     * @return Processbuilder to run
+     */
+    protected Process createProcess(String[] args, File directory) throws IOException {
+        ProcessBuilder processBuilder = new ProcessBuilder(args);
+        processBuilder.directory(directory);
+        if (processBuilder == null) return null;
+        return processBuilder.start();
+    }
 
     /**
      * Creates a new process to run Sauce Connect.
@@ -296,11 +308,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                     return tunnelInformation.getProcess();
                 }
             }
-            ProcessBuilder processBuilder = createProcessBuilder(username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath);
-            if (processBuilder == null) return null;
-
-
-            final Process process = processBuilder.start();
+            final Process process = prepAndCreateProcess(username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath);
             List<Process> openedProcesses = this.openedProcesses.get(tunnelIdentifier);
             try {
                 Semaphore semaphore = new Semaphore(1);

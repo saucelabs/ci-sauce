@@ -129,7 +129,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * Output from Sauce Connect process which indicates that it has been started.
      */
     private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
-    
+
     public static final String CURRENT_SC_VERSION = "4.3.12";
     public static final String SAUCE_CONNECT_4 = "sc-" + CURRENT_SC_VERSION;
 
@@ -172,7 +172,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @throws SauceConnectException thrown if an error occurs extracting the Sauce Connect binary from the CI jar file
      */
     @Override
-    protected ProcessBuilder createProcessBuilder(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, String sauceConnectPath) throws SauceConnectException {
+    protected Process prepAndCreateProcess(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, String sauceConnectPath) throws SauceConnectException {
 
         //find zip file to extract
         try {
@@ -209,11 +209,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
             args = generateSauceConnectArgs(args, username, apiKey, port, options);
 
-            ProcessBuilder processBuilder = new ProcessBuilder(args);
-            processBuilder.directory(unzipDirectory);
             julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + Arrays.toString(args));
-
-            return processBuilder;
+            return createProcess(args, unzipDirectory);
         } catch (IOException e) {
             throw new SauceConnectException(e);
         }

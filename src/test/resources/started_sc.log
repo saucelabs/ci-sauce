@@ -1,0 +1,25 @@
+01 Dec 11:02:48 - Sauce Connect 4.3.12, build 1789 45fd5e3
+01 Dec 11:02:48 - *** WARNING: open file limit 256 is too low!
+01 Dec 11:02:48 - *** Sauce Labs recommends setting it to at least 8000.
+01 Dec 11:02:48 - Starting up; pid 91006
+01 Dec 11:02:48 - Command line arguments: /Users/gavinmogan/sc-4.3.12-osx/bin/sc -u halkeye -k ****
+01 Dec 11:02:48 - Using no proxy for connecting to Sauce Labs REST API.
+01 Dec 11:02:48 - Resolving saucelabs.com to 162.222.75.243 took 0 ms.
+01 Dec 11:02:48 - Started scproxy on port 59629.
+01 Dec 11:02:48 - Please wait for 'you may start your tests' to start your tests.
+01 Dec 11:02:48 - Starting secure remote tunnel VM...
+01 Dec 11:02:48 - Checking domain overlap for my domain sauce-connect.proxy, other tunnel domain sauce-connect.proxy
+01 Dec 11:02:48 - Overlapping domain: sauce-connect.proxy, shutting down tunnel 289e7b61380d4861943016759b6e8f23.
+01 Dec 11:02:55 - Secure remote tunnel VM provisioned.
+01 Dec 11:02:55 - Tunnel ID: a3ccd3985ed04e7ba0fefc7fa401e9c8
+01 Dec 11:02:56 - Secure remote tunnel VM is now: booting
+01 Dec 11:02:58 - Secure remote tunnel VM is now: running
+01 Dec 11:02:58 - Using no proxy for connecting to tunnel VM.
+01 Dec 11:02:58 - Resolving tunnel hostname to 162.222.75.22 took 34ms.
+01 Dec 11:02:58 - Starting Selenium listener...
+01 Dec 11:02:58 - Establishing secure TLS connection to tunnel...
+01 Dec 11:02:58 - Selenium listener started on port 4445.
+01 Dec 11:03:06 - Sauce Connect is up, you may start your tests.
+01 Dec 11:12:52 - Cleaning up.
+01 Dec 11:12:52 - Checking domain overlap for my domain sauce-connect.proxy, other tunnel domain sauce-connect.proxy
+01 Dec 11:12:52 - Overlapping domain: sauce-connect.proxy, shutting down tunnel a3ccd3985ed04e7ba0fefc7fa401e9c8.
