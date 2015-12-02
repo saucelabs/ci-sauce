@@ -25,11 +25,12 @@ public class SauceConnectFourManagerTest {
 
     private final String STRING_JSON_TUNNELS_EMPTY;
     private final String STRING_JSON_TUNNELS_ACTIVE;
-
+    private final String STRING_JSON_GET_TUNNEL;
 
     public SauceConnectFourManagerTest() throws URISyntaxException, IOException {
         STRING_JSON_TUNNELS_ACTIVE = Resources.toString(getClass().getResource("/tunnels_active_tunnel.json").toURI().toURL(), Charsets.UTF_8);
         STRING_JSON_TUNNELS_EMPTY = Resources.toString(getClass().getResource("/tunnels_empty.json").toURI().toURL(), Charsets.UTF_8);
+        STRING_JSON_GET_TUNNEL = Resources.toString(getClass().getResource("/single_tunnel.json").toURI().toURL(), Charsets.UTF_8);
     }
 
 
@@ -101,19 +102,20 @@ public class SauceConnectFourManagerTest {
     @Test
     public void openConnectionTest_existing_tunnel() throws Exception {
         doReturn(STRING_JSON_TUNNELS_ACTIVE).when(mockSauceRest).getTunnels();
-        doReturn(STRING_JSON_TUNNELS_ACTIVE).when(mockSauceRest).getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494");
+        doReturn(STRING_JSON_GET_TUNNEL).when(mockSauceRest).getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494");
 
         when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes("UTF-8")));
         when(mockProcess.getInputStream()).thenReturn(getClass().getResourceAsStream("/started_sc.log"));
 
         Process p = this.tunnelManager.openConnection(
             "fakeuser", "fakeapikey", 12345,
-            null, "", mock(PrintStream.class), false,
+            null, "", null, false,
             ""
         );
 
         assertNotNull(p);
 
+        verify(mockSauceRest).getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494");
         verify(mockSauceRest).getTunnels();
         verify(tunnelManager).createProcess(
             new String[] { anyString(), "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345" },
