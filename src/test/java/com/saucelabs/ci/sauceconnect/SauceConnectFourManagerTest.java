@@ -23,6 +23,8 @@ public class SauceConnectFourManagerTest {
 
     private SauceREST mockSauceRest;
 
+    private PrintStream ps = System.out;
+
     private final String STRING_JSON_TUNNELS_EMPTY;
     private final String STRING_JSON_TUNNELS_ACTIVE;
     private final String STRING_JSON_GET_TUNNEL;
@@ -57,7 +59,7 @@ public class SauceConnectFourManagerTest {
 
         Process p = this.tunnelManager.openConnection(
             "fakeuser", "fakeapikey", 12345,
-            null, "", mock(PrintStream.class), false,
+            null, "", ps, false,
             ""
         );
 
@@ -85,7 +87,7 @@ public class SauceConnectFourManagerTest {
         try {
             Process p = this.tunnelManager.openConnection(
                 "fakeuser", "fakeapikey", 12345,
-                null, "", mock(PrintStream.class), false,
+                null, "", ps, false,
                 ""
             );
         } catch (Exception e) {
@@ -109,7 +111,7 @@ public class SauceConnectFourManagerTest {
 
         Process p = this.tunnelManager.openConnection(
             "fakeuser", "fakeapikey", 12345,
-            null, "", null, false,
+            null, "", ps, false,
             ""
         );
 
