@@ -293,16 +293,40 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @throws IOException thrown if an error occurs extracting the files
      */
     private File extractFile(File workingDirectory, String fileName) throws IOException {
+        InputStream inputStream = null;
+        FileOutputStream outputStream = null;
 
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(fileName);
-        //copy input stream to a file
-        File destination = new File(workingDirectory, fileName);
-        //remove file if it already exists
-        if (destination.exists()) {
-            destination.delete();
+        File destination;
+
+        try {
+            inputStream = getClass().getClassLoader().getResourceAsStream(fileName);
+            //copy input stream to a file
+            destination = new File(workingDirectory, fileName);
+            //remove file if it already exists
+            if (destination.exists()) {
+                destination.delete();
+            }
+            outputStream = new FileOutputStream(destination);
+            IOUtils.copy(inputStream, outputStream);
+            outputStream.flush();
+        } catch (IOException e) {
+            throw e;
+        } finally {
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-        FileOutputStream outputStream = new FileOutputStream(destination);
-        IOUtils.copy(inputStream, outputStream);
         return destination;
     }
 
