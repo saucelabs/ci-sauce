@@ -92,7 +92,7 @@ public class JobInformation implements Serializable {
     }
 
     public String getOs() {
-        return os;
+        return OperatingSystemDescription.getOperatingSystemName(os);
     }
 
     public void setOs(String os) {
