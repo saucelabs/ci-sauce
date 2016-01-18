@@ -134,7 +134,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/selenium-rc"));
+        String response = sauceREST.getSupportedPlatforms("selenium-rc");
         if (response.equals("")) {
             response = "[]";
         }
@@ -152,7 +152,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/webdriver"));
+        String response = sauceREST.getSupportedPlatforms("webdriver");
         if (response.equals("")) {
             response = "[]";
         }
@@ -160,7 +160,7 @@ public class BrowserFactory {
     }
 
     private List<Browser> getAppiumBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = sauceREST.retrieveResults(new URL(BROWSER_URL + "/appium"));
+        String response = sauceREST.getSupportedPlatforms("appium");
         if (response.equals("")) {
             response = "[]";
         }

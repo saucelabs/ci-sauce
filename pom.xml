@@ -197,7 +197,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
-            <version>1.0.28</version>
+            <version>1.0.31</version>
             <scope>compile</scope>
         </dependency>
 

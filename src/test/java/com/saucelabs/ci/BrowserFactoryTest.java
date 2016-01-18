@@ -21,16 +21,15 @@ public class BrowserFactoryTest {
     public void setUp() throws Exception {
         SauceREST sauceREST = mock(SauceREST.class);
         when(
-            sauceREST.retrieveResults(new URL("http://saucelabs.com/rest/v1/info/platforms/selenium-rc"))
+            sauceREST.getSupportedPlatforms("selenium-rc")
         ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/selenium-rc.json")));
         when(
-            sauceREST.retrieveResults(new URL("http://saucelabs.com/rest/v1/info/platforms/appium"))
+            sauceREST.getSupportedPlatforms("appium")
         ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/appium.json")));
         when(
-            sauceREST.retrieveResults(new URL("http://saucelabs.com/rest/v1/info/platforms/webdriver"))
+            sauceREST.getSupportedPlatforms("webdriver")
         ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/webdriver.json")));
         this.browserFactory = new BrowserFactory(sauceREST);
-
     }
 
     @After
