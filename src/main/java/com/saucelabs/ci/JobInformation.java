@@ -1,10 +1,10 @@
 package com.saucelabs.ci;
 
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,7 +83,7 @@ public class JobInformation implements Serializable {
      * Set job status state (boolean)
      * @param status Boolean of true (passed) or false (failed)
      */
-    public void setStatus(@NotNull Boolean status) {
+    public void setStatus(@Nonnull Boolean status) {
         this.setStatus(status.booleanValue() ? "passed" : "failed");
     }
 
