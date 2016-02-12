@@ -26,14 +26,14 @@ public class JobInformationTest {
 
     @Test
     public void testHMAC() throws Exception {
-        assertEquals(job.getHmac(), "hmac");
+        assertEquals("hmac", job.getHmac());
         job.setHmac("newhmac");
-        assertEquals(job.getHmac(), "newhmac");
+        assertEquals("newhmac", job.getHmac());
     }
 
     @Test
     public void testJobId() throws Exception {
-        assertEquals(job.getJobId(), "1234");
+        assertEquals("1234", job.getJobId());
     }
 
     @Test
@@ -56,7 +56,7 @@ public class JobInformationTest {
     @Test
     public void testPopulateFromJson() throws Exception {
         assertFalse(job.hasJobName());
-        assertEquals(job.getName(), null);
+        assertNull(job.getName());
     }
 
     @Test
@@ -65,7 +65,7 @@ public class JobInformationTest {
         updates.put("name", "Gavin's first job");
 
         assertFalse(job.hasJobName());
-        assertEquals(job.getName(), null);
+        assertNull(job.getName());
         assertFalse(job.hasChanges());
         job.setName("Gavin's first job");
         assertTrue(job.hasJobName());
@@ -79,7 +79,7 @@ public class JobInformationTest {
         updates.put("build", "build-name");
 
         assertFalse(job.hasBuild());
-        assertEquals(job.getBuild(), null);
+        assertNull(job.getBuild());
         assertFalse(job.hasChanges());
 
         job.setBuild("build-name");
@@ -94,12 +94,12 @@ public class JobInformationTest {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("browser", "firefox");
 
-        assertEquals(job.getBrowser(), "iexplore");
+        assertEquals("iexplore", job.getBrowser());
         assertFalse(job.hasChanges());
 
         job.setBrowser("firefox");
         assertTrue(job.hasChanges());
-        assertEquals(job.getBrowser(), "firefox");
+        assertEquals("firefox", job.getBrowser());
         assertTrue(job.hasChange("browser"));
 
         assertEquals(updates, job.getChanges());
@@ -110,28 +110,58 @@ public class JobInformationTest {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("version", "20");
 
-        assertEquals(job.getVersion(), "10");
+        assertEquals("10", job.getVersion());
         assertFalse(job.hasChanges());
 
         job.setVersion("20");
         assertTrue(job.hasChanges());
-        assertEquals(job.getVersion(), "20");
+        assertEquals("20", job.getVersion());
         assertTrue(job.hasChange("version"));
 
         assertEquals(updates, job.getChanges());
     }
 
     @Test
+    public void testOs() throws Exception {
+        HashMap<String, Object> updates = new HashMap<String, Object>();
+        updates.put("os", "20");
+
+        assertEquals("Windows 7", job.getOs());
+        assertFalse(job.hasChanges());
+
+        /* Test random os */
+        job.setOs("20");
+        assertTrue(job.hasChanges());
+        assertEquals("20", job.getOs());
+        assertTrue(job.hasChange("os"));
+
+        assertEquals(updates, job.getChanges());
+
+        /* Test mapped os */
+        job.setOs("Windows 2012 R2");
+        assertTrue(job.hasChanges());
+        assertEquals("Windows 8.1", job.getOs());
+        assertTrue(job.hasChange("os"));
+
+        updates.put("os", "Windows 2012 R2");
+        assertEquals(updates, job.getChanges());
+    }
+
+
+    @Test
     public void testVideoUrl() throws Exception {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("videoUrl", "20");
 
-        assertEquals(job.getVideoUrl(), "https://saucelabs.com/jobs/449f8e8f5940483ea6938ce6cdbea117/video.flv");
+        assertEquals(
+            "https://saucelabs.com/jobs/449f8e8f5940483ea6938ce6cdbea117/video.flv",
+            job.getVideoUrl()
+        );
         assertFalse(job.hasChanges());
 
         job.setVideoUrl("20");
         assertTrue(job.hasChanges());
-        assertEquals(job.getVideoUrl(), "20");
+        assertEquals("20", job.getVideoUrl());
         assertTrue(job.hasChange("videoUrl"));
 
         assertEquals(updates, job.getChanges());
@@ -142,12 +172,15 @@ public class JobInformationTest {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("logUrl", "20");
 
-        assertEquals(job.getLogUrl(), "https://saucelabs.com/jobs/449f8e8f5940483ea6938ce6cdbea117/selenium-server.log");
+        assertEquals(
+            "https://saucelabs.com/jobs/449f8e8f5940483ea6938ce6cdbea117/selenium-server.log",
+            job.getLogUrl()
+        );
         assertFalse(job.hasChanges());
 
         job.setLogUrl("20");
         assertTrue(job.hasChanges());
-        assertEquals(job.getLogUrl(), "20");
+        assertEquals("20", job.getLogUrl());
         assertTrue(job.hasChange("logUrl"));
 
         assertEquals(updates, job.getChanges());
@@ -159,7 +192,7 @@ public class JobInformationTest {
         updates.put("build", "build-name");
         updates.put("name", "name-name-name");
 
-        assertEquals(job.getName(), null);
+        assertNull(job.getName());
         assertFalse(job.hasChanges());
         job.setBuild("build-name");
         job.setName("name-name-name");
