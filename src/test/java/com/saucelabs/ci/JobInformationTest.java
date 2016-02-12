@@ -50,6 +50,8 @@ public class JobInformationTest {
         assertFalse(job.hasChanges());
         job.setStatus(true);
         assertEquals("passed", job.getStatus());
+        job.setStatus(false);
+        assertEquals("failed", job.getStatus());
         assertTrue(job.hasChange("status"));
     }
 
@@ -67,6 +69,10 @@ public class JobInformationTest {
         assertFalse(job.hasJobName());
         assertNull(job.getName());
         assertFalse(job.hasChanges());
+        job.setName(null);
+        assertFalse(job.hasJobName());
+        job.setName("null");
+        assertFalse(job.hasJobName());
         job.setName("Gavin's first job");
         assertTrue(job.hasJobName());
         assertTrue(job.hasChanges());
@@ -81,6 +87,11 @@ public class JobInformationTest {
         assertFalse(job.hasBuild());
         assertNull(job.getBuild());
         assertFalse(job.hasChanges());
+
+        job.setBuild(null);
+        assertFalse(job.hasJobName());
+        job.setBuild("null");
+        assertFalse(job.hasBuild());
 
         job.setBuild("build-name");
         assertTrue(job.hasChanges());
