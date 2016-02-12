@@ -49,9 +49,9 @@ public class JobInformationTest {
         job.clearChanges();
         assertFalse(job.hasChanges());
         job.setStatus(true);
-        assertEquals("passed", job.getStatus());
+        assertEquals("Passed", job.getStatus());
         job.setStatus(false);
-        assertEquals("failed", job.getStatus());
+        assertEquals("Failed", job.getStatus());
         assertTrue(job.hasChange("status"));
     }
 
@@ -59,6 +59,43 @@ public class JobInformationTest {
     public void testPopulateFromJson() throws Exception {
         assertFalse(job.hasJobName());
         assertNull(job.getName());
+
+        JSONObject json = new JSONObject();
+        json.put("passed", (String) null);
+        json.put("name", (String) null);
+        json.put("build", (String) null);
+        json.put("os", "Windows 2012 R2");
+        json.put("browser", "");
+        json.put("browser_short_version", "");
+        json.put("video_url", "");
+        json.put("log_url", "");
+
+        /* Name */
+        json.put("name", (String) null);
+        job.populateFromJson(json);
+        assertEquals(null, job.getName());
+
+        json.put("name", "Something");
+        job.populateFromJson(json);
+        assertEquals("Something", job.getName());
+
+        /* Build */
+        json.put("build", (String) null);
+        job.populateFromJson(json);
+        assertEquals(null, job.getBuild());
+
+        json.put("build", "Something");
+        job.populateFromJson(json);
+        assertEquals("Something", job.getBuild());
+
+        /* Passed */
+        json.put("passed", true);
+        job.populateFromJson(json);
+        assertEquals("Passed", job.getStatus());
+
+        json.put("passed", false);
+        job.populateFromJson(json);
+        assertEquals("Failed", job.getStatus());
     }
 
     @Test
@@ -198,7 +235,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void getChange() throws Exception {
+    public void testGetChange() throws Exception {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("build", "build-name");
         updates.put("name", "name-name-name");

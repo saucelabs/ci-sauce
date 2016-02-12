@@ -72,7 +72,7 @@ public class JobInformation implements Serializable {
     /**
      * Job Status
      *
-     * @return "passed", "failed", null
+     * @return "Passed", "Failed", null
      */
     @Nullable
     public String getStatus() {
@@ -84,7 +84,7 @@ public class JobInformation implements Serializable {
      * @param status Boolean of true (passed) or false (failed)
      */
     public void setStatus(@Nonnull Boolean status) {
-        this.setStatus(status.booleanValue() ? "passed" : "failed");
+        this.setStatus(status.booleanValue() ? "Passed" : "Failed");
     }
 
     /**
@@ -263,7 +263,7 @@ public class JobInformation implements Serializable {
 
         if (jobData.has("passed") && !jobData.isNull("passed")) {
             Boolean status = jobData.getBoolean("passed");
-            setStatus(status == true ? "Passed" : "Failed");
+            setStatus(status);
         }
         if (jobData.has("name") && !jobData.isNull("name")) {
             String jobName = jobData.getString("name");
