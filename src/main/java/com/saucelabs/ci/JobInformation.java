@@ -72,7 +72,7 @@ public class JobInformation implements Serializable {
     /**
      * Job Status
      *
-     * @return "passed", "failed", null
+     * @return "Passed", "Failed", null
      */
     @Nullable
     public String getStatus() {
@@ -84,7 +84,7 @@ public class JobInformation implements Serializable {
      * @param status Boolean of true (passed) or false (failed)
      */
     public void setStatus(@Nonnull Boolean status) {
-        this.setStatus(status.booleanValue() ? "passed" : "failed");
+        this.setStatus(status.booleanValue() ? "Passed" : "Failed");
     }
 
     /**
@@ -129,7 +129,7 @@ public class JobInformation implements Serializable {
      *
      * @return true/false
      */
-    public boolean hasBuildNumber() {
+    public boolean hasBuild() {
         return build != null && !build.equals("") && !build.equals("null");
     }
 
@@ -208,13 +208,22 @@ public class JobInformation implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof JobInformation)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
 
         JobInformation that = (JobInformation) o;
 
         if (jobId != null ? !jobId.equals(that.jobId) : that.jobId != null) return false;
+        if (hmac != null ? !hmac.equals(that.hmac) : that.hmac != null) return false;
+        if (status != null ? !status.equals(that.status) : that.status != null) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (os != null ? !os.equals(that.os) : that.os != null) return false;
+        if (browser != null ? !browser.equals(that.browser) : that.browser != null) return false;
+        if (version != null ? !version.equals(that.version) : that.version != null) return false;
+        if (videoUrl != null ? !videoUrl.equals(that.videoUrl) : that.videoUrl != null) return false;
+        if (logUrl != null ? !logUrl.equals(that.logUrl) : that.logUrl != null) return false;
+        if (build != null ? !build.equals(that.build) : that.build != null) return false;
+        return changes != null ? changes.equals(that.changes) : that.changes == null;
 
-        return true;
     }
 
     @Override
@@ -254,7 +263,7 @@ public class JobInformation implements Serializable {
 
         if (jobData.has("passed") && !jobData.isNull("passed")) {
             Boolean status = jobData.getBoolean("passed");
-            setStatus(status == true ? "Passed" : "Failed");
+            setStatus(status);
         }
         if (jobData.has("name") && !jobData.isNull("name")) {
             String jobName = jobData.getString("name");

@@ -10,7 +10,7 @@
   "collects_automator_log": true,
   "record_screenshots": true,
   "record_video": true,
-  "build": "JAVA-JAVA-3",
+  "build": null,
   "passed": true,
   "public": null,
   "assigned_tunnel_id": "3273d337dd69445db86051a464726a76",
