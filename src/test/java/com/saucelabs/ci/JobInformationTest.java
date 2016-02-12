@@ -72,28 +72,39 @@ public class JobInformationTest {
 
         /* Name */
         json.put("name", (String) null);
+        job = new JobInformation("1234", "hmac");
         job.populateFromJson(json);
         assertEquals(null, job.getName());
 
         json.put("name", "Something");
+        job = new JobInformation("1234", "hmac");
         job.populateFromJson(json);
         assertEquals("Something", job.getName());
 
         /* Build */
         json.put("build", (String) null);
+        job = new JobInformation("1234", "hmac");
         job.populateFromJson(json);
         assertEquals(null, job.getBuild());
 
         json.put("build", "Something");
+        job = new JobInformation("1234", "hmac");
         job.populateFromJson(json);
         assertEquals("Something", job.getBuild());
 
         /* Passed */
+        json.put("passed", (String) null);
+        job = new JobInformation("1234", "hmac");
+        job.populateFromJson(json);
+        assertEquals(null, job.getStatus());
+
         json.put("passed", true);
+        job = new JobInformation("1234", "hmac");
         job.populateFromJson(json);
         assertEquals("Passed", job.getStatus());
 
         json.put("passed", false);
+        job = new JobInformation("1234", "hmac");
         job.populateFromJson(json);
         assertEquals("Failed", job.getStatus());
     }
@@ -107,6 +118,8 @@ public class JobInformationTest {
         assertNull(job.getName());
         assertFalse(job.hasChanges());
         job.setName(null);
+        assertFalse(job.hasJobName());
+        job.setName("");
         assertFalse(job.hasJobName());
         job.setName("null");
         assertFalse(job.hasJobName());
@@ -126,7 +139,9 @@ public class JobInformationTest {
         assertFalse(job.hasChanges());
 
         job.setBuild(null);
-        assertFalse(job.hasJobName());
+        assertFalse(job.hasBuild());
+        job.setBuild("");
+        assertFalse(job.hasBuild());
         job.setBuild("null");
         assertFalse(job.hasBuild());
 
