@@ -11,7 +11,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.URL;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
@@ -26,8 +25,6 @@ import java.util.logging.Logger;
 public class BrowserFactory {
 
     private static final Logger logger = Logger.getLogger(BrowserFactory.class.getName());
-
-    public static final String BROWSER_URL = "http://saucelabs.com/rest/v1/info/platforms";
 
     public static final int ONE_HOUR_IN_MILLIS = 1000 * 60 * 60;
 
@@ -165,10 +162,6 @@ public class BrowserFactory {
             response = "[]";
         }
         return getBrowserListFromJson(response);
-    }
-
-    public SauceFactory getSauceAPIFactory() {
-        return new SauceFactory();
     }
 
     /**
