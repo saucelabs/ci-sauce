@@ -237,6 +237,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     /**
      * @param args Arguments to run
      * @param directory Directory to run in
+     * @throws IOException thrown if an error occurs launching the Sauce Connect process
      * @return Processbuilder to run
      */
     protected Process createProcess(String[] args, File directory) throws IOException {
