@@ -130,7 +130,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      */
     private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
 
-    public static final String CURRENT_SC_VERSION = "4.3.13";
+    public static final String CURRENT_SC_VERSION = "4.3.14";
     public static final String SAUCE_CONNECT_4 = "sc-" + CURRENT_SC_VERSION;
 
     private static final String OSX_DIR = SAUCE_CONNECT_4 + "-osx";
