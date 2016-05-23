@@ -49,24 +49,4 @@ public class BrowserTest  {
     }
 
 
-
-    @Test
-    public void testWindows2008ToWindows7() throws Exception {
-        List<Browser> browsers = BrowserFactory.getInstance().getBrowserListFromJson("[" +
-            "            {\n" +
-                "            short_version: \"8\",\n" +
-                "            long_name: \"Internet Explorer\",\n" +
-                "            api_name: \"internet explorer\",\n" +
-                "            long_version: \"8.0.7601.17514.\",\n" +
-                "            latest_stable_version: \"\",\n" +
-                "            automation_backend: \"webdriver\",\n" +
-                "            os: \"Windows 2008\"\n" +
-                "        }," +
-            "]");
-
-        assertEquals("internet explorer", browsers.get(0).getBrowserName());
-        assertEquals("Windows 7", browsers.get(0).getPlatform());
-        assertEquals("8", browsers.get(0).getVersion());
-    }
-
 }
