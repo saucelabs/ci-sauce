@@ -195,9 +195,15 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
                     return null;
                 }
 
-                unzipDirectory = extractZipFile(workingDirectory, operatingSystem);
+                unzipDirectory = getUnzipDir(workingDirectory, operatingSystem);
+                File binPath = new File(unzipDirectory, operatingSystem.getExecutable());
+                if (!binPath.exists()) {
+                    unzipDirectory = extractZipFile(workingDirectory, operatingSystem);
+                } else {
+                    logMessage(printStream, binPath + " already exists, so not extracting");
+                }
                 //although we are setting the working directory, we need to specify the full path to the exe
-                args = new String[]{new File(unzipDirectory, operatingSystem.getExecutable()).getPath()};
+                args = new String[]{binPath.getPath()};
             } else {
                 File sauceConnectBinary = new File(sauceConnectPath);
                 if (!sauceConnectBinary.exists()) {
@@ -252,6 +258,10 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         } else if (operatingSystem.equals(OperatingSystem.LINUX) || operatingSystem.equals(OperatingSystem.LINUX32)) {
             untarGzFile(zipFile, workingDirectory);
         }
+        return getUnzipDir(workingDirectory, operatingSystem);
+    }
+
+    private File getUnzipDir(File workingDirectory, OperatingSystem operatingSystem) {
         return new File(workingDirectory, operatingSystem.getDirectory());
     }
 
