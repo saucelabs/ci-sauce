@@ -3,7 +3,7 @@
 
     <groupId>com.saucelabs</groupId>
     <artifactId>ci-sauce</artifactId>
-    <version>1.117</version>
+    <version>1.118-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 
@@ -49,7 +49,7 @@
         <connection>scm:git:git://github.com/saucelabs/ci-sauce.git</connection>
         <developerConnection>scm:git:git@github.com:saucelabs/ci-sauce.git</developerConnection>
         <url>git@github.com:saucelabs/ci-sauce.git</url>
-      <tag>ci-sauce-1.117</tag>
+      <tag>HEAD</tag>
   </scm>
     <distributionManagement>
         <snapshotRepository>
