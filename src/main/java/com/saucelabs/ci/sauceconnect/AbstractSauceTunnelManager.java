@@ -158,16 +158,21 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @return String representing the tunnel identifier
      */
     public static String getTunnelIdentifier(String options, String defaultValue) {
-        if (options != null && !options.equals("")) {
-            String[] split = options.split(" ");
-            for (int i = 0; i < split.length; i++) {
-                String option = split[i];
-                if (option.equals("-i") || option.equals("--tunnel-identifier")) {
-                    //next option is identifier
-                    return split[i + 1];
-                }
+        if (options == null || options.equals("")) {
+            return defaultValue;
+        }
+
+        String identifier = null;
+        String[] split = options.split(" ");
+        for (int i = 0; i < split.length; i++) {
+            String option = split[i];
+            if (option.equals("-i") || option.equals("--tunnel-identifier")) {
+                //next option is identifier
+                identifier = split[i + 1];
             }
         }
+        if (identifier != null) { return identifier; }
+
         return defaultValue;
     }
 
@@ -176,16 +181,20 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @return String representing the logfile location
      */
     public static String getLogfile(String options) {
-        if (options != null && !options.equals("")) {
-            String[] split = options.split(" ");
-            for (int i = 0; i < split.length; i++) {
-                String option = split[i];
-                if (option.equals("-l") || option.equals("--logfile")) {
-                    //next option is identifier
-                    return split[i + 1];
-                }
+        if (options == null || options.equals("")) {
+            return null;
+        }
+        String logFile = null;
+        String[] split = options.split(" ");
+        for (int i = 0; i < split.length; i++) {
+            String option = split[i];
+            if (option.equals("-l") || option.equals("--logfile")) {
+                //next option is identifier
+                logFile = split[i + 1];
             }
         }
+        if (logFile != null) { return logFile; }
+
         return null;
     }
 
