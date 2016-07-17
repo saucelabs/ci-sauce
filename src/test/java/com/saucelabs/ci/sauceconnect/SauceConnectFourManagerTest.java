@@ -5,7 +5,9 @@ import com.google.common.io.Resources;
 import com.saucelabs.saucerest.SauceREST;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 
 import java.io.*;
@@ -123,5 +125,41 @@ public class SauceConnectFourManagerTest {
             new String[] { anyString(), "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345" },
             new File( anyString() )
         );
+    }
+
+    @Rule
+    public TemporaryFolder folder= new TemporaryFolder();
+
+    @Test
+    public void testExtractZipFile() throws Exception {
+        File linux_destination = folder.newFolder("sauceconnect_linux");
+        File linux32_destination = folder.newFolder("sauceconnect_linux32");
+        File windows_destination = folder.newFolder("sauceconnect_windows");
+        File osx_destination = folder.newFolder("sauceconnect_osx");
+
+        SauceConnectFourManager manager = new SauceConnectFourManager();
+        manager.extractZipFile(linux_destination, SauceConnectFourManager.OperatingSystem.LINUX);
+        assertTrue("Linux executable exists", new File(
+            new File(linux_destination, SauceConnectFourManager.OperatingSystem.LINUX.getDirectory()),
+            SauceConnectFourManager.OperatingSystem.LINUX.getExecutable()
+        ).exists());
+
+        manager.extractZipFile(linux32_destination, SauceConnectFourManager.OperatingSystem.LINUX32);
+        assertTrue("Linux32 executable exists", new File(
+            new File(linux32_destination, SauceConnectFourManager.OperatingSystem.LINUX32.getDirectory()),
+            SauceConnectFourManager.OperatingSystem.LINUX32.getExecutable()
+        ).exists());
+
+        manager.extractZipFile(windows_destination, SauceConnectFourManager.OperatingSystem.WINDOWS);
+        assertTrue("windows executable exists", new File(
+            new File(windows_destination, SauceConnectFourManager.OperatingSystem.WINDOWS.getDirectory()),
+            SauceConnectFourManager.OperatingSystem.WINDOWS.getExecutable()
+        ).exists());
+
+        manager.extractZipFile(osx_destination, SauceConnectFourManager.OperatingSystem.OSX);
+        assertTrue("osx executable exists", new File(
+            new File(osx_destination, SauceConnectFourManager.OperatingSystem.OSX.getDirectory()),
+            SauceConnectFourManager.OperatingSystem.OSX.getExecutable()
+        ).exists());
     }
 }

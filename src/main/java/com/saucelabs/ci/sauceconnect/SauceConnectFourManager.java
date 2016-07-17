@@ -1,15 +1,19 @@
 package com.saucelabs.ci.sauceconnect;
 
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
-import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
-import org.codehaus.plexus.logging.Logger;
-import org.codehaus.plexus.logging.console.ConsoleLogger;
 
 import java.io.*;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.logging.Level;
 
 /**
@@ -103,11 +107,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             return (os.indexOf("nux") >= 0);
         }
 
-        private String getDirectory() {
+        public String getDirectory() {
             return directory;
         }
 
-        private String getFileName() {
+        public String getFileName() {
             return fileName;
         }
 
@@ -219,6 +223,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             return createProcess(args, unzipDirectory);
         } catch (IOException e) {
             throw new SauceConnectException(e);
+        } catch (ArchiveException e) {
+            throw new SauceConnectException(e);
         }
     }
 
@@ -250,7 +256,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @return the directory containing the extracted files
      * @throws IOException thrown if an error occurs extracting the files
      */
-    public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
+    public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException, ArchiveException {
 
         File zipFile = extractFile(workingDirectory, operatingSystem.getFileName());
         if (operatingSystem.equals(OperatingSystem.OSX) | operatingSystem.equals(OperatingSystem.WINDOWS)) {
@@ -265,35 +271,97 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         return new File(workingDirectory, operatingSystem.getDirectory());
     }
 
+    final static int BUFFER = 2048;
+
     /**
      * @param zipFile     the compressed file to extract
      * @param destination the destination directory
      */
-    private void untarGzFile(File zipFile, File destination) {
-        //remove tar file if it exists first
-        File tarFile = new File(zipFile.getParentFile(), zipFile.getName().replaceAll(".gz", ""));
-        if (tarFile.exists()) {
-            tarFile.delete();
+    private void untarGzFile(File zipFile, File destination) throws IOException, ArchiveException {
+        FileInputStream fin = null;
+        BufferedInputStream in = null;
+        GzipCompressorInputStream gzIn = null;
+        TarArchiveInputStream tarIn = null;
+
+        try {
+            fin = new FileInputStream(zipFile);
+            in = new BufferedInputStream(fin);
+            gzIn = new GzipCompressorInputStream(in);
+            tarIn = new TarArchiveInputStream(gzIn);
+
+            TarArchiveEntry entry = null;
+
+            /** Read the tar entries using the getNextEntry method **/
+
+            while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {
+                /** If the entry is a directory, create the directory. **/
+
+                if (entry.isDirectory()) {
+
+                    File f = new File(destination, entry.getName());
+                    f.mkdirs();
+                }
+                /**
+                 * If the entry is a file,write the decompressed file to the disk
+                 * and close destination stream.
+                 **/
+                else {
+                    int count;
+                    byte data[] = new byte[BUFFER];
+
+                    FileOutputStream fos = new FileOutputStream(new File(destination, entry.getName()));
+                    BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER);
+                    while ((count = tarIn.read(data, 0, BUFFER)) != -1) {
+                        dest.write(data, 0, count);
+                    }
+                    dest.close();
+                }
+            }
+
+            /** Close the input stream **/
+
+            tarIn.close();
+        } finally {
+            if (fin != null) {
+                fin.close();
+            }
+            if (in != null) {
+                in.close();
+            }
+            if (gzIn != null) {
+                gzIn.close();
+            }
+            if (tarIn != null) {
+                tarIn.close();
+            }
         }
-
-        final TarGZipUnArchiver unArchiver = new TarGZipUnArchiver();
-        unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, "Sauce"));
-        unArchiver.setSourceFile(zipFile);
-        unArchiver.setDestDirectory(destination);
-        unArchiver.extract();
-
     }
 
     /**
-     * @param zipFile     the compressed file to extract
+     * @param zip        the compressed file to extract
      * @param destination the destination directory
      */
-    private void unzipFile(File zipFile, File destination) {
-        final ZipUnArchiver unArchiver = new ZipUnArchiver();
-        unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, "Sauce"));
-        unArchiver.setSourceFile(zipFile);
-        unArchiver.setDestDirectory(destination);
-        unArchiver.extract();
+    private void unzipFile(File zip, File destination) throws IOException, ArchiveException {
+        ZipFile zipFile = new ZipFile(zip);
+        try {
+            Enumeration<? extends ZipArchiveEntry> entries = zipFile.getEntries();
+            while (entries.hasMoreElements()) {
+                ZipArchiveEntry entry = entries.nextElement();
+                File entryDestination = new File(destination, entry.getName());
+                if (entry.isDirectory()) {
+                    entryDestination.mkdirs();
+                } else {
+                    entryDestination.getParentFile().mkdirs();
+                    InputStream in = zipFile.getInputStream(entry);
+                    OutputStream out = new FileOutputStream(entryDestination);
+                    IOUtils.copy(in, out);
+                    IOUtils.closeQuietly(in);
+                    out.close();
+                }
+            }
+        } finally {
+            zipFile.close();
+        }
     }
 
     /**
