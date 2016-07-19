@@ -13,7 +13,7 @@ ci-sauce,com.saucelabs.ci,BrowserFactory,209,514,36,30,57,107,34,23,10,14
 ci-sauce,com.saucelabs.ci.sauceconnect,SauceConnectFourManager.OperatingSystem,34,176,9,9,11,34,11,12,3,11
 ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.TunnelInformation,6,39,0,0,2,14,2,7,2,7
 ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.SystemOutGobbler,3,61,2,10,1,16,2,9,0,5
-ci-sauce,com.saucelabs.ci.sauceconnect,SauceConnectFourManager,196,389,42,30,38,102,30,19,1,12
+ci-sauce,com.saucelabs.ci.sauceconnect,SauceConnectFourManager,169,281,31,17,37,68,23,14,1,12
 ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.new Runnable() {...},1,19,0,0,1,4,0,2,0,2
 ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.StreamGobbler,21,40,5,3,7,13,3,4,0,3
 ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.new Runnable() {...},1,19,0,0,1,4,0,2,0,2

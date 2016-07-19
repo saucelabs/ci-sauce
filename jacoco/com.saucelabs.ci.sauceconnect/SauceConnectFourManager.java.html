@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SauceConnectFourManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ci-sauce</a> &gt; <a href="index.source.html" class="el_package">com.saucelabs.ci.sauceconnect</a> &gt; <span class="el_source">SauceConnectFourManager.java</span></div><h1>SauceConnectFourManager.java</h1><pre class="source lang-java linenums">package com.saucelabs.ci.sauceconnect;
 
-import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
+import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
+import org.codehaus.plexus.logging.Logger;
+import org.codehaus.plexus.logging.console.ConsoleLogger;
 
 import java.io.*;
 import java.text.MessageFormat;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.logging.Level;
 
 /**
@@ -26,43 +22,43 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     /**
      * Represents the operating system-specific Sauce Connect binary.
      */
-<span class="pc" id="L29">    public enum OperatingSystem {</span>
+<span class="pc" id="L25">    public enum OperatingSystem {</span>
 
-<span class="fc" id="L31">        OSX(OSX_DIR, OSX_FILE, UNIX_TEMP_DIR),</span>
-<span class="fc" id="L32">        WINDOWS(WINDOWS_DIR, WINDOWS_FILE, WINDOWS_TEMP_DIR, &quot;bin&quot; + File.separator + &quot;sc.exe&quot;),</span>
-<span class="fc" id="L33">        LINUX(LINUX_DIR, LINUX_FILE, UNIX_TEMP_DIR),</span>
-<span class="fc" id="L34">        LINUX32(LINUX32_DIR, LINUX32_FILE, UNIX_TEMP_DIR);</span>
+<span class="fc" id="L27">        OSX(OSX_DIR, OSX_FILE, UNIX_TEMP_DIR),</span>
+<span class="fc" id="L28">        WINDOWS(WINDOWS_DIR, WINDOWS_FILE, WINDOWS_TEMP_DIR, &quot;bin&quot; + File.separator + &quot;sc.exe&quot;),</span>
+<span class="fc" id="L29">        LINUX(LINUX_DIR, LINUX_FILE, UNIX_TEMP_DIR),</span>
+<span class="fc" id="L30">        LINUX32(LINUX32_DIR, LINUX32_FILE, UNIX_TEMP_DIR);</span>
         private final String directory;
         private final String fileName;
         private final String executable;
         private final String tempDirectory;
 
-<span class="fc" id="L40">        OperatingSystem(String directory, String fileName, String tempDirectory, String executable) {</span>
-<span class="fc" id="L41">            this.directory = directory;</span>
-<span class="fc" id="L42">            this.fileName = fileName;</span>
-<span class="fc" id="L43">            this.executable = executable;</span>
-<span class="fc" id="L44">            this.tempDirectory = tempDirectory;</span>
-<span class="fc" id="L45">        }</span>
+<span class="fc" id="L36">        OperatingSystem(String directory, String fileName, String tempDirectory, String executable) {</span>
+<span class="fc" id="L37">            this.directory = directory;</span>
+<span class="fc" id="L38">            this.fileName = fileName;</span>
+<span class="fc" id="L39">            this.executable = executable;</span>
+<span class="fc" id="L40">            this.tempDirectory = tempDirectory;</span>
+<span class="fc" id="L41">        }</span>
 
         OperatingSystem(String directory, String fileName, String tempDirectory) {
-<span class="fc" id="L48">            this(directory, fileName, tempDirectory, &quot;bin/sc&quot;);</span>
-<span class="fc" id="L49">        }</span>
+<span class="fc" id="L44">            this(directory, fileName, tempDirectory, &quot;bin/sc&quot;);</span>
+<span class="fc" id="L45">        }</span>
 
         public static OperatingSystem getOperatingSystem() {
-<span class="fc" id="L52">            String os = System.getProperty(&quot;os.name&quot;).toLowerCase();</span>
-<span class="pc bpc" id="L53" title="1 of 2 branches missed.">            if (isWindows(os)) {</span>
-<span class="nc" id="L54">                return WINDOWS;</span>
-<span class="pc bpc" id="L55" title="1 of 2 branches missed.">            } else if (isMac(os)) {</span>
-<span class="nc" id="L56">                return OSX;</span>
-<span class="pc bpc" id="L57" title="1 of 2 branches missed.">            } else if (isUnix(os)) {</span>
+<span class="fc" id="L48">            String os = System.getProperty(&quot;os.name&quot;).toLowerCase();</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">            if (isWindows(os)) {</span>
+<span class="nc" id="L50">                return WINDOWS;</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">            } else if (isMac(os)) {</span>
+<span class="nc" id="L52">                return OSX;</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">            } else if (isUnix(os)) {</span>
                 //check to see if we are on 64 bit
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">                if (is64BitLinux()) {</span>
-<span class="fc" id="L60">                    return LINUX;</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">                if (is64BitLinux()) {</span>
+<span class="fc" id="L56">                    return LINUX;</span>
                 } else {
-<span class="nc" id="L62">                    return LINUX32;</span>
+<span class="nc" id="L58">                    return LINUX32;</span>
                 }
             }
-<span class="nc" id="L65">            return null;</span>
+<span class="nc" id="L61">            return null;</span>
         }
 
         /**
@@ -71,64 +67,64 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
          * @return boolean indicating whether OS is 64-bit
          */
         private static boolean is64BitLinux() {
-<span class="fc" id="L74">            BufferedReader reader = null;</span>
+<span class="fc" id="L70">            BufferedReader reader = null;</span>
             try {
-<span class="fc" id="L76">                Runtime runtime = Runtime.getRuntime();</span>
-<span class="fc" id="L77">                Process process = runtime.exec(&quot;uname -a&quot;);</span>
-<span class="fc" id="L78">                process.waitFor();</span>
-<span class="fc" id="L79">                reader = new BufferedReader(new InputStreamReader(process.getInputStream()));</span>
-<span class="fc" id="L80">                StringBuilder builder = new StringBuilder();</span>
+<span class="fc" id="L72">                Runtime runtime = Runtime.getRuntime();</span>
+<span class="fc" id="L73">                Process process = runtime.exec(&quot;uname -a&quot;);</span>
+<span class="fc" id="L74">                process.waitFor();</span>
+<span class="fc" id="L75">                reader = new BufferedReader(new InputStreamReader(process.getInputStream()));</span>
+<span class="fc" id="L76">                StringBuilder builder = new StringBuilder();</span>
                 String line;
-<span class="fc bfc" id="L82" title="All 2 branches covered.">                while ((line = reader.readLine()) != null) {</span>
-<span class="fc" id="L83">                    builder.append(line);</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                while ((line = reader.readLine()) != null) {</span>
+<span class="fc" id="L79">                    builder.append(line);</span>
                 }
-<span class="fc" id="L85">                return builder.toString().contains(&quot;64&quot;);</span>
-<span class="nc" id="L86">            } catch (Exception e) {</span>
-<span class="nc bnc" id="L87" title="All 2 branches missed.">                if (reader != null) {</span>
+<span class="fc" id="L81">                return builder.toString().contains(&quot;64&quot;);</span>
+<span class="nc" id="L82">            } catch (Exception e) {</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">                if (reader != null) {</span>
                     try {
-<span class="nc" id="L89">                        reader.close();</span>
-<span class="nc" id="L90">                    } catch (IOException e1) {</span>
+<span class="nc" id="L85">                        reader.close();</span>
+<span class="nc" id="L86">                    } catch (IOException e1) {</span>
                         //ignore
-<span class="nc" id="L92">                    }</span>
+<span class="nc" id="L88">                    }</span>
                 }
             }
-<span class="nc" id="L95">            return false;</span>
+<span class="nc" id="L91">            return false;</span>
         }
 
         private static boolean isWindows(String os) {
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            return (os.indexOf(&quot;win&quot;) &gt;= 0);</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">            return (os.indexOf(&quot;win&quot;) &gt;= 0);</span>
         }
 
         private static boolean isMac(String os) {
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">            return (os.indexOf(&quot;mac&quot;) &gt;= 0);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            return (os.indexOf(&quot;mac&quot;) &gt;= 0);</span>
         }
 
         private static boolean isUnix(String os) {
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">            return (os.indexOf(&quot;nux&quot;) &gt;= 0);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">            return (os.indexOf(&quot;nux&quot;) &gt;= 0);</span>
         }
 
         public String getDirectory() {
-<span class="fc" id="L111">            return directory;</span>
+<span class="fc" id="L107">            return directory;</span>
         }
 
         public String getFileName() {
-<span class="fc" id="L115">            return fileName;</span>
+<span class="fc" id="L111">            return fileName;</span>
         }
 
         public String getExecutable() {
-<span class="fc" id="L119">            return executable;</span>
+<span class="fc" id="L115">            return executable;</span>
         }
 
 
         public String getDefaultSauceConnectLogDirectory() {
-<span class="nc" id="L124">            return tempDirectory;</span>
+<span class="nc" id="L120">            return tempDirectory;</span>
         }
     }
 
 
     private static final String UNIX_TEMP_DIR = &quot;/tmp&quot;;
 
-<span class="fc" id="L131">    private static final String WINDOWS_TEMP_DIR = System.getProperty(&quot;java.io.tmpdir&quot;);</span>
+<span class="fc" id="L127">    private static final String WINDOWS_TEMP_DIR = System.getProperty(&quot;java.io.tmpdir&quot;);</span>
     /**
      * Output from Sauce Connect process which indicates that it has been started.
      */
@@ -152,8 +148,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * Constructs a new instance with quiet mode disabled.
      */
     public SauceConnectFourManager() {
-<span class="fc" id="L155">        this(false);</span>
-<span class="fc" id="L156">    }</span>
+<span class="fc" id="L151">        this(false);</span>
+<span class="fc" id="L152">    }</span>
 
     /**
      * Constructs a new instance.
@@ -161,8 +157,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @param quietMode indicates whether Sauce Connect output should be suppressed
      */
     public SauceConnectFourManager(boolean quietMode) {
-<span class="fc" id="L164">        super(quietMode);</span>
-<span class="fc" id="L165">    }</span>
+<span class="fc" id="L160">        super(quietMode);</span>
+<span class="fc" id="L161">    }</span>
 
     /**
      * @param username         name of the user which launched Sauce Connect
@@ -182,49 +178,47 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         try {
             String[] args;
             File unzipDirectory;
-<span class="pc bpc" id="L185" title="2 of 4 branches missed.">            if (sauceConnectPath == null || sauceConnectPath.equals(&quot;&quot;)) {</span>
-<span class="fc" id="L186">                File workingDirectory = null;</span>
-<span class="pc bpc" id="L187" title="3 of 4 branches missed.">                if (sauceConnectJar != null &amp;&amp; sauceConnectJar.exists()) {</span>
-<span class="nc" id="L188">                    workingDirectory = sauceConnectJar.getParentFile();</span>
+<span class="pc bpc" id="L181" title="2 of 4 branches missed.">            if (sauceConnectPath == null || sauceConnectPath.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L182">                File workingDirectory = null;</span>
+<span class="pc bpc" id="L183" title="3 of 4 branches missed.">                if (sauceConnectJar != null &amp;&amp; sauceConnectJar.exists()) {</span>
+<span class="nc" id="L184">                    workingDirectory = sauceConnectJar.getParentFile();</span>
                 }
-<span class="pc bpc" id="L190" title="1 of 2 branches missed.">                if (workingDirectory == null) {</span>
-<span class="fc" id="L191">                    workingDirectory = new File(getSauceConnectWorkingDirectory());</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">                if (workingDirectory == null) {</span>
+<span class="fc" id="L187">                    workingDirectory = new File(getSauceConnectWorkingDirectory());</span>
                 }
-<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                if (!workingDirectory.canWrite()) {</span>
-<span class="nc" id="L194">                    throw new SauceConnectException(&quot;Can't write to &quot; + workingDirectory.getAbsolutePath() + &quot;, please check the directory permissions&quot;);</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">                if (!workingDirectory.canWrite()) {</span>
+<span class="nc" id="L190">                    throw new SauceConnectException(&quot;Can't write to &quot; + workingDirectory.getAbsolutePath() + &quot;, please check the directory permissions&quot;);</span>
                 }
-<span class="fc" id="L196">                OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();</span>
-<span class="pc bpc" id="L197" title="1 of 2 branches missed.">                if (operatingSystem == null) {</span>
+<span class="fc" id="L192">                OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();</span>
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                if (operatingSystem == null) {</span>
                     //TODO log an error
-<span class="nc" id="L199">                    return null;</span>
+<span class="nc" id="L195">                    return null;</span>
                 }
 
-<span class="fc" id="L202">                unzipDirectory = getUnzipDir(workingDirectory, operatingSystem);</span>
-<span class="fc" id="L203">                File binPath = new File(unzipDirectory, operatingSystem.getExecutable());</span>
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">                if (!binPath.exists()) {</span>
-<span class="nc" id="L205">                    unzipDirectory = extractZipFile(workingDirectory, operatingSystem);</span>
+<span class="fc" id="L198">                unzipDirectory = getUnzipDir(workingDirectory, operatingSystem);</span>
+<span class="fc" id="L199">                File binPath = new File(unzipDirectory, operatingSystem.getExecutable());</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">                if (!binPath.exists()) {</span>
+<span class="nc" id="L201">                    unzipDirectory = extractZipFile(workingDirectory, operatingSystem);</span>
                 } else {
-<span class="fc" id="L207">                    logMessage(printStream, binPath + &quot; already exists, so not extracting&quot;);</span>
+<span class="fc" id="L203">                    logMessage(printStream, binPath + &quot; already exists, so not extracting&quot;);</span>
                 }
                 //although we are setting the working directory, we need to specify the full path to the exe
-<span class="fc" id="L210">                args = new String[]{binPath.getPath()};</span>
-<span class="fc" id="L211">            } else {</span>
-<span class="nc" id="L212">                File sauceConnectBinary = new File(sauceConnectPath);</span>
-<span class="nc bnc" id="L213" title="All 2 branches missed.">                if (!sauceConnectBinary.exists()) {</span>
-<span class="nc" id="L214">                    throw new SauceConnectException(sauceConnectPath + &quot;doesn't exist, please check the location&quot;);</span>
+<span class="fc" id="L206">                args = new String[]{binPath.getPath()};</span>
+<span class="fc" id="L207">            } else {</span>
+<span class="nc" id="L208">                File sauceConnectBinary = new File(sauceConnectPath);</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                if (!sauceConnectBinary.exists()) {</span>
+<span class="nc" id="L210">                    throw new SauceConnectException(sauceConnectPath + &quot;doesn't exist, please check the location&quot;);</span>
                 }
-<span class="nc" id="L216">                unzipDirectory = sauceConnectBinary.getParentFile();</span>
-<span class="nc" id="L217">                args = new String[]{sauceConnectBinary.getPath()};</span>
+<span class="nc" id="L212">                unzipDirectory = sauceConnectBinary.getParentFile();</span>
+<span class="nc" id="L213">                args = new String[]{sauceConnectBinary.getPath()};</span>
             }
 
-<span class="fc" id="L220">            args = generateSauceConnectArgs(args, username, apiKey, port, options);</span>
+<span class="fc" id="L216">            args = generateSauceConnectArgs(args, username, apiKey, port, options);</span>
 
-<span class="fc" id="L222">            julLogger.log(Level.INFO, &quot;Launching Sauce Connect &quot; + getCurrentVersion() + &quot; &quot; + Arrays.toString(args));</span>
-<span class="fc" id="L223">            return createProcess(args, unzipDirectory);</span>
-<span class="nc" id="L224">        } catch (IOException e) {</span>
-<span class="nc" id="L225">            throw new SauceConnectException(e);</span>
-<span class="nc" id="L226">        } catch (ArchiveException e) {</span>
-<span class="nc" id="L227">            throw new SauceConnectException(e);</span>
+<span class="fc" id="L218">            julLogger.log(Level.INFO, &quot;Launching Sauce Connect &quot; + getCurrentVersion() + &quot; &quot; + Arrays.toString(args));</span>
+<span class="fc" id="L219">            return createProcess(args, unzipDirectory);</span>
+<span class="nc" id="L220">        } catch (IOException e) {</span>
+<span class="nc" id="L221">            throw new SauceConnectException(e);</span>
         }
     }
 
@@ -238,16 +232,16 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      */
     protected String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port, String options) {
 
-<span class="fc" id="L241">        args = addElement(args, &quot;-u&quot;);</span>
-<span class="fc" id="L242">        args = addElement(args, username);</span>
-<span class="fc" id="L243">        args = addElement(args, &quot;-k&quot;);</span>
-<span class="fc" id="L244">        args = addElement(args, apiKey);</span>
-<span class="fc" id="L245">        args = addElement(args, &quot;-P&quot;);</span>
-<span class="fc" id="L246">        args = addElement(args, String.valueOf(port));</span>
-<span class="pc bpc" id="L247" title="1 of 2 branches missed.">        if (StringUtils.isNotBlank(options)) {</span>
-<span class="nc" id="L248">            args = addElement(args, options);</span>
+<span class="fc" id="L235">        args = addElement(args, &quot;-u&quot;);</span>
+<span class="fc" id="L236">        args = addElement(args, username);</span>
+<span class="fc" id="L237">        args = addElement(args, &quot;-k&quot;);</span>
+<span class="fc" id="L238">        args = addElement(args, apiKey);</span>
+<span class="fc" id="L239">        args = addElement(args, &quot;-P&quot;);</span>
+<span class="fc" id="L240">        args = addElement(args, String.valueOf(port));</span>
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">        if (StringUtils.isNotBlank(options)) {</span>
+<span class="nc" id="L242">            args = addElement(args, options);</span>
         }
-<span class="fc" id="L250">        return args;</span>
+<span class="fc" id="L244">        return args;</span>
     }
 
     /**
@@ -256,113 +250,51 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @return the directory containing the extracted files
      * @throws IOException thrown if an error occurs extracting the files
      */
-    public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException, ArchiveException {
+    public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
 
-<span class="fc" id="L261">        File zipFile = extractFile(workingDirectory, operatingSystem.getFileName());</span>
-<span class="fc bfc" id="L262" title="All 2 branches covered.">        if (operatingSystem.equals(OperatingSystem.OSX) | operatingSystem.equals(OperatingSystem.WINDOWS)) {</span>
-<span class="fc" id="L263">            unzipFile(zipFile, workingDirectory);</span>
-<span class="pc bpc" id="L264" title="1 of 4 branches missed.">        } else if (operatingSystem.equals(OperatingSystem.LINUX) || operatingSystem.equals(OperatingSystem.LINUX32)) {</span>
-<span class="fc" id="L265">            untarGzFile(zipFile, workingDirectory);</span>
+<span class="fc" id="L255">        File zipFile = extractFile(workingDirectory, operatingSystem.getFileName());</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        if (operatingSystem.equals(OperatingSystem.OSX) | operatingSystem.equals(OperatingSystem.WINDOWS)) {</span>
+<span class="fc" id="L257">            unzipFile(zipFile, workingDirectory);</span>
+<span class="pc bpc" id="L258" title="1 of 4 branches missed.">        } else if (operatingSystem.equals(OperatingSystem.LINUX) || operatingSystem.equals(OperatingSystem.LINUX32)) {</span>
+<span class="fc" id="L259">            untarGzFile(zipFile, workingDirectory);</span>
         }
-<span class="fc" id="L267">        return getUnzipDir(workingDirectory, operatingSystem);</span>
+<span class="fc" id="L261">        return getUnzipDir(workingDirectory, operatingSystem);</span>
     }
 
     private File getUnzipDir(File workingDirectory, OperatingSystem operatingSystem) {
-<span class="fc" id="L271">        return new File(workingDirectory, operatingSystem.getDirectory());</span>
+<span class="fc" id="L265">        return new File(workingDirectory, operatingSystem.getDirectory());</span>
     }
-
-    final static int BUFFER = 2048;
 
     /**
      * @param zipFile     the compressed file to extract
      * @param destination the destination directory
      */
-    private void untarGzFile(File zipFile, File destination) throws IOException, ArchiveException {
-<span class="fc" id="L281">        FileInputStream fin = null;</span>
-<span class="fc" id="L282">        BufferedInputStream in = null;</span>
-<span class="fc" id="L283">        GzipCompressorInputStream gzIn = null;</span>
-<span class="fc" id="L284">        TarArchiveInputStream tarIn = null;</span>
-
-        try {
-<span class="fc" id="L287">            fin = new FileInputStream(zipFile);</span>
-<span class="fc" id="L288">            in = new BufferedInputStream(fin);</span>
-<span class="fc" id="L289">            gzIn = new GzipCompressorInputStream(in);</span>
-<span class="fc" id="L290">            tarIn = new TarArchiveInputStream(gzIn);</span>
-
-<span class="fc" id="L292">            TarArchiveEntry entry = null;</span>
-
-            /** Read the tar entries using the getNextEntry method **/
-
-<span class="fc bfc" id="L296" title="All 2 branches covered.">            while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {</span>
-                /** If the entry is a directory, create the directory. **/
-
-<span class="fc bfc" id="L299" title="All 2 branches covered.">                if (entry.isDirectory()) {</span>
-
-<span class="fc" id="L301">                    File f = new File(destination, entry.getName());</span>
-<span class="fc" id="L302">                    f.mkdirs();</span>
-<span class="fc" id="L303">                }</span>
-                /**
-                 * If the entry is a file,write the decompressed file to the disk
-                 * and close destination stream.
-                 **/
-                else {
-                    int count;
-<span class="fc" id="L310">                    byte data[] = new byte[BUFFER];</span>
-
-<span class="fc" id="L312">                    FileOutputStream fos = new FileOutputStream(new File(destination, entry.getName()));</span>
-<span class="fc" id="L313">                    BufferedOutputStream dest = new BufferedOutputStream(fos, BUFFER);</span>
-<span class="fc bfc" id="L314" title="All 2 branches covered.">                    while ((count = tarIn.read(data, 0, BUFFER)) != -1) {</span>
-<span class="fc" id="L315">                        dest.write(data, 0, count);</span>
-                    }
-<span class="fc" id="L317">                    dest.close();</span>
-<span class="fc" id="L318">                }</span>
-            }
-
-            /** Close the input stream **/
-
-<span class="fc" id="L323">            tarIn.close();</span>
-        } finally {
-<span class="pc bpc" id="L325" title="3 of 4 branches missed.">            if (fin != null) {</span>
-<span class="pc" id="L326">                fin.close();</span>
-            }
-<span class="pc bpc" id="L328" title="3 of 4 branches missed.">            if (in != null) {</span>
-<span class="pc" id="L329">                in.close();</span>
-            }
-<span class="pc bpc" id="L331" title="3 of 4 branches missed.">            if (gzIn != null) {</span>
-<span class="pc" id="L332">                gzIn.close();</span>
-            }
-<span class="pc bpc" id="L334" title="3 of 4 branches missed.">            if (tarIn != null) {</span>
-<span class="pc" id="L335">                tarIn.close();</span>
-            }
+    private void untarGzFile(File zipFile, File destination) {
+        //remove tar file if it exists first
+<span class="fc" id="L274">        File tarFile = new File(zipFile.getParentFile(), zipFile.getName().replaceAll(&quot;.gz&quot;, &quot;&quot;));</span>
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">        if (tarFile.exists()) {</span>
+<span class="nc" id="L276">            tarFile.delete();</span>
         }
-<span class="fc" id="L338">    }</span>
+
+<span class="fc" id="L279">        final TarGZipUnArchiver unArchiver = new TarGZipUnArchiver();</span>
+<span class="fc" id="L280">        unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, &quot;Sauce&quot;));</span>
+<span class="fc" id="L281">        unArchiver.setSourceFile(zipFile);</span>
+<span class="fc" id="L282">        unArchiver.setDestDirectory(destination);</span>
+<span class="fc" id="L283">        unArchiver.extract();</span>
+
+<span class="fc" id="L285">    }</span>
 
     /**
-     * @param zip        the compressed file to extract
+     * @param zipFile     the compressed file to extract
      * @param destination the destination directory
      */
-    private void unzipFile(File zip, File destination) throws IOException, ArchiveException {
-<span class="fc" id="L345">        ZipFile zipFile = new ZipFile(zip);</span>
-        try {
-<span class="fc" id="L347">            Enumeration&lt;? extends ZipArchiveEntry&gt; entries = zipFile.getEntries();</span>
-<span class="fc bfc" id="L348" title="All 2 branches covered.">            while (entries.hasMoreElements()) {</span>
-<span class="fc" id="L349">                ZipArchiveEntry entry = entries.nextElement();</span>
-<span class="fc" id="L350">                File entryDestination = new File(destination, entry.getName());</span>
-<span class="fc bfc" id="L351" title="All 2 branches covered.">                if (entry.isDirectory()) {</span>
-<span class="fc" id="L352">                    entryDestination.mkdirs();</span>
-                } else {
-<span class="fc" id="L354">                    entryDestination.getParentFile().mkdirs();</span>
-<span class="fc" id="L355">                    InputStream in = zipFile.getInputStream(entry);</span>
-<span class="fc" id="L356">                    OutputStream out = new FileOutputStream(entryDestination);</span>
-<span class="fc" id="L357">                    IOUtils.copy(in, out);</span>
-<span class="fc" id="L358">                    IOUtils.closeQuietly(in);</span>
-<span class="fc" id="L359">                    out.close();</span>
-                }
-<span class="fc" id="L361">            }</span>
-        } finally {
-<span class="pc" id="L363">            zipFile.close();</span>
-<span class="fc" id="L364">        }</span>
-<span class="fc" id="L365">    }</span>
+    private void unzipFile(File zipFile, File destination) {
+<span class="fc" id="L292">        final ZipUnArchiver unArchiver = new ZipUnArchiver();</span>
+<span class="fc" id="L293">        unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, &quot;Sauce&quot;));</span>
+<span class="fc" id="L294">        unArchiver.setSourceFile(zipFile);</span>
+<span class="fc" id="L295">        unArchiver.setDestDirectory(destination);</span>
+<span class="fc" id="L296">        unArchiver.extract();</span>
+<span class="fc" id="L297">    }</span>
 
     /**
      * @param workingDirectory the destination directory
@@ -371,53 +303,53 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @throws IOException thrown if an error occurs extracting the files
      */
     private File extractFile(File workingDirectory, String fileName) throws IOException {
-<span class="fc" id="L374">        InputStream inputStream = null;</span>
-<span class="fc" id="L375">        FileOutputStream outputStream = null;</span>
+<span class="fc" id="L306">        InputStream inputStream = null;</span>
+<span class="fc" id="L307">        FileOutputStream outputStream = null;</span>
 
         File destination;
 
         try {
-<span class="fc" id="L380">            inputStream = getClass().getClassLoader().getResourceAsStream(fileName);</span>
+<span class="fc" id="L312">            inputStream = getClass().getClassLoader().getResourceAsStream(fileName);</span>
             //copy input stream to a file
-<span class="fc" id="L382">            destination = new File(workingDirectory, fileName);</span>
+<span class="fc" id="L314">            destination = new File(workingDirectory, fileName);</span>
             //remove file if it already exists
-<span class="pc bpc" id="L384" title="1 of 2 branches missed.">            if (destination.exists()) {</span>
-<span class="nc" id="L385">                destination.delete();</span>
+<span class="pc bpc" id="L316" title="1 of 2 branches missed.">            if (destination.exists()) {</span>
+<span class="nc" id="L317">                destination.delete();</span>
             }
-<span class="fc" id="L387">            outputStream = new FileOutputStream(destination);</span>
-<span class="fc" id="L388">            IOUtils.copy(inputStream, outputStream);</span>
-<span class="fc" id="L389">            outputStream.flush();</span>
-<span class="nc" id="L390">        } catch (IOException e) {</span>
-<span class="nc" id="L391">            throw e;</span>
+<span class="fc" id="L319">            outputStream = new FileOutputStream(destination);</span>
+<span class="fc" id="L320">            IOUtils.copy(inputStream, outputStream);</span>
+<span class="fc" id="L321">            outputStream.flush();</span>
+<span class="nc" id="L322">        } catch (IOException e) {</span>
+<span class="nc" id="L323">            throw e;</span>
         } finally {
-<span class="pc bpc" id="L393" title="3 of 4 branches missed.">            if (outputStream != null) {</span>
+<span class="pc bpc" id="L325" title="3 of 4 branches missed.">            if (outputStream != null) {</span>
                 try {
-<span class="pc" id="L395">                    outputStream.close();</span>
-<span class="nc" id="L396">                } catch (IOException e) {</span>
-<span class="nc" id="L397">                    e.printStackTrace();</span>
-<span class="pc" id="L398">                }</span>
+<span class="pc" id="L327">                    outputStream.close();</span>
+<span class="nc" id="L328">                } catch (IOException e) {</span>
+<span class="nc" id="L329">                    e.printStackTrace();</span>
+<span class="pc" id="L330">                }</span>
             }
-<span class="pc bpc" id="L400" title="3 of 4 branches missed.">            if (inputStream != null) {</span>
+<span class="pc bpc" id="L332" title="3 of 4 branches missed.">            if (inputStream != null) {</span>
                 try {
-<span class="pc" id="L402">                    inputStream.close();</span>
-<span class="nc" id="L403">                } catch (IOException e) {</span>
-<span class="nc" id="L404">                    e.printStackTrace();</span>
-<span class="pc" id="L405">                }</span>
+<span class="pc" id="L334">                    inputStream.close();</span>
+<span class="nc" id="L335">                } catch (IOException e) {</span>
+<span class="nc" id="L336">                    e.printStackTrace();</span>
+<span class="pc" id="L337">                }</span>
             }
         }
-<span class="fc" id="L408">        return destination;</span>
+<span class="fc" id="L340">        return destination;</span>
     }
 
     /**
      * {@inheritDoc}
      */
     protected String getSauceStartedMessage() {
-<span class="fc" id="L415">        return SAUCE_CONNECT_4_STARTED;</span>
+<span class="fc" id="L347">        return SAUCE_CONNECT_4_STARTED;</span>
     }
 
     @Override
     protected String getCurrentVersion() {
-<span class="fc" id="L420">        return CURRENT_SC_VERSION;</span>
+<span class="fc" id="L352">        return CURRENT_SC_VERSION;</span>
     }
 
     /**
@@ -432,35 +364,35 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     public File getSauceConnectLogFile(String options) {
 
         //Has --logfile arg been specified
-<span class="nc" id="L435">        String logfile = getLogfile(options);</span>
-<span class="nc bnc" id="L436" title="All 2 branches missed.">        if (logfile != null) {</span>
+<span class="nc" id="L367">        String logfile = getLogfile(options);</span>
+<span class="nc bnc" id="L368" title="All 2 branches missed.">        if (logfile != null) {</span>
 
-<span class="nc" id="L438">            File sauceConnectLogFile = new File(logfile);</span>
-<span class="nc bnc" id="L439" title="All 2 branches missed.">            if (sauceConnectLogFile.exists()) {</span>
-<span class="nc" id="L440">                return sauceConnectLogFile;</span>
+<span class="nc" id="L370">            File sauceConnectLogFile = new File(logfile);</span>
+<span class="nc bnc" id="L371" title="All 2 branches missed.">            if (sauceConnectLogFile.exists()) {</span>
+<span class="nc" id="L372">                return sauceConnectLogFile;</span>
             } else {
-<span class="nc" id="L442">                return null;</span>
+<span class="nc" id="L374">                return null;</span>
             }
         }
 
         //otherwise, try to work out location
-<span class="nc" id="L447">        String fileName = &quot;sc.log&quot;;</span>
-<span class="nc" id="L448">        File logFileDirectory = new File(OperatingSystem.getOperatingSystem().getDefaultSauceConnectLogDirectory());</span>
+<span class="nc" id="L379">        String fileName = &quot;sc.log&quot;;</span>
+<span class="nc" id="L380">        File logFileDirectory = new File(OperatingSystem.getOperatingSystem().getDefaultSauceConnectLogDirectory());</span>
 
         //has --tunnel-identifer been specified?
-<span class="nc" id="L451">        String tunnelIdentifier = getTunnelIdentifier(options, null);</span>
-<span class="nc bnc" id="L452" title="All 2 branches missed.">        if (tunnelIdentifier != null) {</span>
-<span class="nc" id="L453">            fileName = MessageFormat.format(&quot;sc-{0}.log&quot;, tunnelIdentifier);</span>
+<span class="nc" id="L383">        String tunnelIdentifier = getTunnelIdentifier(options, null);</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">        if (tunnelIdentifier != null) {</span>
+<span class="nc" id="L385">            fileName = MessageFormat.format(&quot;sc-{0}.log&quot;, tunnelIdentifier);</span>
         }
-<span class="nc" id="L455">        File sauceConnectLogFile = new File(logFileDirectory, fileName);</span>
-<span class="nc bnc" id="L456" title="All 2 branches missed.">        if (!sauceConnectLogFile.exists()) {</span>
+<span class="nc" id="L387">        File sauceConnectLogFile = new File(logFileDirectory, fileName);</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">        if (!sauceConnectLogFile.exists()) {</span>
             //try working directory
-<span class="nc" id="L458">            sauceConnectLogFile = new File(getSauceConnectWorkingDirectory(), fileName);</span>
-<span class="nc bnc" id="L459" title="All 2 branches missed.">            if (!sauceConnectLogFile.exists()) {</span>
-<span class="nc" id="L460">                return null;</span>
+<span class="nc" id="L390">            sauceConnectLogFile = new File(getSauceConnectWorkingDirectory(), fileName);</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">            if (!sauceConnectLogFile.exists()) {</span>
+<span class="nc" id="L392">                return null;</span>
             }
         }
-<span class="nc" id="L463">        return sauceConnectLogFile;</span>
+<span class="nc" id="L395">        return sauceConnectLogFile;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

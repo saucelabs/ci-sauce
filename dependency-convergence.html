@@ -114,46 +114,65 @@
 </caption>
 <tr class="b">
 <th>Number of dependencies (NOD):</th>
-<td>52</td></tr>
+<td>63</td></tr>
 <tr class="a">
 <th>Number of unique artifacts (NOA):</th>
-<td>61</td></tr>
+<td>76</td></tr>
 <tr class="b">
 <th>Number of version-conflicting artifacts (NOC):</th>
-<td>5</td></tr>
+<td>7</td></tr>
 <tr class="a">
 <th>Number of SNAPSHOT artifacts (NOS):</th>
 <td>0</td></tr>
 <tr class="b">
 <th>Convergence (NOD/NOA):</th>
-<td><img alt="[Error]" src="images/icon_error_sml.gif" />&#160;<b>85 %</b></td></tr>
+<td><img alt="[Error]" src="images/icon_error_sml.gif" />&#160;<b>82 %</b></td></tr>
 <tr class="a">
 <th>Ready for release (100% convergence and no SNAPSHOTS):</th>
 <td><img alt="[Error]" src="images/icon_error_sml.gif" />&#160;<b>Error</b><br />You do not have 100% convergence.</td></tr></table></div>
 <div class="section">
 <h3>Dependencies used in this project<a name="Dependencies_used_in_this_project"></a></h3>
 <div class="section">
-<h4>commons-logging:commons-logging<a name="commons-logging:commons-logging"></a></h4>
+<h4>commons-io:commons-io<a name="commons-io:commons-io"></a></h4>
 <table border="0" class="bodyTable">
 <tr class="b">
 <td><img alt="[Error]" src="images/icon_error_sml.gif" /></td>
 <td>
 <table border="0" class="bodyTable">
 <tr class="a">
+<td width="25%">2.2</td>
+<td>
+<ol style="list-style-type: decimal">com.saucelabs:ci-sauce:jar:1.118-SNAPSHOT<br />\-&#160;org.codehaus.plexus:plexus-archiver:jar:3.4:compile<br />&#160;&#160;&#160;\-&#160;org.codehaus.plexus:plexus-io:jar:2.7.1:compile<br />&#160;&#160;&#160;&#160;&#160;&#160;\-&#160;(commons-io:commons-io:jar:2.2:compile - omitted for conflict with 2.5)<br /><br /></ol></td></tr>
+<tr class="b">
+<td width="25%">2.5</td>
+<td>
+<ol style="list-style-type: decimal">com.saucelabs:ci-sauce:jar:1.118-SNAPSHOT<br />+-&#160;org.codehaus.plexus:plexus-archiver:jar:3.4:compile<br />|&#160;&#160;\-&#160;(commons-io:commons-io:jar:2.5:compile - omitted for duplicate)<br />\-&#160;commons-io:commons-io:jar:2.5:provided (scope not updated to compile)<br /><br /></ol></td></tr></table></td></tr></table></div>
+<div class="section">
+<h4>commons-logging:commons-logging<a name="commons-logging:commons-logging"></a></h4>
+<table border="0" class="bodyTable">
+<tr class="a">
+<td><img alt="[Error]" src="images/icon_error_sml.gif" /></td>
+<td>
+<table border="0" class="bodyTable">
+<tr class="b">
 <td width="25%">1.0.4</td>
 <td>
 <ol style="list-style-type: decimal">com.saucelabs:ci-sauce:jar:1.118-SNAPSHOT<br />\-&#160;com.saucelabs:sebuilder-interpreter:jar:1.0.6:compile<br />&#160;&#160;&#160;\-&#160;commons-logging:commons-logging:jar:1.0.4:compile<br /><br /></ol></td></tr>
-<tr class="b">
+<tr class="a">
 <td width="25%">1.2</td>
 <td>
 <ol style="list-style-type: decimal">com.saucelabs:ci-sauce:jar:1.118-SNAPSHOT<br />+-&#160;com.saucelabs:saucerest:jar:1.0.33:compile<br />|&#160;&#160;\-&#160;org.apache.httpcomponents:httpclient:jar:4.5:compile<br />|&#160;&#160;&#160;&#160;&#160;\-&#160;(commons-logging:commons-logging:jar:1.2:compile - omitted for conflict with 1.0.4)<br />\-&#160;org.seleniumhq.selenium:selenium-java:jar:2.53.1:test (scope not updated to compile)<br />&#160;&#160;&#160;\-&#160;org.seleniumhq.selenium:htmlunit-driver:jar:2.21:test<br />&#160;&#160;&#160;&#160;&#160;&#160;\-&#160;net.sourceforge.htmlunit:htmlunit:jar:2.21:test<br />&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;\-&#160;(commons-logging:commons-logging:jar:1.2:test - omitted for conflict with 1.0.4)<br /><br /></ol></td></tr></table></td></tr></table></div>
 <div class="section">
 <h4>junit:junit<a name="junit:junit"></a></h4>
 <table border="0" class="bodyTable">
-<tr class="a">
+<tr class="b">
 <td><img alt="[Error]" src="images/icon_error_sml.gif" /></td>
 <td>
 <table border="0" class="bodyTable">
+<tr class="a">
+<td width="25%">3.8.2</td>
+<td>
+<ol style="list-style-type: decimal">com.saucelabs:ci-sauce:jar:1.118-SNAPSHOT<br />\-&#160;org.codehaus.plexus:plexus-container-default:jar:1.5.5:compile<br />&#160;&#160;&#160;\-&#160;(junit:junit:jar:3.8.2:compile - omitted for conflict with 4.12)<br /><br /></ol></td></tr>
 <tr class="b">
 <td width="25%">4.10</td>
 <td>
@@ -177,6 +196,25 @@
 <td width="25%">4.5.1</td>
 <td>
 <ol style="list-style-type: decimal">com.saucelabs:ci-sauce:jar:1.118-SNAPSHOT<br />\-&#160;org.seleniumhq.selenium:selenium-remote-driver:jar:2.53.1:compile<br />&#160;&#160;&#160;\-&#160;(org.apache.httpcomponents:httpclient:jar:4.5.1:compile - omitted for conflict with 4.5)<br /><br /></ol></td></tr></table></td></tr></table></div>
+<div class="section">
+<h4>org.codehaus.plexus:plexus-utils<a name="org.codehaus.plexus:plexus-utils"></a></h4>
+<table border="0" class="bodyTable">
+<tr class="a">
+<td><img alt="[Error]" src="images/icon_error_sml.gif" /></td>
+<td>
+<table border="0" class="bodyTable">
+<tr class="b">
+<td width="25%">1.4.5</td>
+<td>
+<ol style="list-style-type: decimal">com.saucelabs:ci-sauce:jar:1.118-SNAPSHOT<br />\-&#160;org.codehaus.plexus:plexus-container-default:jar:1.5.5:compile<br />&#160;&#160;&#160;\-&#160;(org.codehaus.plexus:plexus-utils:jar:1.4.5:compile - omitted for conflict with 3.0.24)<br /><br /></ol></td></tr>
+<tr class="a">
+<td width="25%">3.0.22</td>
+<td>
+<ol style="list-style-type: decimal">com.saucelabs:ci-sauce:jar:1.118-SNAPSHOT<br />\-&#160;org.codehaus.plexus:plexus-archiver:jar:3.4:compile<br />&#160;&#160;&#160;\-&#160;org.codehaus.plexus:plexus-io:jar:2.7.1:compile<br />&#160;&#160;&#160;&#160;&#160;&#160;\-&#160;(org.codehaus.plexus:plexus-utils:jar:3.0.22:compile - omitted for conflict with 3.0.24)<br /><br /></ol></td></tr>
+<tr class="b">
+<td width="25%">3.0.24</td>
+<td>
+<ol style="list-style-type: decimal">com.saucelabs:ci-sauce:jar:1.118-SNAPSHOT<br />\-&#160;org.codehaus.plexus:plexus-archiver:jar:3.4:compile<br />&#160;&#160;&#160;\-&#160;org.codehaus.plexus:plexus-utils:jar:3.0.24:compile<br /><br /></ol></td></tr></table></td></tr></table></div>
 <div class="section">
 <h4>org.json:json<a name="org.json:json"></a></h4>
 <table border="0" class="bodyTable">
