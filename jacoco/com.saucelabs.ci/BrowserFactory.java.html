@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>BrowserFactory.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ci-sauce</a> &gt; <a href="index.source.html" class="el_package">com.saucelabs.ci</a> &gt; <span class="el_source">BrowserFactory.java</span></div><h1>BrowserFactory.java</h1><pre class="source lang-java linenums">/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package com.saucelabs.ci;
+
+import com.saucelabs.saucerest.SauceREST;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.sql.Timestamp;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Handles invoking the Sauce REST API to retrieve the list of valid Browsers.  The list of browser is cached for
+ * an hour.
+ *
+ * @author Ross Rowe
+ */
+public class BrowserFactory {
+
+<span class="fc" id="L27">    private static final Logger logger = Logger.getLogger(BrowserFactory.class.getName());</span>
+
+    public static final int ONE_HOUR_IN_MILLIS = 1000 * 60 * 60;
+
+    private SauceREST sauceREST;
+
+<span class="fc" id="L33">    private Map&lt;String, Browser&gt; seleniumLookup = new HashMap&lt;String, Browser&gt;();</span>
+<span class="fc" id="L34">    private Map&lt;String, Browser&gt; appiumLookup = new HashMap&lt;String, Browser&gt;();</span>
+<span class="fc" id="L35">    private Map&lt;String, Browser&gt; webDriverLookup = new HashMap&lt;String, Browser&gt;();</span>
+<span class="fc" id="L36">    protected Timestamp lastLookup = null;</span>
+    private static final String IEHTA = &quot;iehta&quot;;
+    private static final String CHROME = &quot;chrome&quot;;
+    private static BrowserFactory instance;
+
+    public BrowserFactory() {
+<span class="nc" id="L42">        this(null);</span>
+<span class="nc" id="L43">    }</span>
+
+<span class="fc" id="L45">    public BrowserFactory(SauceREST sauceREST) {</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (sauceREST == null) {</span>
+<span class="fc" id="L47">            this.sauceREST = new SauceREST(null, null);</span>
+        } else {
+<span class="fc" id="L49">            this.sauceREST = sauceREST;</span>
+        }
+        try {
+<span class="fc" id="L52">            initializeSeleniumBrowsers();</span>
+<span class="fc" id="L53">            initializeWebDriverBrowsers();</span>
+<span class="fc" id="L54">            initializeAppiumBrowsers();</span>
+<span class="nc" id="L55">        } catch (IOException e) {</span>
+            //TODO exception could mean we're behind firewall
+<span class="nc" id="L57">            logger.log(Level.WARNING, &quot;Error retrieving browsers, attempting to continue&quot;, e);</span>
+<span class="nc" id="L58">        } catch (JSONException e) {</span>
+<span class="nc" id="L59">            logger.log(Level.WARNING, &quot;Error retrieving browsers, attempting to continue&quot;, e);</span>
+<span class="pc" id="L60">        }</span>
+<span class="fc" id="L61">    }</span>
+
+    public List&lt;Browser&gt; getSeleniumBrowsers() throws IOException, JSONException {
+        List&lt;Browser&gt; browsers;
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (shouldRetrieveBrowsers()) {</span>
+<span class="nc" id="L66">            browsers = initializeSeleniumBrowsers();</span>
+        } else {
+<span class="fc" id="L68">            browsers = new ArrayList&lt;Browser&gt;(seleniumLookup.values());</span>
+        }
+<span class="fc" id="L70">        Collections.sort(browsers);</span>
+
+<span class="fc" id="L72">        return browsers;</span>
+    }
+
+    public List&lt;Browser&gt; getAppiumBrowsers() throws IOException, JSONException {
+        List&lt;Browser&gt; browsers;
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (shouldRetrieveBrowsers()) {</span>
+<span class="nc" id="L78">            browsers = initializeAppiumBrowsers();</span>
+        } else {
+<span class="fc" id="L80">            browsers = new ArrayList&lt;Browser&gt;(appiumLookup.values());</span>
+        }
+<span class="fc" id="L82">        Collections.sort(browsers);</span>
+
+<span class="fc" id="L84">        return browsers;</span>
+    }
+
+    public List&lt;Browser&gt; getWebDriverBrowsers() throws IOException, JSONException {
+        List&lt;Browser&gt; browsers;
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (shouldRetrieveBrowsers()) {</span>
+<span class="nc" id="L90">            browsers = initializeWebDriverBrowsers();</span>
+        } else {
+<span class="fc" id="L92">            browsers = new ArrayList&lt;Browser&gt;(webDriverLookup.values());</span>
+        }
+<span class="fc" id="L94">        Collections.sort(browsers);</span>
+
+<span class="fc" id="L96">        return browsers;</span>
+    }
+
+    public boolean shouldRetrieveBrowsers() {
+<span class="pc bpc" id="L100" title="2 of 4 branches missed.">        return lastLookup == null || CacheTimeUtil.pastAcceptableDuration(lastLookup, ONE_HOUR_IN_MILLIS);</span>
+    }
+
+    private List&lt;Browser&gt; initializeSeleniumBrowsers() throws IOException, JSONException {
+<span class="fc" id="L104">        List&lt;Browser&gt; browsers = getSeleniumBrowsersFromSauceLabs();</span>
+<span class="fc" id="L105">        seleniumLookup = new HashMap&lt;String, Browser&gt;();</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        for (Browser browser : browsers) {</span>
+<span class="nc" id="L107">            seleniumLookup.put(browser.getKey(), browser);</span>
+<span class="nc" id="L108">        }</span>
+<span class="fc" id="L109">        lastLookup = new Timestamp(new Date().getTime());</span>
+<span class="fc" id="L110">        return browsers;</span>
+    }
+
+    private List&lt;Browser&gt; initializeAppiumBrowsers() throws IOException, JSONException {
+<span class="fc" id="L114">        List&lt;Browser&gt; browsers = getAppiumBrowsersFromSauceLabs();</span>
+<span class="fc" id="L115">        appiumLookup = new HashMap&lt;String, Browser&gt;();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        for (Browser browser : browsers) {</span>
+<span class="fc" id="L117">            appiumLookup.put(browser.getKey(), browser);</span>
+<span class="fc" id="L118">        }</span>
+<span class="fc" id="L119">        lastLookup = new Timestamp(new Date().getTime());</span>
+<span class="fc" id="L120">        return browsers;</span>
+    }
+
+    private List&lt;Browser&gt; initializeWebDriverBrowsers() throws IOException, JSONException {
+<span class="fc" id="L124">        List&lt;Browser&gt; browsers = getWebDriverBrowsersFromSauceLabs();</span>
+<span class="fc" id="L125">        webDriverLookup = new HashMap&lt;String, Browser&gt;();</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        for (Browser browser : browsers) {</span>
+<span class="fc" id="L127">            webDriverLookup.put(browser.getKey(), browser);</span>
+<span class="fc" id="L128">        }</span>
+<span class="fc" id="L129">        lastLookup = new Timestamp(new Date().getTime());</span>
+<span class="fc" id="L130">        return browsers;</span>
+    }
+
+    private List&lt;Browser&gt; getSeleniumBrowsersFromSauceLabs() throws IOException, JSONException {
+<span class="fc" id="L134">        String response = sauceREST.getSupportedPlatforms(&quot;selenium-rc&quot;);</span>
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (response.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L136">            response = &quot;[]&quot;;</span>
+        }
+<span class="fc" id="L138">        List&lt;Browser&gt; browsers = getBrowserListFromJson(response);</span>
+<span class="fc" id="L139">        List&lt;Browser&gt; toRemove = new ArrayList&lt;Browser&gt;();</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        for (Browser browser : browsers) {</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            if (browser.getBrowserName().equals(CHROME)) {</span>
+<span class="nc" id="L142">                toRemove.add(browser);</span>
+            }
+<span class="nc" id="L144">        }</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        for (Browser browser : toRemove) {</span>
+<span class="nc" id="L146">            browsers.remove(browser);</span>
+<span class="nc" id="L147">        }</span>
+<span class="fc" id="L148">        return browsers;</span>
+    }
+
+    private List&lt;Browser&gt; getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
+<span class="fc" id="L152">        String response = sauceREST.getSupportedPlatforms(&quot;webdriver&quot;);</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (response.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L154">            response = &quot;[]&quot;;</span>
+        }
+<span class="fc" id="L156">        return getBrowserListFromJson(response);</span>
+    }
+
+    private List&lt;Browser&gt; getAppiumBrowsersFromSauceLabs() throws IOException, JSONException {
+<span class="fc" id="L160">        String response = sauceREST.getSupportedPlatforms(&quot;appium&quot;);</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (response.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L162">            response = &quot;[]&quot;;</span>
+        }
+<span class="fc" id="L164">        return getBrowserListFromJson(response);</span>
+    }
+
+    /**
+     * Parses the JSON response and constructs a List of {@link Browser} instances.
+     *
+     * @param browserListJson JSON response with all browsers
+     * @return List of browser objects
+     * @throws JSONException Invalid JSON
+     */
+    public List&lt;Browser&gt; getBrowserListFromJson(String browserListJson) throws JSONException {
+<span class="fc" id="L175">        List&lt;Browser&gt; browsers = new ArrayList&lt;Browser&gt;();</span>
+
+<span class="fc" id="L177">        JSONArray browserArray = new JSONArray(browserListJson);</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">        for (int i = 0; i &lt; browserArray.length(); i++) {</span>
+<span class="fc" id="L179">            JSONObject browserObject = browserArray.getJSONObject(i);</span>
+<span class="fc" id="L180">            String seleniumName = browserObject.getString(&quot;api_name&quot;);</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">            if (seleniumName.equals(IEHTA)) {</span>
+                //exclude these browsers from the list, as they replicate iexplore and firefox
+<span class="nc" id="L183">                continue;</span>
+            }
+<span class="fc bfc" id="L185" title="All 2 branches covered.">            if (browserObject.has(&quot;device&quot;)) {</span>
+                //appium browser
+<span class="fc" id="L187">                String longName = browserObject.getString(&quot;long_name&quot;);</span>
+<span class="fc" id="L188">                String longVersion = browserObject.getString(&quot;long_version&quot;);</span>
+<span class="fc" id="L189">                String osName = browserObject.getString(&quot;api_name&quot;); //use api_name instead of os, as os was returning Linux/Mac OS</span>
+<span class="fc" id="L190">                String shortVersion = browserObject.getString(&quot;short_version&quot;);</span>
+                //set value used for device to be the long name (ie. if device value is 'Nexus7HD', then actually use 'Google Nexus 7 HD Emulator' ​
+<span class="fc" id="L192">                String device = longName;</span>
+
+<span class="fc" id="L194">                String deviceType = null;</span>
+
+<span class="fc bfc" id="L196" title="All 2 branches covered.">                if (browserObject.has(&quot;device-type&quot;)) {</span>
+<span class="fc" id="L197">                    deviceType = browserObject.getString(&quot;device-type&quot;);</span>
+                }
+                //iOS devices should include 'Simulator' in the device name (not currently included in the Sauce REST API response.  The platform should also be set to iOS (as per instructions at https://docs.saucelabs.com/reference/platforms-configurator
+<span class="fc bfc" id="L200" title="All 4 branches covered.">                if (device.equalsIgnoreCase(&quot;ipad&quot;) || device.equalsIgnoreCase(&quot;iphone&quot;)) {</span>
+<span class="fc" id="L201">                    device = device + &quot; Simulator&quot;;</span>
+<span class="fc" id="L202">                    osName = &quot;iOS&quot;;</span>
+                    //JENKINS-29047 set the browserName to 'Safari'
+<span class="fc" id="L204">                    seleniumName = &quot;Safari&quot;;</span>
+                }
+<span class="fc" id="L206">                Browser browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, &quot;portrait&quot;);</span>
+<span class="fc" id="L207">                browsers.add(browser);</span>
+<span class="fc" id="L208">                browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, &quot;landscape&quot;);</span>
+<span class="fc" id="L209">                browsers.add(browser);</span>
+
+
+<span class="fc" id="L212">            } else {</span>
+                //webdriver/selenium browser
+<span class="fc" id="L214">                String longName = browserObject.getString(&quot;long_name&quot;);</span>
+<span class="fc" id="L215">                String longVersion = browserObject.getString(&quot;long_version&quot;);</span>
+<span class="fc" id="L216">                String osName = browserObject.getString(&quot;os&quot;);</span>
+<span class="fc" id="L217">                String shortVersion = browserObject.getString(&quot;short_version&quot;);</span>
+<span class="fc" id="L218">                String browserKey = osName + seleniumName + shortVersion;</span>
+                //replace any spaces with _s
+<span class="fc" id="L220">                browserKey = browserKey.replaceAll(&quot; &quot;, &quot;_&quot;);</span>
+                //replace any . with _
+<span class="fc" id="L222">                browserKey = browserKey.replaceAll(&quot;\\.&quot;, &quot;_&quot;);</span>
+<span class="fc" id="L223">                String label = OperatingSystemDescription.getOperatingSystemName(osName) + &quot; &quot; + longName + &quot; &quot; + shortVersion;</span>
+<span class="fc" id="L224">                browsers.add(new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion, label));</span>
+            }
+        }
+<span class="fc" id="L227">        return browsers;</span>
+    }
+
+    private Browser createBrowser(String seleniumName, String longName, String longVersion, String osName, String device, String deviceType, String shortVersion, String orientation) {
+<span class="fc" id="L231">        String browserKey = device + orientation + seleniumName + longVersion;</span>
+        //replace any spaces with _s
+<span class="fc" id="L233">        browserKey = browserKey.replaceAll(&quot; &quot;, &quot;_&quot;);</span>
+        //replace any . with _
+<span class="fc" id="L235">        browserKey = browserKey.replaceAll(&quot;\\.&quot;, &quot;_&quot;);</span>
+<span class="fc" id="L236">        StringBuilder label = new StringBuilder();</span>
+<span class="fc" id="L237">        label.append(longName).append(' ');</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">        if (deviceType != null) {</span>
+<span class="fc" id="L239">            label.append(deviceType).append(' ');</span>
+        }
+<span class="fc" id="L241">        label.append(shortVersion);</span>
+<span class="fc" id="L242">        label.append(&quot; (&quot;).append(orientation).append(')');</span>
+        //add browser for both landscape and portrait orientation
+<span class="fc" id="L244">        Browser browser = new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion, label.toString());</span>
+<span class="fc" id="L245">        browser.setDevice(device);</span>
+<span class="fc" id="L246">        browser.setDeviceType(deviceType);</span>
+<span class="fc" id="L247">        browser.setDeviceOrientation(orientation);</span>
+<span class="fc" id="L248">        return browser;</span>
+    }
+
+    /**
+     * Return the selenium rc browser which matches the key.
+     *
+     * @param key the key
+     * @return the selenium rc browser which matches the key.
+     */
+    public Browser seleniumBrowserForKey(String key) {
+<span class="nc" id="L258">        return seleniumLookup.get(key);</span>
+    }
+
+    public Browser seleniumBrowserForKey(String key, boolean useLatestVersion) {
+<span class="nc" id="L262">        Browser browser = webDriverBrowserForKey(key);</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">        if (useLatestVersion) {</span>
+<span class="nc" id="L264">            return getLatestSeleniumBrowserVersion(browser);</span>
+        } else {
+<span class="nc" id="L266">            return browser;</span>
+        }
+    }
+
+    private Browser getLatestSeleniumBrowserVersion(Browser originalBrowser) {
+<span class="nc" id="L271">        Browser candidateBrowser = originalBrowser;</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">        for (Browser browser : seleniumLookup.values()) {</span>
+            try {
+<span class="nc bnc" id="L274" title="All 2 branches missed.">                if (browser.getBrowserName().equals(originalBrowser.getBrowserName())</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">                        &amp;&amp; browser.getOs().equals(originalBrowser.getOs())</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">                        &amp;&amp; Integer.parseInt(browser.getLongVersion()) &gt; Integer.parseInt(candidateBrowser.getLongVersion())) {</span>
+<span class="nc" id="L277">                    candidateBrowser = browser;</span>
+                }
+<span class="nc" id="L279">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L280">                continue;</span>
+<span class="nc" id="L281">            }</span>
+<span class="nc" id="L282">        }</span>
+<span class="nc" id="L283">        return candidateBrowser;</span>
+    }
+
+    /**
+     * Return the web driver browser which matches the key.
+     *
+     * @param key the key
+     * @return the web driver browser which matches the key.
+     */
+    public Browser webDriverBrowserForKey(String key) {
+<span class="nc" id="L293">        return webDriverLookup.get(key);</span>
+    }
+
+    public Browser webDriverBrowserForKey(String key, boolean useLatestVersion) {
+<span class="nc" id="L297">        Browser browser = webDriverBrowserForKey(key);</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">        if (useLatestVersion) {</span>
+<span class="nc" id="L299">            return getLatestWebDriverBrowserVersion(browser);</span>
+        } else {
+<span class="nc" id="L301">            return browser;</span>
+        }
+    }
+
+    private Browser getLatestWebDriverBrowserVersion(Browser originalBrowser) {
+<span class="nc" id="L306">        Browser candidateBrowser = originalBrowser;</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">        for (Browser browser : webDriverLookup.values()) {</span>
+
+            try {
+<span class="nc bnc" id="L310" title="All 2 branches missed.">                if (browser.getBrowserName().equals(originalBrowser.getBrowserName())</span>
+<span class="nc bnc" id="L311" title="All 2 branches missed.">                        &amp;&amp; browser.getOs().equals(originalBrowser.getOs())</span>
+<span class="nc bnc" id="L312" title="All 2 branches missed.">                        &amp;&amp; Integer.parseInt(browser.getLongVersion()) &gt; Integer.parseInt(candidateBrowser.getLongVersion())) {</span>
+<span class="nc" id="L313">                    candidateBrowser = browser;</span>
+                }
+<span class="nc" id="L315">            } catch (NumberFormatException e) {</span>
+<span class="nc" id="L316">                continue;</span>
+<span class="nc" id="L317">            }</span>
+<span class="nc" id="L318">        }</span>
+<span class="nc" id="L319">        return candidateBrowser;</span>
+    }
+
+    /**
+     * Return the appium browser which matches the key.
+     *
+     * @param key the key
+     * @return the appium browser which matches the key.
+     */
+
+    public Browser appiumBrowserForKey(String key) {
+<span class="nc" id="L330">        return appiumLookup.get(key);</span>
+    }
+
+    /**
+     * Returns a singleton instance of SauceFactory.  This is required because
+     * remote agents don't have the Bamboo component plugin available, so the Spring
+     * auto-wiring doesn't work.
+     *
+     * @return the Browser Factory
+     */
+    public static BrowserFactory getInstance() {
+<span class="nc" id="L341">        return getInstance(null);</span>
+    }
+
+    public static BrowserFactory getInstance(SauceREST sauceREST) {
+<span class="nc bnc" id="L345" title="All 2 branches missed.">        if (instance == null) {</span>
+<span class="nc" id="L346">            instance = new BrowserFactory(sauceREST);</span>
+        }
+<span class="nc" id="L348">        return instance;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

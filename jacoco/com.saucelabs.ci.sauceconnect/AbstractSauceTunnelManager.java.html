@@ -1,0 +1,685 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractSauceTunnelManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ci-sauce</a> &gt; <a href="index.source.html" class="el_package">com.saucelabs.ci.sauceconnect</a> &gt; <span class="el_source">AbstractSauceTunnelManager.java</span></div><h1>AbstractSauceTunnelManager.java</h1><pre class="source lang-java linenums">package com.saucelabs.ci.sauceconnect;
+
+import com.saucelabs.saucerest.SauceREST;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.NullOutputStream;
+import org.apache.commons.lang.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+
+/**
+ * Provides common logic for the invocation of Sauce Connect v3 and v4 processes.  The class maintains a cache of {@link Process } instances mapped against
+ * the corresponding Sauce user which invoked Sauce Connect.
+ *
+ * @author Ross Rowe
+ */
+public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
+
+    /**
+     * Logger instance.
+     */
+<span class="fc" id="L32">    protected static final java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(AbstractSauceTunnelManager.class.getName());</span>
+
+    /**
+     * Should Sauce Connect output be suppressed?
+     */
+    protected boolean quietMode;
+
+    /**
+     * Contains all the Sauce Connect {@link Process} instances that have been launched.
+     */
+<span class="fc" id="L42">    private Map&lt;String, List&lt;Process&gt;&gt; openedProcesses = new HashMap&lt;String, List&lt;Process&gt;&gt;();</span>
+
+<span class="fc" id="L44">    protected Map&lt;String, TunnelInformation&gt; tunnelInformationMap = new ConcurrentHashMap&lt;String, TunnelInformation&gt;();</span>
+
+    private SauceREST sauceRest;
+
+<span class="fc" id="L48">    private AtomicInteger launchAttempts = new AtomicInteger(0);</span>
+
+    /**
+     * Constructs a new instance.
+     *
+     * @param quietMode indicates whether Sauce Connect output should be suppressed
+     */
+<span class="fc" id="L55">    public AbstractSauceTunnelManager(boolean quietMode) {</span>
+<span class="fc" id="L56">        this.quietMode = quietMode;</span>
+<span class="fc" id="L57">    }</span>
+
+    public void setSauceRest(SauceREST sauceRest) {
+<span class="fc" id="L60">        this.sauceRest = sauceRest;</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * Closes the Sauce Connect process
+     *
+     * @param userName    name of the user which launched Sauce Connect
+     * @param options     the command line options used to launch Sauce Connect
+     * @param printStream the output stream to send log messages
+     */
+    public void closeTunnelsForPlan(String userName, String options, PrintStream printStream) {
+<span class="nc" id="L71">        String identifier = getTunnelIdentifier(options, userName);</span>
+<span class="nc" id="L72">        TunnelInformation tunnelInformation = getTunnelInformation(identifier);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">        if (tunnelInformation == null) {</span>
+<span class="nc" id="L74">            return;</span>
+        }
+        try {
+<span class="nc" id="L77">            tunnelInformation.getLock().lock();</span>
+<span class="nc" id="L78">            Integer count = decrementProcessCountForUser(tunnelInformation, printStream);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">            if (count == 0) {</span>
+                //we can now close the process
+<span class="nc" id="L81">                final Process sauceConnect = tunnelInformation.getProcess();</span>
+<span class="nc" id="L82">                closeSauceConnectProcess(printStream, sauceConnect);</span>
+<span class="nc" id="L83">                String tunnelId = tunnelInformation.getTunnelId();</span>
+<span class="nc bnc" id="L84" title="All 4 branches missed.">                if (tunnelId != null &amp;&amp; sauceRest != null) {</span>
+                    //forcibly delete tunnel
+<span class="nc" id="L86">                    sauceRest.deleteTunnel(tunnelId);</span>
+                }
+<span class="nc" id="L88">                tunnelInformationMap.remove(identifier);</span>
+<span class="nc" id="L89">                List&lt;Process&gt; processes = openedProcesses.get(identifier);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">                if (processes != null) {</span>
+<span class="nc" id="L91">                    processes.remove(sauceConnect);</span>
+                }
+<span class="nc" id="L93">                logMessage(printStream, &quot;Sauce Connect stopped for: &quot; + identifier);</span>
+<span class="nc" id="L94">            } else {</span>
+<span class="nc" id="L95">                logMessage(printStream, &quot;Jobs still running, not closing Sauce Connect&quot;);</span>
+            }
+
+        } finally {
+<span class="nc" id="L99">            tunnelInformation.getLock().unlock();</span>
+<span class="nc" id="L100">        }</span>
+<span class="nc" id="L101">    }</span>
+
+    private void closeSauceConnectProcess(PrintStream printStream, final Process sauceConnect) {
+<span class="fc" id="L104">        logMessage(printStream, &quot;Flushing Sauce Connect Input Stream&quot;);</span>
+<span class="fc" id="L105">        new Thread(new Runnable() {</span>
+            public void run() {
+                try {
+<span class="fc" id="L108">                    IOUtils.copy(sauceConnect.getInputStream(), new NullOutputStream());</span>
+<span class="nc" id="L109">                } catch (IOException e) {</span>
+                    //ignore
+<span class="fc" id="L111">                }</span>
+<span class="fc" id="L112">            }</span>
+<span class="fc" id="L113">        }).start();</span>
+<span class="fc" id="L114">        logMessage(printStream, &quot;Flushing Sauce Connect Error Stream&quot;);</span>
+<span class="fc" id="L115">        new Thread(new Runnable() {</span>
+            public void run() {
+                try {
+<span class="fc" id="L118">                    IOUtils.copy(sauceConnect.getErrorStream(), new NullOutputStream());</span>
+<span class="nc" id="L119">                } catch (IOException e) {</span>
+                    //ignore
+<span class="fc" id="L121">                }</span>
+<span class="fc" id="L122">            }</span>
+<span class="fc" id="L123">        }).start();</span>
+<span class="fc" id="L124">        logMessage(printStream, &quot;Closing Sauce Connect process&quot;);</span>
+<span class="fc" id="L125">        sauceConnect.destroy();</span>
+<span class="fc" id="L126">    }</span>
+
+    /**
+     * Reduces the count of active Sauce Connect processes for the user by 1.
+     *
+     * @param identifier  the tunnel identifier
+     * @param printStream the output stream to send log messages
+     * @return current count of active Sauce Connect processes for the user
+     */
+    private Integer decrementProcessCountForUser(TunnelInformation identifier, PrintStream printStream) {
+<span class="nc" id="L136">        Integer count = identifier.getProcessCount() - 1;</span>
+<span class="nc" id="L137">        identifier.setProcessCount(count);</span>
+<span class="nc" id="L138">        logMessage(printStream, &quot;Decremented process count for &quot; + identifier + &quot;, now &quot; + count);</span>
+<span class="nc" id="L139">        return count;</span>
+    }
+
+    /**
+     * Logs a message to the print stream (if not null), and to the logger instance for the class.
+     *
+     * @param printStream the output stream to send log messages
+     * @param message     the message to be logged
+     */
+    protected void logMessage(PrintStream printStream, String message) {
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">        if (printStream != null) {</span>
+<span class="fc" id="L150">            printStream.println(message);</span>
+        }
+<span class="fc" id="L152">        julLogger.log(Level.INFO, message);</span>
+<span class="fc" id="L153">    }</span>
+
+    /**
+     * @param options      the command line options used to launch Sauce Connect
+     * @param defaultValue the default value to use for the identifier if none specified in the options
+     * @return String representing the tunnel identifier
+     */
+    public static String getTunnelIdentifier(String options, String defaultValue) {
+<span class="pc bpc" id="L161" title="1 of 4 branches missed.">        if (options == null || options.equals(&quot;&quot;)) {</span>
+<span class="fc" id="L162">            return defaultValue;</span>
+        }
+
+<span class="fc" id="L165">        String identifier = null;</span>
+<span class="fc" id="L166">        String[] split = options.split(&quot; &quot;);</span>
+<span class="fc bfc" id="L167" title="All 2 branches covered.">        for (int i = 0; i &lt; split.length; i++) {</span>
+<span class="fc" id="L168">            String option = split[i];</span>
+<span class="fc bfc" id="L169" title="All 4 branches covered.">            if (option.equals(&quot;-i&quot;) || option.equals(&quot;--tunnel-identifier&quot;)) {</span>
+                //next option is identifier
+<span class="fc" id="L171">                identifier = split[i + 1];</span>
+            }
+        }
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (identifier != null) { return identifier; }</span>
+
+<span class="fc" id="L176">        return defaultValue;</span>
+    }
+
+    /**
+     * @param options      the command line options used to launch Sauce Connect
+     * @return String representing the logfile location
+     */
+    public static String getLogfile(String options) {
+<span class="pc bpc" id="L184" title="2 of 4 branches missed.">        if (options == null || options.equals(&quot;&quot;)) {</span>
+<span class="nc" id="L185">            return null;</span>
+        }
+<span class="fc" id="L187">        String logFile = null;</span>
+<span class="fc" id="L188">        String[] split = options.split(&quot; &quot;);</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        for (int i = 0; i &lt; split.length; i++) {</span>
+<span class="fc" id="L190">            String option = split[i];</span>
+<span class="fc bfc" id="L191" title="All 4 branches covered.">            if (option.equals(&quot;-l&quot;) || option.equals(&quot;--logfile&quot;)) {</span>
+                //next option is identifier
+<span class="fc" id="L193">                logFile = split[i + 1];</span>
+            }
+        }
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        if (logFile != null) { return logFile; }</span>
+
+<span class="fc" id="L198">        return null;</span>
+    }
+
+    /**
+     * Adds an element to an array
+     *
+     * @param original the original array
+     * @param added    the element to add
+     * @return a new array with the element added to the end
+     */
+    protected String[] addElement(String[] original, String added) {
+        //split added on space
+<span class="fc" id="L210">        String[] split = added.split(&quot; &quot;);</span>
+<span class="fc" id="L211">        String[] result = original;</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        for (String arg : split) {</span>
+<span class="fc" id="L213">            String[] newResult = Arrays.copyOf(result, result.length + 1);</span>
+<span class="fc" id="L214">            newResult[result.length] = arg;</span>
+<span class="fc" id="L215">            result = newResult;</span>
+        }
+<span class="fc" id="L217">        return result;</span>
+    }
+
+    /**
+     * Increases the number of Sauce Connect invocations for the user by 1.
+     *
+     * @param identifier  the tunnel identifier
+     * @param printStream the output stream to send log messages
+     */
+    protected void incrementProcessCountForUser(TunnelInformation identifier, PrintStream printStream) {
+<span class="fc" id="L227">        int processCount = identifier.getProcessCount() + 1;</span>
+<span class="fc" id="L228">        identifier.setProcessCount(processCount);</span>
+<span class="fc" id="L229">        logMessage(printStream, &quot;Incremented process count for &quot; + identifier + &quot;, now &quot; + processCount);</span>
+
+<span class="fc" id="L231">    }</span>
+
+    /**
+     * @param username         name of the user which launched Sauce Connect
+     * @param apiKey           api key corresponding to the user
+     * @param port             port which Sauce Connect should be launched on
+     * @param sauceConnectJar  File which contains the Sauce Connect executables (typically the CI plugin Jar file)
+     * @param options          the command line options used to launch Sauce Connect
+     * @param printStream      the output stream to send log messages
+     * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and won't be extracted from the jar file
+     * @return new ProcessBuilder instance which will launch Sauce Connect
+     * @throws SauceConnectException thrown if an error occurs launching the Sauce Connect process
+     */
+    protected abstract Process prepAndCreateProcess(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, String sauceConnectPath) throws SauceConnectException;
+
+    /**
+     * @param args Arguments to run
+     * @param directory Directory to run in
+     * @throws IOException thrown if an error occurs launching the Sauce Connect process
+     * @return Processbuilder to run
+     */
+    protected Process createProcess(String[] args, File directory) throws IOException {
+<span class="nc" id="L253">        ProcessBuilder processBuilder = new ProcessBuilder(args);</span>
+<span class="nc" id="L254">        processBuilder.directory(directory);</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">        if (processBuilder == null) return null;</span>
+<span class="nc" id="L256">        return processBuilder.start();</span>
+    }
+
+    /**
+     * Creates a new process to run Sauce Connect.
+     *
+     * @param username         the name of the Sauce OnDemand user
+     * @param apiKey           the API Key for the Sauce OnDemand user
+     * @param port             the port which Sauce Connect should be run on
+     * @param sauceConnectJar  the Jar file containing Sauce Connect.  If null, then we attempt to find Sauce Connect from the classpath (only used by SauceConnectTwoManager)
+     * @param options          the command line options to pass to Sauce Connect
+     * @param printStream      A print stream in which to redirect the output from Sauce Connect to.  Can be null
+     * @param verboseLogging   indicates whether verbose logging should be output
+     * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and won't be extracted from the jar file
+     * @return a {@link Process} instance which represents the Sauce Connect instance
+     * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
+     */
+    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+
+        //ensure that only a single thread attempts to open a connection
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">        if (sauceRest == null) {</span>
+<span class="nc" id="L277">            sauceRest = new SauceREST(username, apiKey);</span>
+        }
+<span class="fc" id="L279">        String identifier = getTunnelIdentifier(options, username);</span>
+<span class="fc" id="L280">        TunnelInformation tunnelInformation = getTunnelInformation(identifier);</span>
+        try {
+
+<span class="fc" id="L283">            tunnelInformation.getLock().lock();</span>
+<span class="pc bpc" id="L284" title="1 of 2 branches missed.">            if (options == null) {</span>
+<span class="nc" id="L285">                options = &quot;&quot;;</span>
+            }
+<span class="pc bpc" id="L287" title="1 of 2 branches missed.">            if (verboseLogging != null) {</span>
+<span class="pc bpc" id="L288" title="1 of 2 branches missed.">                this.quietMode = !verboseLogging;</span>
+            }
+
+            //do we have an instance for the tunnel identifier?
+<span class="fc" id="L292">            String tunnelIdentifier = activeTunnelIdentifier(username, identifier);</span>
+<span class="pc bpc" id="L293" title="1 of 2 branches missed.">            if (tunnelInformation.getProcessCount() == 0) {</span>
+                //if the count is zero, check to see if there are any active tunnels
+
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">                if (tunnelIdentifier != null) {</span>
+                    //if we have an active tunnel, but the process count is zero, we have an orphaned SC process
+                    //instead of deleting the tunnel, log a message
+                    //sauceRest.deleteTunnel(tunnelIdentifier);
+                    //wait a few minutes? (or log that user needs to wait?)
+<span class="nc" id="L301">                    logMessage(printStream, &quot;Detected active tunnel: &quot; + tunnelIdentifier);</span>
+//                    logMessage(printStream, &quot;Deleting tunnel: &quot; + tunnelIdentifier);
+                    //continue creating tunnel
+                }
+            } else {
+
+                //check active tunnels via Sauce REST API
+<span class="nc bnc" id="L308" title="All 2 branches missed.">                if (tunnelIdentifier == null) {</span>
+<span class="nc" id="L309">                    logMessage(printStream, &quot;Process count non-zero, but no active tunnels found for identifier: &quot; + tunnelIdentifier);</span>
+<span class="nc" id="L310">                    logMessage(printStream, &quot;Process count reset to zero&quot;);</span>
+                    //if no active tunnels, we have a mismatch of the tunnel count
+                    //reset tunnel count to zero and continue to launch Sauce Connect
+<span class="nc" id="L313">                    tunnelInformation.setProcessCount(0);</span>
+                } else {
+                    //if we have an active tunnel, increment counter and return
+<span class="nc" id="L316">                    logMessage(printStream, &quot;Sauce Connect already running for &quot; + identifier);</span>
+<span class="nc" id="L317">                    incrementProcessCountForUser(tunnelInformation, printStream);</span>
+<span class="nc" id="L318">                    return tunnelInformation.getProcess();</span>
+                }
+            }
+<span class="fc" id="L321">            final Process process = prepAndCreateProcess(username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath);</span>
+<span class="fc" id="L322">            List&lt;Process&gt; openedProcesses = this.openedProcesses.get(tunnelIdentifier);</span>
+            try {
+<span class="fc" id="L324">                Semaphore semaphore = new Semaphore(1);</span>
+<span class="fc" id="L325">                semaphore.acquire();</span>
+<span class="fc" id="L326">                StreamGobbler errorGobbler = new SystemErrorGobbler(&quot;ErrorGobbler&quot;, process.getErrorStream(), printStream);</span>
+<span class="fc" id="L327">                errorGobbler.start();</span>
+<span class="fc" id="L328">                SystemOutGobbler outputGobbler = new SystemOutGobbler(&quot;OutputGobbler&quot;, process.getInputStream(), semaphore, printStream);</span>
+<span class="fc" id="L329">                outputGobbler.start();</span>
+
+<span class="fc" id="L331">                boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);</span>
+<span class="pc bpc" id="L332" title="1 of 2 branches missed.">                if (sauceConnectStarted) {</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">                    if (outputGobbler.isFailed()) {</span>
+<span class="fc" id="L334">                        String message = &quot;Error launching Sauce Connect&quot;;</span>
+<span class="fc" id="L335">                        logMessage(printStream, message);</span>
+                        //ensure that Sauce Connect process is closed
+<span class="fc" id="L337">                        closeSauceConnectProcess(printStream, process);</span>
+<span class="fc" id="L338">                        throw new SauceConnectDidNotStartException(message);</span>
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">                    } else if (outputGobbler.isCantLockPidfile()) {</span>
+<span class="nc" id="L340">                        logMessage(printStream, &quot;Sauce Connect can't lock pidfile, attempting to close open Sauce Connect processes&quot;);</span>
+                        //close any open Sauce Connect processes
+<span class="nc bnc" id="L342" title="All 2 branches missed.">                        for (Process openedProcess : openedProcesses) {</span>
+<span class="nc" id="L343">                            openedProcess.destroy();</span>
+<span class="nc" id="L344">                        }</span>
+
+                        //Sauce Connect failed to start, possibly because although process has been killed by the plugin, it still remains active for a few seconds
+<span class="nc bnc" id="L347" title="All 2 branches missed.">                        if (launchAttempts.get() &lt; 3) {</span>
+                            //wait for a few seconds to let the process finish closing
+<span class="nc" id="L349">                            Thread.sleep(5000);</span>
+                            //increment launch attempts variable
+<span class="nc" id="L351">                            launchAttempts.incrementAndGet();</span>
+
+                            //call openConnection again to see if the process has closed
+<span class="nc" id="L354">                            return openConnection(username, apiKey, port, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath);</span>
+                        } else {
+                            //we've tried relaunching Sauce Connect 3 times
+<span class="nc" id="L357">                            throw new SauceConnectDidNotStartException(&quot;Unable to start Sauce Connect, please see the Sauce Connect log&quot;);</span>
+                        }
+
+                    } else {
+                        //everything okay, continue the build
+<span class="pc bpc" id="L362" title="1 of 2 branches missed.">                        if (outputGobbler.getTunnelId() != null) {</span>
+<span class="fc" id="L363">                            tunnelInformation.setTunnelId(outputGobbler.getTunnelId());</span>
+                        }
+<span class="fc" id="L365">                        logMessage(printStream, &quot;Sauce Connect &quot; + getCurrentVersion() + &quot; now launched for: &quot; + identifier);</span>
+                    }
+                } else {
+<span class="nc" id="L368">                    File sauceConnectLogFile = getSauceConnectLogFile(options);</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">                    String message = sauceConnectLogFile != null ? &quot;Time out while waiting for Sauce Connect to start, please check the Sauce Connect log located in &quot; + sauceConnectLogFile.getAbsoluteFile() : &quot;Time out while waiting for Sauce Connect to start, please check the Sauce Connect log&quot;;</span>
+<span class="nc" id="L370">                    logMessage(printStream, message);</span>
+                    //ensure that Sauce Connect process is closed
+<span class="nc" id="L372">                    closeSauceConnectProcess(printStream, process);</span>
+<span class="nc" id="L373">                    throw new SauceConnectDidNotStartException(message);</span>
+                }
+<span class="nc" id="L375">            } catch (InterruptedException e) {</span>
+                //continue;
+<span class="nc" id="L377">                julLogger.log(Level.WARNING, &quot;Exception occurred during invocation of Sauce Connect&quot;, e);</span>
+<span class="fc" id="L378">            }</span>
+
+<span class="fc" id="L380">            incrementProcessCountForUser(tunnelInformation, printStream);</span>
+<span class="fc" id="L381">            tunnelInformation.setProcess(process);</span>
+<span class="fc" id="L382">            List&lt;Process&gt; processes = openedProcesses;</span>
+<span class="pc bpc" id="L383" title="1 of 2 branches missed.">            if (processes == null) {</span>
+<span class="fc" id="L384">                processes = new ArrayList&lt;Process&gt;();</span>
+<span class="fc" id="L385">                this.openedProcesses.put(identifier, processes);</span>
+            }
+<span class="fc" id="L387">            processes.add(process);</span>
+<span class="fc" id="L388">            return process;</span>
+<span class="fc" id="L389">        } catch (SauceConnectException e) {</span>
+<span class="fc" id="L390">            throw e;</span>
+<span class="nc" id="L391">        } catch (IOException e) {</span>
+            //thrown if an error occurs starting the process builder
+<span class="nc" id="L393">            julLogger.log(Level.WARNING, &quot;Exception occurred during invocation of Sauce Connect&quot;, e);</span>
+<span class="nc" id="L394">            throw new SauceConnectException(e);</span>
+        } finally {
+            //release the access lock
+<span class="pc" id="L397">            tunnelInformation.getLock().unlock();</span>
+<span class="pc" id="L398">            launchAttempts.set(0);</span>
+        }
+
+    }
+
+    /**
+     *
+     * @param identifier
+     * @return
+     */
+    private TunnelInformation getTunnelInformation(String identifier) {
+<span class="pc bpc" id="L409" title="1 of 2 branches missed.">        if (identifier == null)</span>
+        {
+<span class="nc" id="L411">            return null;</span>
+        }
+<span class="fc" id="L413">        TunnelInformation tunnelInformation = tunnelInformationMap.get(identifier);</span>
+<span class="pc bpc" id="L414" title="1 of 2 branches missed.">        if (tunnelInformation == null) {</span>
+<span class="fc" id="L415">            tunnelInformation = new TunnelInformation(identifier);</span>
+<span class="fc" id="L416">            tunnelInformationMap.put(identifier, tunnelInformation);</span>
+        }
+<span class="fc" id="L418">        return tunnelInformation;</span>
+    }
+
+    /**
+     * Queries the Sauce REST API to find the active tunnel for the user/tunnel identifier.
+     *
+     * @param username   the Sauce username
+     * @param identifier tunnel identifier, can be the same as the username
+     * @return String the internal Sauce tunnel id
+     */
+    private String activeTunnelIdentifier(String username, String identifier) {
+<span class="pc bpc" id="L429" title="1 of 2 branches missed.">        if (sauceRest == null) {</span>
+            //TODO how to handle?
+<span class="nc" id="L431">            return null;</span>
+        }
+        try {
+<span class="fc" id="L434">            JSONArray tunnelArray = new JSONArray(sauceRest.getTunnels());</span>
+<span class="fc bfc" id="L435" title="All 2 branches covered.">            if (tunnelArray.length() == 0) {</span>
+                //no active tunnels
+<span class="fc" id="L437">                return null;</span>
+            }
+            //iterate over elements
+<span class="fc bfc" id="L440" title="All 2 branches covered.">            for (int i = 0; i &lt; tunnelArray.length(); i++) {</span>
+<span class="fc" id="L441">                String tunnelId = tunnelArray.getString(i);</span>
+<span class="fc" id="L442">                JSONObject tunnelInformation = new JSONObject(sauceRest.getTunnelInformation(tunnelId));</span>
+<span class="fc" id="L443">                String tunnelIdentifier = tunnelInformation.getString(&quot;tunnel_identifier&quot;);</span>
+<span class="fc" id="L444">                String status = tunnelInformation.getString(&quot;status&quot;);</span>
+<span class="pc bpc" id="L445" title="1 of 2 branches missed.">                if (status.equals(&quot;running&quot;) &amp;&amp;</span>
+<span class="pc bpc" id="L446" title="3 of 4 branches missed.">                        (tunnelIdentifier.equals(&quot;null&quot;) &amp;&amp; identifier.equals(username)) ||</span>
+<span class="pc bpc" id="L447" title="2 of 4 branches missed.">                        !tunnelIdentifier.equals(&quot;null&quot;) &amp;&amp; tunnelIdentifier.equals(identifier)) {</span>
+                    //we have an active tunnel
+<span class="nc" id="L449">                    return tunnelId;</span>
+                }
+
+            }
+<span class="nc" id="L453">        } catch (JSONException e) {</span>
+            //log error and return false
+<span class="nc" id="L455">            julLogger.log(Level.WARNING, &quot;Exception occurred retrieving tunnel information&quot;, e);</span>
+<span class="fc" id="L456">        }</span>
+<span class="fc" id="L457">        return null;</span>
+    }
+
+    protected abstract String getCurrentVersion();
+
+    /**
+     * Returns the arguments to be used to launch Sauce Connect
+     *
+     * @param args     the initial Sauce Connect command line args
+     * @param username name of the user which launched Sauce Connect
+     * @param apiKey   the access key for the Sauce user
+     * @param port     the port that Sauce Connect should be launched on
+     * @param options  command line args specified by the user
+     * @return String array representing the command line args to be used to launch Sauce Connect
+     */
+    protected String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port, String options) {
+
+<span class="nc" id="L474">        args = addElement(args, username);</span>
+<span class="nc" id="L475">        args = addElement(args, apiKey);</span>
+<span class="nc" id="L476">        args = addElement(args, &quot;-P&quot;);</span>
+<span class="nc" id="L477">        args = addElement(args, String.valueOf(port));</span>
+<span class="nc bnc" id="L478" title="All 2 branches missed.">        if (StringUtils.isNotBlank(options)) {</span>
+<span class="nc" id="L479">            args = addElement(args, options);</span>
+        }
+<span class="nc" id="L481">        return args;</span>
+    }
+
+    /**
+     * @return the user's home directory
+     */
+    public String getSauceConnectWorkingDirectory() {
+<span class="fc" id="L488">        return System.getProperty(&quot;user.home&quot;);</span>
+    }
+
+    public abstract File getSauceConnectLogFile(String options);
+
+    /**
+     * Handles receiving and processing the output of an external process.
+     */
+    protected abstract class StreamGobbler extends Thread {
+        private final PrintStream printStream;
+        private final InputStream is;
+
+<span class="fc" id="L500">        public StreamGobbler(String name, InputStream is, PrintStream printStream) {</span>
+<span class="fc" id="L501">            super(name);</span>
+<span class="fc" id="L502">            this.is = is;</span>
+<span class="fc" id="L503">            this.printStream = printStream;</span>
+<span class="fc" id="L504">        }</span>
+
+        /**
+         * Opens a BufferedReader over the input stream, reads and processes each line.
+         */
+        public void run() {
+            try {
+<span class="fc" id="L511">                InputStreamReader isr = new InputStreamReader(is);</span>
+<span class="fc" id="L512">                BufferedReader br = new BufferedReader(isr);</span>
+                String line;
+<span class="fc bfc" id="L514" title="All 2 branches covered.">                while ((line = br.readLine()) != null) {</span>
+<span class="fc" id="L515">                    processLine(line);</span>
+                }
+<span class="nc" id="L517">            } catch (IOException ioe) {</span>
+                //ignore stream closed errors
+<span class="nc bnc" id="L519" title="All 2 branches missed.">                if (!(ioe.getMessage().equalsIgnoreCase(&quot;stream closed&quot;))) {</span>
+<span class="nc" id="L520">                    ioe.printStackTrace();</span>
+                }
+<span class="fc" id="L522">            }</span>
+<span class="fc" id="L523">        }</span>
+
+        /**
+         * Processes a line of output received by the stream gobbler.
+         *
+         * @param line line to process
+         */
+        protected void processLine(String line) {
+<span class="pc bpc" id="L531" title="1 of 2 branches missed.">            if (!quietMode) {</span>
+<span class="nc bnc" id="L532" title="All 2 branches missed.">                if (printStream != null) {</span>
+<span class="nc" id="L533">                    printStream.println(line);</span>
+                }
+<span class="nc" id="L535">                System.out.println(line);</span>
+<span class="nc" id="L536">                julLogger.info(line);</span>
+            }
+<span class="fc" id="L538">        }</span>
+    }
+
+    /**
+     * Handles processing Sauce Connect output sent to stdout.
+     */
+    public class SystemOutGobbler extends StreamGobbler {
+
+        private final Semaphore semaphore;
+
+        private String tunnelId;
+        private boolean failed;
+        private boolean cantLockPidfile;
+
+<span class="fc" id="L552">        public SystemOutGobbler(String name, InputStream is, final Semaphore semaphore, PrintStream printStream) {</span>
+<span class="fc" id="L553">            super(name, is, printStream);</span>
+<span class="fc" id="L554">            this.semaphore = semaphore;</span>
+<span class="fc" id="L555">        }</span>
+
+        /**
+         * {@inheritDoc}
+         *
+         * If the line contains the Sauce Connect started message, then release the semaphone, which will allow the
+         * build to resume.
+         *
+         * @param line Line being processed
+         */
+        @Override
+        protected void processLine(String line) {
+<span class="fc" id="L567">            super.processLine(line);</span>
+
+<span class="pc bpc" id="L569" title="1 of 2 branches missed.">            if (StringUtils.containsIgnoreCase(line, &quot;can't lock pidfile&quot;)) {</span>
+                //this message is generated from Sauce Connect when the pidfile can't be locked, indicating that SC is still running
+<span class="nc" id="L571">                cantLockPidfile = true;</span>
+            }
+
+
+<span class="fc bfc" id="L575" title="All 2 branches covered.">            if (StringUtils.containsIgnoreCase(line, &quot;Tunnel ID:&quot;)) {</span>
+<span class="fc" id="L576">                tunnelId = StringUtils.substringAfter(line, &quot;Tunnel ID: &quot;);</span>
+            }
+<span class="fc bfc" id="L578" title="All 2 branches covered.">            if (StringUtils.containsIgnoreCase(line, &quot;Goodbye&quot;)) {</span>
+<span class="fc" id="L579">                failed = true;</span>
+            }
+<span class="pc bpc" id="L581" title="1 of 6 branches missed.">            if (StringUtils.containsIgnoreCase(line, getSauceStartedMessage()) || failed || cantLockPidfile) {</span>
+                //unlock processMonitor
+<span class="fc" id="L583">                semaphore.release();</span>
+            }
+<span class="fc" id="L585">        }</span>
+
+        public String getTunnelId() {
+<span class="fc" id="L588">            return tunnelId;</span>
+        }
+
+        public boolean isFailed() {
+<span class="fc" id="L592">            return failed;</span>
+        }
+
+        public boolean isCantLockPidfile() {
+<span class="fc" id="L596">            return cantLockPidfile;</span>
+        }
+    }
+
+    /**
+     * @return Text which indicates that Sauce Connect has started
+     */
+    protected abstract String getSauceStartedMessage();
+
+    /**
+     * Handles processing Sauce Connect output sent to stderr.
+     */
+    public class SystemErrorGobbler extends StreamGobbler {
+
+<span class="fc" id="L610">        public SystemErrorGobbler(String name, InputStream is, PrintStream printStream) {</span>
+<span class="fc" id="L611">            super(name, is, printStream);</span>
+<span class="fc" id="L612">        }</span>
+    }
+
+    /**
+     * Base exception class which is thrown if an error occurs launching Sauce Connect.
+     */
+    public static class SauceConnectException extends IOException {
+
+        public SauceConnectException(String message) {
+<span class="fc" id="L621">            super(message);</span>
+<span class="fc" id="L622">        }</span>
+
+        public SauceConnectException(Exception cause) {
+<span class="nc" id="L625">            super(cause);</span>
+<span class="nc" id="L626">        }</span>
+    }
+
+    /**
+     * Exception which is thrown when Sauce Connect does not start within the timeout period.
+     */
+    public static class SauceConnectDidNotStartException extends SauceConnectException {
+        public SauceConnectDidNotStartException(String message) {
+<span class="fc" id="L634">            super(message);</span>
+<span class="fc" id="L635">        }</span>
+    }
+
+    private class TunnelInformation {
+        private final String identifier;
+        private Process process;
+<span class="fc" id="L641">        private Integer processCount = 0;</span>
+<span class="fc" id="L642">        private final Lock lock = new ReentrantLock();</span>
+        private String tunnelId;
+
+<span class="fc" id="L645">        public TunnelInformation(String identifier) {</span>
+<span class="fc" id="L646">            this.identifier = identifier;</span>
+<span class="fc" id="L647">        }</span>
+
+        private Lock getLock() {
+<span class="fc" id="L650">            return lock;</span>
+        }
+
+        private Process getProcess() {
+<span class="nc" id="L654">            return process;</span>
+        }
+
+        private void setProcess(Process process) {
+<span class="fc" id="L658">            this.process = process;</span>
+<span class="fc" id="L659">        }</span>
+
+        private Integer getProcessCount() {
+<span class="fc" id="L662">            return processCount;</span>
+        }
+
+        private void setProcessCount(Integer processCount) {
+<span class="fc" id="L666">            this.processCount = processCount;</span>
+<span class="fc" id="L667">        }</span>
+
+        private String getTunnelId() {
+<span class="nc" id="L670">            return tunnelId;</span>
+        }
+
+        private void setTunnelId(String tunnelId) {
+<span class="fc" id="L674">            this.tunnelId = tunnelId;</span>
+<span class="fc" id="L675">        }</span>
+
+        @Override
+        public String toString() {
+<span class="fc" id="L679">            return identifier;</span>
+        }
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

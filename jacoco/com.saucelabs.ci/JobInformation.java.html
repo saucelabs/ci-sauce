@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JobInformation.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ci-sauce</a> &gt; <a href="index.source.html" class="el_package">com.saucelabs.ci</a> &gt; <span class="el_source">JobInformation.java</span></div><h1>JobInformation.java</h1><pre class="source lang-java linenums">package com.saucelabs.ci;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Stores details about a sauce labs job/test
+ *
+ * @author Sauce Labs
+ */
+public class JobInformation implements Serializable {
+
+    private String jobId;
+
+    private String hmac;
+    private String status;
+    private String name;
+
+    private String os;
+    private String browser;
+    private String version;
+
+    private String videoUrl;
+    private String logUrl;
+    private String build;
+
+<span class="fc" id="L33">    final private HashMap&lt;String, Object&gt; changes = new HashMap&lt;String, Object&gt;();</span>
+
+    /**
+     *
+     * @param jobId JobID of the job/test in question
+     * @param hmac Temporary Authentication token
+     */
+<span class="fc" id="L40">    public JobInformation(String jobId, String hmac) {</span>
+<span class="fc" id="L41">        this.jobId = jobId;</span>
+<span class="fc" id="L42">        this.hmac = hmac;</span>
+<span class="fc" id="L43">    }</span>
+
+    /**
+     * Gets Temporary Authentication token
+     *
+     * @return hmac token provided in the constructor
+     */
+    public String getHmac() {
+<span class="fc" id="L51">        return hmac;</span>
+    }
+
+    /**
+     * Sets Temporary Authentication token
+     *
+     * @param hmac hmac token
+     */
+    public void setHmac(String hmac) {
+<span class="fc" id="L60">        this.hmac = hmac;</span>
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * Job id of the job/test in question
+     *
+     * @return jobid
+     */
+    public String getJobId() {
+<span class="fc" id="L69">        return jobId;</span>
+    }
+
+    /**
+     * Job Status
+     *
+     * @return &quot;Passed&quot;, &quot;Failed&quot;, null
+     */
+    @Nullable
+    public String getStatus() {
+<span class="fc" id="L79">        return status;</span>
+    }
+
+    /**
+     * Set job status state (boolean)
+     * @param status Boolean of true (passed) or false (failed)
+     */
+    public void setStatus(@Nonnull Boolean status) {
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        this.setStatus(status.booleanValue() ? &quot;Passed&quot; : &quot;Failed&quot;);</span>
+<span class="fc" id="L88">    }</span>
+
+    /**
+     * Set job status state (string)
+     * @param status null, &quot;passed&quot;, &quot;false&quot;
+     */
+    public void setStatus(@Nullable String status) {
+<span class="fc" id="L95">        this.status = status;</span>
+<span class="fc" id="L96">        changes.put(&quot;status&quot;, status);</span>
+<span class="fc" id="L97">    }</span>
+
+    /**
+     * Is a job name set? Check for all possible false values
+     *
+     * @return true/false
+     */
+    public boolean hasJobName() {
+<span class="fc bfc" id="L105" title="All 6 branches covered.">        return name != null &amp;&amp; !name.equals(&quot;&quot;) &amp;&amp; !name.equals(&quot;null&quot;);</span>
+    }
+
+    /**
+     * Get Job Name
+     * @return name of job
+     */
+    @Nullable
+    public String getName() {
+<span class="fc" id="L114">        return name;</span>
+    }
+
+    /**
+     * Set job name
+     *
+     * @param name New Name
+     */
+    public void setName(@Nullable String name) {
+<span class="fc" id="L123">        this.name = name;</span>
+<span class="fc" id="L124">        changes.put(&quot;name&quot;, name);</span>
+<span class="fc" id="L125">    }</span>
+
+    /**
+     * Is a build name set? Check for all possible false values
+     *
+     * @return true/false
+     */
+    public boolean hasBuild() {
+<span class="fc bfc" id="L133" title="All 6 branches covered.">        return build != null &amp;&amp; !build.equals(&quot;&quot;) &amp;&amp; !build.equals(&quot;null&quot;);</span>
+    }
+
+    /**
+     * Get build name
+     *
+     * @return build name
+     */
+    @Nullable
+    public String getBuild() {
+<span class="fc" id="L143">        return build;</span>
+    }
+
+    /**
+     * Set build name
+     *
+     * @param build build name
+     */
+    public void setBuild(@Nullable String build) {
+<span class="fc" id="L152">        this.build = build;</span>
+<span class="fc" id="L153">        changes.put(&quot;build&quot;, build);</span>
+<span class="fc" id="L154">    }</span>
+
+    /**
+     * get browser
+     * @return browser
+     */
+    public String getBrowser() {
+<span class="fc" id="L161">        return browser;</span>
+    }
+
+    /**
+     * set browser
+     * @param browser browser name
+     */
+    public void setBrowser(String browser) {
+<span class="fc" id="L169">        this.browser = browser;</span>
+<span class="fc" id="L170">        changes.put(&quot;browser&quot;, browser);</span>
+
+<span class="fc" id="L172">    }</span>
+
+    /**
+     * get os (normalized)
+     * @return normalized os
+     */
+    public String getOs() {
+<span class="fc" id="L179">        return OperatingSystemDescription.getOperatingSystemName(os);</span>
+    }
+
+    /**
+     * set os
+     * @param os os name
+     */
+    public void setOs(String os) {
+<span class="fc" id="L187">        this.os = os;</span>
+<span class="fc" id="L188">        changes.put(&quot;os&quot;, os);</span>
+<span class="fc" id="L189">    }</span>
+
+    /**
+     * get version
+     * @return version
+     */
+    public String getVersion() {
+<span class="fc" id="L196">        return version;</span>
+    }
+
+    /**
+     * get version
+     * @param version version
+     */
+    public void setVersion(String version) {
+<span class="fc" id="L204">        this.version = version;</span>
+<span class="fc" id="L205">        changes.put(&quot;version&quot;, version);</span>
+<span class="fc" id="L206">    }</span>
+
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        if (this == o) return true;</span>
+<span class="nc bnc" id="L211" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+
+<span class="nc" id="L213">        JobInformation that = (JobInformation) o;</span>
+
+<span class="nc bnc" id="L215" title="All 6 branches missed.">        if (jobId != null ? !jobId.equals(that.jobId) : that.jobId != null) return false;</span>
+<span class="nc bnc" id="L216" title="All 6 branches missed.">        if (hmac != null ? !hmac.equals(that.hmac) : that.hmac != null) return false;</span>
+<span class="nc bnc" id="L217" title="All 6 branches missed.">        if (status != null ? !status.equals(that.status) : that.status != null) return false;</span>
+<span class="nc bnc" id="L218" title="All 6 branches missed.">        if (name != null ? !name.equals(that.name) : that.name != null) return false;</span>
+<span class="nc bnc" id="L219" title="All 6 branches missed.">        if (os != null ? !os.equals(that.os) : that.os != null) return false;</span>
+<span class="nc bnc" id="L220" title="All 6 branches missed.">        if (browser != null ? !browser.equals(that.browser) : that.browser != null) return false;</span>
+<span class="nc bnc" id="L221" title="All 6 branches missed.">        if (version != null ? !version.equals(that.version) : that.version != null) return false;</span>
+<span class="nc bnc" id="L222" title="All 6 branches missed.">        if (videoUrl != null ? !videoUrl.equals(that.videoUrl) : that.videoUrl != null) return false;</span>
+<span class="nc bnc" id="L223" title="All 6 branches missed.">        if (logUrl != null ? !logUrl.equals(that.logUrl) : that.logUrl != null) return false;</span>
+<span class="nc bnc" id="L224" title="All 6 branches missed.">        if (build != null ? !build.equals(that.build) : that.build != null) return false;</span>
+<span class="nc bnc" id="L225" title="All 4 branches missed.">        return changes != null ? changes.equals(that.changes) : that.changes == null;</span>
+
+    }
+
+    @Override
+    public int hashCode() {
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        return jobId != null ? jobId.hashCode() : 0;</span>
+    }
+
+    public void setVideoUrl(String videoUrl) {
+<span class="fc" id="L235">        this.videoUrl = videoUrl;</span>
+<span class="fc" id="L236">        changes.put(&quot;videoUrl&quot;, videoUrl);</span>
+
+<span class="fc" id="L238">    }</span>
+
+    public String getVideoUrl() {
+<span class="fc" id="L241">        return videoUrl;</span>
+    }
+
+    public void setLogUrl(String logUrl) {
+<span class="fc" id="L245">        this.logUrl = logUrl;</span>
+<span class="fc" id="L246">        changes.put(&quot;logUrl&quot;, logUrl);</span>
+<span class="fc" id="L247">    }</span>
+
+    public String getLogUrl() {
+<span class="fc" id="L250">        return logUrl;</span>
+    }
+
+    /**
+     * Takes in a JSONObject, and populates the current object with all values
+     * Also resets the list of changes
+     *
+     * @see JobInformation#clearChanges()
+     *
+     * @param jobData JSON Data of job/test data
+     * @throws JSONException Any processing error of the JSON Object
+     */
+    public void populateFromJson(JSONObject jobData) throws JSONException {
+
+<span class="pc bpc" id="L264" title="1 of 4 branches missed.">        if (jobData.has(&quot;passed&quot;) &amp;&amp; !jobData.isNull(&quot;passed&quot;)) {</span>
+<span class="fc" id="L265">            Boolean status = jobData.getBoolean(&quot;passed&quot;);</span>
+<span class="fc" id="L266">            setStatus(status);</span>
+        }
+<span class="fc bfc" id="L268" title="All 4 branches covered.">        if (jobData.has(&quot;name&quot;) &amp;&amp; !jobData.isNull(&quot;name&quot;)) {</span>
+<span class="fc" id="L269">            String jobName = jobData.getString(&quot;name&quot;);</span>
+<span class="fc" id="L270">            setName(jobName);</span>
+        }
+<span class="fc bfc" id="L272" title="All 4 branches covered.">        if (jobData.has(&quot;build&quot;) &amp;&amp; !jobData.isNull(&quot;build&quot;)) {</span>
+<span class="fc" id="L273">            String build = jobData.getString(&quot;build&quot;);</span>
+<span class="fc" id="L274">            setBuild(build);</span>
+        }
+<span class="fc" id="L276">        setOs(jobData.getString(&quot;os&quot;));</span>
+<span class="fc" id="L277">        setBrowser(jobData.getString(&quot;browser&quot;));</span>
+<span class="fc" id="L278">        setVersion(jobData.getString(&quot;browser_short_version&quot;));</span>
+<span class="fc" id="L279">        setVideoUrl(jobData.getString(&quot;video_url&quot;));</span>
+<span class="fc" id="L280">        setLogUrl(jobData.getString(&quot;log_url&quot;));</span>
+<span class="fc" id="L281">        clearChanges();</span>
+<span class="fc" id="L282">    }</span>
+
+    public boolean hasChange(String field) {
+<span class="fc" id="L285">        return changes.containsKey(field);</span>
+    }
+
+    public boolean hasChanges() {
+<span class="fc bfc" id="L289" title="All 2 branches covered.">        return !changes.isEmpty();</span>
+    }
+
+    /**
+     * Resets the internal dirty data state
+     */
+    public void clearChanges() {
+<span class="fc" id="L296">        changes.clear();</span>
+<span class="fc" id="L297">    }</span>
+
+    /**
+     * Get a map of all the internal changes/dirty data
+     *
+     * @return map of all the changes
+     */
+    public Map&lt;String, Object&gt; getChanges() {
+<span class="fc" id="L305">        return new HashMap&lt;String, Object&gt;(changes);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

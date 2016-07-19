@@ -1,0 +1,23 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+ci-sauce,com.saucelabs.ci,CacheTimeUtil,3,28,0,0,2,6,1,3,1,3
+ci-sauce,com.saucelabs.ci,JobInformation,192,269,73,27,15,66,39,41,2,28
+ci-sauce,com.saucelabs.ci,SeleniumVersion,46,0,0,0,6,0,5,0,5,0
+ci-sauce,com.saucelabs.ci,SeleniumBuilderManager.PrintStreamLogger,158,0,4,0,48,0,21,0,19,0
+ci-sauce,com.saucelabs.ci,OperatingSystemDescription,5,168,0,4,0,23,1,7,1,5
+ci-sauce,com.saucelabs.ci,SeleniumBuilderManager,406,0,40,0,73,0,26,0,6,0
+ci-sauce,com.saucelabs.ci,Browser,218,109,58,6,38,33,35,18,5,16
+ci-sauce,com.saucelabs.ci,SODSeleniumConfiguration,236,0,16,0,69,0,32,0,24,0
+ci-sauce,com.saucelabs.ci,SeleniumBuilderManager.SauceRemoteDriver,111,0,6,0,19,0,5,0,2,0
+ci-sauce,com.saucelabs.ci,SeleniumBuilderManager.new Runnable() {...},63,0,4,0,6,0,4,0,2,0
+ci-sauce,com.saucelabs.ci,BrowserFactory,209,514,36,30,57,107,34,23,10,14
+ci-sauce,com.saucelabs.ci.sauceconnect,SauceConnectFourManager.OperatingSystem,34,176,9,9,11,34,11,12,3,11
+ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.TunnelInformation,6,39,0,0,2,14,2,7,2,7
+ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.SystemOutGobbler,3,61,2,10,1,16,2,9,0,5
+ci-sauce,com.saucelabs.ci.sauceconnect,SauceConnectFourManager,196,389,42,30,38,102,30,19,1,12
+ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.new Runnable() {...},1,19,0,0,1,4,0,2,0,2
+ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.StreamGobbler,21,40,5,3,7,13,3,4,0,3
+ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.new Runnable() {...},1,19,0,0,1,4,0,2,0,2
+ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.SauceConnectException,4,4,0,0,2,2,1,1,1,1
+ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager,349,502,45,47,72,115,37,26,4,13
+ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.SystemErrorGobbler,0,10,0,0,0,3,0,1,0,1
+ci-sauce,com.saucelabs.ci.sauceconnect,AbstractSauceTunnelManager.SauceConnectDidNotStartException,0,4,0,0,0,2,0,1,0,1

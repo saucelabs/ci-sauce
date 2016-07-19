@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Browser.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ci-sauce</a> &gt; <a href="index.source.html" class="el_package">com.saucelabs.ci</a> &gt; <span class="el_source">Browser.java</span></div><h1>Browser.java</h1><pre class="source lang-java linenums">package com.saucelabs.ci;
+
+import org.openqa.selenium.Platform;
+
+import java.util.Locale;
+
+
+/**
+ * Represents a Sauce Browser instance.
+ *
+ * @author &lt;a href=&quot;http://www.sysbliss.com&quot;&gt;Jonathan Doklovic&lt;/a&gt;
+ * @author Ross Rowe
+ */
+public class Browser implements Comparable&lt;Browser&gt; {
+
+    private final String key;
+    private final String os;
+    private final String browserName;
+    private final String version;
+    private final String name;
+    private final String longVersion;
+    private final String longName;
+    private String device;
+    private String deviceType;
+    private String deviceOrientation;
+
+<span class="fc" id="L27">    public Browser(String key, String os, String browserName, String longName, String version, String shortVersion, String name) {</span>
+<span class="fc" id="L28">        this.key = key;</span>
+<span class="fc" id="L29">        this.os = os;</span>
+<span class="fc" id="L30">        this.browserName = browserName;</span>
+<span class="fc" id="L31">        this.longName = longName;</span>
+<span class="fc" id="L32">        this.version = version;</span>
+<span class="fc" id="L33">        this.longVersion = shortVersion;</span>
+<span class="fc" id="L34">        this.name = name;</span>
+<span class="fc" id="L35">    }</span>
+
+    public String getKey() {
+<span class="fc" id="L38">        return key;</span>
+    }
+
+    public String getBrowserName() {
+<span class="fc" id="L42">        return browserName;</span>
+    }
+
+    public String getName() {
+<span class="fc" id="L46">        return name;</span>
+    }
+
+    public String getOs() {
+<span class="fc" id="L50">        return os;</span>
+    }
+
+    public String getVersion() {
+<span class="fc" id="L54">        return version;</span>
+    }
+
+    public Platform getPlatform() {
+        //convert the operating system into the Platform enum
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (os.toLowerCase(Locale.getDefault()).contains(&quot;windows 2008&quot;)) {</span>
+
+<span class="fc" id="L61">            return Platform.VISTA;</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        } else if (os.toLowerCase(Locale.getDefault()).contains(&quot;windows 2012 r2&quot;)) {</span>
+
+<span class="nc" id="L64">            return Platform.WIN8_1;</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">        } else if (os.toLowerCase(Locale.getDefault()).contains(&quot;windows 2012&quot;)) {</span>
+
+<span class="nc" id="L67">            return Platform.WIN8;</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        } else if (os.toLowerCase(Locale.getDefault()).contains(&quot;windows 2003&quot;)) {</span>
+
+<span class="fc" id="L70">            return Platform.XP;</span>
+        }
+        //otherwise just return the os
+<span class="fc" id="L73">        return Platform.extractFromSysProperty(os);</span>
+    }
+
+    public boolean equals(Object object) {
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        if (!(object instanceof Browser)) {</span>
+<span class="nc" id="L78">            return false;</span>
+        }
+<span class="nc" id="L80">        Browser browser = (Browser) object;</span>
+<span class="nc bnc" id="L81" title="All 10 branches missed.">        return (key == null ? browser.key == null : key.equals(browser.key)) &amp;&amp;</span>
+<span class="nc bnc" id="L82" title="All 6 branches missed.">                (browserName == null ? browser.browserName == null : browserName.equals(browser.browserName)) &amp;&amp;</span>
+<span class="nc bnc" id="L83" title="All 6 branches missed.">                (name == null ? browser.name == null : name.equals(browser.name)) &amp;&amp;</span>
+<span class="nc bnc" id="L84" title="All 6 branches missed.">                (os == null ? browser.os == null : os.equals(browser.os)) &amp;&amp;</span>
+<span class="nc bnc" id="L85" title="All 6 branches missed.">                (deviceType == null ? browser.deviceType == null : deviceType.equals(browser.deviceType)) &amp;&amp;</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">                (version == null ? browser.version == null : version.equals(browser.version));</span>
+    }
+
+    public int hashCode() {
+<span class="nc" id="L90">        int result = 17;</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (key != null) {</span>
+<span class="nc" id="L92">            result = 31 * result + key.hashCode();</span>
+        }
+<span class="nc bnc" id="L94" title="All 2 branches missed.">        if (browserName != null) {</span>
+<span class="nc" id="L95">            result = 31 * result + browserName.hashCode();</span>
+        }
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        if (name != null) {</span>
+<span class="nc" id="L98">            result = 31 * result + name.hashCode();</span>
+        }
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (os != null) {</span>
+<span class="nc" id="L101">            result = 31 * result + os.hashCode();</span>
+        }
+<span class="nc bnc" id="L103" title="All 2 branches missed.">        if (version != null) {</span>
+<span class="nc" id="L104">            result = 31 * result + version.hashCode();</span>
+        }
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (deviceType != null) {</span>
+<span class="nc" id="L107">            result = 31 * result + deviceType.hashCode();</span>
+        }
+<span class="nc" id="L109">        return result;</span>
+    }
+
+    public int compareTo(Browser browser) {
+<span class="fc" id="L113">        return String.CASE_INSENSITIVE_ORDER.compare(name, browser.name);</span>
+    }
+
+    public String toString() {
+<span class="nc bnc" id="L117" title="All 2 branches missed.">        if (name == null) {</span>
+<span class="nc" id="L118">            return super.toString();</span>
+        } else {
+<span class="nc" id="L120">            return name;</span>
+        }
+    }
+
+    public String getUri() {
+<span class="nc" id="L125">        return getUri(null, null);</span>
+    }
+
+    public String getUri(String username, String accessKey) {
+<span class="nc" id="L129">        StringBuilder builder = new StringBuilder();</span>
+<span class="nc" id="L130">        builder.append(&quot;sauce-ondemand:?os=&quot;).append(os).</span>
+<span class="nc" id="L131">                append(&quot;&amp;browser=&quot;).append(browserName).</span>
+<span class="nc" id="L132">                append(&quot;&amp;browser-version=&quot;).append(version);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (username != null) {</span>
+<span class="nc" id="L134">            builder.append(&quot;&amp;username=&quot;).append(username);</span>
+        }
+<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (accessKey != null) {</span>
+<span class="nc" id="L137">            builder.append(&quot;&amp;access-key=&quot;).append(accessKey);</span>
+        }
+<span class="nc" id="L139">        return builder.toString();</span>
+    }
+
+    public void setDevice(String device) {
+<span class="fc" id="L143">        this.device = device;</span>
+<span class="fc" id="L144">    }</span>
+
+    public String getDevice() {
+<span class="fc" id="L147">        return device;</span>
+    }
+
+    public void setDeviceType(String deviceType) {
+<span class="fc" id="L151">        this.deviceType = deviceType;</span>
+<span class="fc" id="L152">    }</span>
+
+    public String getDeviceType() {
+<span class="fc" id="L155">        return deviceType;</span>
+    }
+
+    public void setDeviceOrientation(String deviceOrientation) {
+<span class="fc" id="L159">        this.deviceOrientation = deviceOrientation;</span>
+<span class="fc" id="L160">    }</span>
+
+    public String getDeviceOrientation() {
+<span class="fc" id="L163">        return deviceOrientation;</span>
+    }
+
+    public String getLongVersion() {
+<span class="fc" id="L167">        return longVersion;</span>
+    }
+
+    public String getLongName() {
+<span class="fc" id="L171">        return longName;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>

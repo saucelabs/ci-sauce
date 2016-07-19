@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SeleniumBuilderManager.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ci-sauce</a> &gt; <a href="index.source.html" class="el_package">com.saucelabs.ci</a> &gt; <span class="el_source">SeleniumBuilderManager.java</span></div><h1>SeleniumBuilderManager.java</h1><pre class="source lang-java linenums">package com.saucelabs.ci;
+
+import com.sebuilder.interpreter.Script;
+import com.sebuilder.interpreter.SeInterpreter;
+import com.sebuilder.interpreter.factory.ScriptFactory;
+import com.sebuilder.interpreter.factory.StepTypeFactory;
+import com.sebuilder.interpreter.factory.TestRunFactory;
+import com.sebuilder.interpreter.webdriverfactory.Firefox;
+import com.sebuilder.interpreter.webdriverfactory.Remote;
+import com.sebuilder.interpreter.webdriverfactory.WebDriverFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Provides integration with the {@link com.sebuilder.interpreter.SeInterpreter} class for running
+ * JSON-based Selenium Builder scripts
+ *
+ * @author Ross Rowe
+ */
+<span class="nc" id="L41">public class SeleniumBuilderManager {</span>
+
+    public static final String BROWSER_NAME = &quot;browserName&quot;;
+    public static final String VERSION = &quot;version&quot;;
+
+<span class="nc" id="L46">    private static final Logger logger = Logger.getLogger(SeleniumBuilderManager.class.getName());</span>
+
+    /**
+     * TODO always use wd/hub?
+     */
+    private static final String URL = &quot;http://{0}:{1}@{2}:{3}/wd/hub&quot;;
+    private static final String PLATFORM = &quot;platform&quot;;
+    private static final String NAME = &quot;name&quot;;
+    private static final String URL_KEY = &quot;url&quot;;
+
+    /**
+     * Creates and invokes a new {@link Script} instance for the given &lt;code&gt;scriptFile&lt;/code&gt;.
+     *
+     * @param scriptFile     The se-builder script file to invoke
+     * @param envVars        Contains the available environment variables set by the CI environment.  The Sauce CI
+     *                       plugin will set envvars that contain information about the browser/user/url to use.
+     * @param printStream    Where messages will be logged to
+     * @param threadPoolSize the size of the thread pool to be used when running tests in parallel, can be null
+     * @return boolean indicating whether the invocation of the se-builder script was successful
+     */
+    public boolean executeSeleniumBuilder(File scriptFile, Map envVars, PrintStream printStream, Integer threadPoolSize) {
+
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        ExecutorService executorService = Executors.newFixedThreadPool(threadPoolSize == null ? 1 : threadPoolSize);</span>
+        try {
+<span class="nc" id="L71">            HashMap&lt;String, String&gt; config = new HashMap&lt;String, String&gt;();</span>
+<span class="nc" id="L72">            String browserInformation = readPropertyOrEnv(&quot;SAUCE_ONDEMAND_BROWSERS&quot;, envVars, null);</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">            if (browserInformation != null) {</span>
+                //multiple browsers defined, parse JSON data
+<span class="nc" id="L75">                JSONArray browserArray = new JSONArray(browserInformation);</span>
+<span class="nc" id="L76">                boolean result = true;</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">                for (int i = 0; i &lt; browserArray.length(); i++) {</span>
+<span class="nc" id="L78">                    JSONObject browserObject = browserArray.getJSONObject(i);</span>
+<span class="nc" id="L79">                    String browser = browserObject.getString(&quot;browser&quot;);</span>
+<span class="nc" id="L80">                    String version = browserObject.getString(&quot;browser-version&quot;);</span>
+<span class="nc" id="L81">                    String os = browserObject.getString(&quot;os&quot;);</span>
+<span class="nc bnc" id="L82" title="All 4 branches missed.">                    result = invokeBuild(executorService, scriptFile, envVars, printStream, config, browser, version, os, threadPoolSize) || result;</span>
+                }
+<span class="nc" id="L84">                return result;</span>
+            } else {
+<span class="nc" id="L86">                String browser = readPropertyOrEnv(&quot;SELENIUM_BROWSER&quot;, envVars, null);</span>
+<span class="nc" id="L87">                String version = readPropertyOrEnv(&quot;SELENIUM_VERSION&quot;, envVars, null);</span>
+<span class="nc" id="L88">                String os = readPropertyOrEnv(&quot;SELENIUM_PLATFORM&quot;, envVars, null);</span>
+<span class="nc" id="L89">                return invokeBuild(executorService, scriptFile, envVars, printStream, config, browser, version, os, threadPoolSize);</span>
+            }
+<span class="nc" id="L91">        } catch (Exception e) {</span>
+<span class="nc" id="L92">            printStream.println(&quot;Error running selenium builder command&quot;);</span>
+<span class="nc" id="L93">            SeleniumBuilderManager.logger.log(Level.WARNING, &quot;Error running selenium builder command&quot;, e);</span>
+        } finally {
+<span class="nc" id="L95">            executorService.shutdown();</span>
+            try {
+<span class="nc" id="L97">                executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);</span>
+<span class="nc" id="L98">            } catch (InterruptedException e) {</span>
+<span class="nc" id="L99">                printStream.println(&quot;InterruptedException running selenium builder command&quot;);</span>
+<span class="nc" id="L100">                SeleniumBuilderManager.logger.log(Level.WARNING, &quot;InterruptedException running selenium builder command&quot;, e);</span>
+<span class="nc" id="L101">            }</span>
+<span class="nc" id="L102">        }</span>
+<span class="nc" id="L103">        return false;</span>
+    }
+
+    private boolean invokeBuild(ExecutorService executorService, File scriptFile, Map envVars, final PrintStream printStream, final HashMap&lt;String, String&gt; config, String browser, String version, String os, final Integer threadPoolSize) throws IOException, JSONException {
+<span class="nc" id="L107">        String host = readPropertyOrEnv(&quot;SELENIUM_HOST&quot;, envVars, null);</span>
+<span class="nc" id="L108">        String port = readPropertyOrEnv(&quot;SELENIUM_PORT&quot;, envVars, null);</span>
+<span class="nc" id="L109">        String username = readPropertyOrEnv(&quot;SAUCE_USER_NAME&quot;, envVars, null);</span>
+<span class="nc" id="L110">        String accessKey = readPropertyOrEnv(&quot;SAUCE_API_KEY&quot;, envVars, null);</span>
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (browser != null) {</span>
+<span class="nc" id="L113">            config.put(BROWSER_NAME, browser);</span>
+        }
+<span class="nc bnc" id="L115" title="All 2 branches missed.">        if (version != null) {</span>
+<span class="nc" id="L116">            config.put(VERSION, version);</span>
+        }
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (os != null) {</span>
+<span class="nc" id="L119">            config.put(PLATFORM, os);</span>
+        }
+<span class="nc" id="L121">        config.put(NAME, scriptFile.getName());</span>
+<span class="nc bnc" id="L122" title="All 8 branches missed.">        if (host != null &amp;&amp; accessKey != null &amp;&amp; username != null &amp;&amp; port != null)</span>
+<span class="nc" id="L123">            config.put(URL_KEY, MessageFormat.format(URL, username, accessKey, host, port));</span>
+
+<span class="nc" id="L125">        final Log log = LogFactory.getFactory().getInstance(SeInterpreter.class);</span>
+
+<span class="nc" id="L127">        BufferedReader br = null;</span>
+
+        try {
+<span class="nc" id="L130">            ScriptFactory sf = new ScriptFactory();</span>
+<span class="nc" id="L131">            StepTypeFactory stf = new StepTypeFactory();</span>
+<span class="nc" id="L132">            sf.setStepTypeFactory(stf);</span>
+<span class="nc" id="L133">            TestRunFactory trf = new TestRunFactory();</span>
+<span class="nc" id="L134">            sf.setTestRunFactory(trf);</span>
+<span class="nc" id="L135">            printStream.println(&quot;Starting to run selenium builder command&quot;);</span>
+<span class="nc" id="L136">            final WebDriverFactory remoteDriver = createRemoteDriver(config.get(URL_KEY), printStream);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">            for (final Script script : sf.parse(scriptFile)) {</span>
+<span class="nc" id="L138">                executorService.submit(new Runnable() {</span>
+                    public void run() {
+<span class="nc" id="L140">                        WebDriverFactory driver = remoteDriver;</span>
+<span class="nc bnc" id="L141" title="All 4 branches missed.">                        if (threadPoolSize != null &amp;&amp; threadPoolSize &gt; 1) {</span>
+                            //if we are running multiple threads, then create a new driver per test
+<span class="nc" id="L143">                            driver = createRemoteDriver(config.get(URL_KEY), printStream);</span>
+                        }
+<span class="nc" id="L145">                        script.run(new PrintStreamLogger(log, printStream), driver, config);</span>
+<span class="nc" id="L146">                    }</span>
+                });
+<span class="nc" id="L148">            }</span>
+<span class="nc" id="L149">            return true;</span>
+        } finally {
+<span class="nc bnc" id="L151" title="All 4 branches missed.">            if (br != null) {</span>
+                try {
+<span class="nc" id="L153">                    br.close();</span>
+<span class="nc" id="L154">                } catch (IOException e) {</span>
+<span class="nc" id="L155">                    SeleniumBuilderManager.logger.log(Level.WARNING, &quot;Error closing script file&quot;, e);</span>
+<span class="nc" id="L156">                }</span>
+            }
+        }
+    }
+
+    /**
+     * Returns the {@link WebDriverFactory} instance to be used to run the script against.
+     *
+     * @param url
+     * @return
+     */
+    private WebDriverFactory createRemoteDriver(String url, PrintStream printStream) {
+<span class="nc bnc" id="L168" title="All 4 branches missed.">        if (url == null || url.equals(&quot;&quot;)) {</span>
+            //run against firefox
+<span class="nc" id="L170">            return new Firefox();</span>
+        } else {
+<span class="nc" id="L172">            return new SauceRemoteDriver(printStream);</span>
+        }
+    }
+
+    private String readPropertyOrEnv(String key, Map vars, String defaultValue) {
+<span class="nc" id="L177">        String v = (String) vars.get(key);</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">        if (v == null)</span>
+<span class="nc" id="L179">            v = System.getProperty(key);</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">        if (v == null)</span>
+<span class="nc" id="L181">            v = System.getenv(key);</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">        if (v == null)</span>
+<span class="nc" id="L183">            v = defaultValue;</span>
+<span class="nc" id="L184">        return v;</span>
+    }
+
+    /**
+     * {@link Log} implementation which logs messages to the underlying Logger as well as to the PrintStream.
+     */
+    private class PrintStreamLogger implements Log {
+
+        private Log log;
+        private PrintStream printStream;
+
+<span class="nc" id="L195">        public PrintStreamLogger(Log log, PrintStream printStream) {</span>
+<span class="nc" id="L196">            this.log = log;</span>
+<span class="nc" id="L197">            this.printStream = printStream;</span>
+<span class="nc" id="L198">        }</span>
+
+        public boolean isDebugEnabled() {
+<span class="nc" id="L201">            return log.isDebugEnabled();</span>
+        }
+
+        public boolean isErrorEnabled() {
+<span class="nc" id="L205">            return log.isErrorEnabled();</span>
+        }
+
+        public boolean isFatalEnabled() {
+<span class="nc" id="L209">            return log.isFatalEnabled();</span>
+        }
+
+        public boolean isInfoEnabled() {
+<span class="nc" id="L213">            return log.isInfoEnabled();</span>
+        }
+
+        public boolean isTraceEnabled() {
+<span class="nc" id="L217">            return log.isTraceEnabled();</span>
+        }
+
+        public boolean isWarnEnabled() {
+<span class="nc" id="L221">            return log.isTraceEnabled();</span>
+        }
+
+        public void trace(Object o) {
+<span class="nc" id="L225">            log.trace(o);</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">            if (log.isTraceEnabled()) {</span>
+<span class="nc" id="L227">                printStream.println(o);</span>
+            }
+<span class="nc" id="L229">        }</span>
+
+        public void trace(Object o, Throwable throwable) {
+<span class="nc" id="L232">            log.trace(o, throwable);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">            if (log.isTraceEnabled()) {</span>
+<span class="nc" id="L234">                printStream.println(o);</span>
+            }
+<span class="nc" id="L236">        }</span>
+
+        public void debug(Object o) {
+<span class="nc" id="L239">            log.debug(o);</span>
+<span class="nc" id="L240">            printStream.println(o);</span>
+
+<span class="nc" id="L242">        }</span>
+
+        public void debug(Object o, Throwable throwable) {
+<span class="nc" id="L245">            log.debug(o, throwable);</span>
+<span class="nc" id="L246">            printStream.println(o);</span>
+
+<span class="nc" id="L248">        }</span>
+
+        public void info(Object o) {
+<span class="nc" id="L251">            log.info(o);</span>
+<span class="nc" id="L252">            printStream.println(o);</span>
+
+<span class="nc" id="L254">        }</span>
+
+        public void info(Object o, Throwable throwable) {
+<span class="nc" id="L257">            log.info(o, throwable);</span>
+<span class="nc" id="L258">            printStream.println(o);</span>
+
+<span class="nc" id="L260">        }</span>
+
+        public void warn(Object o) {
+<span class="nc" id="L263">            log.warn(o);</span>
+<span class="nc" id="L264">            printStream.println(o);</span>
+
+<span class="nc" id="L266">        }</span>
+
+        public void warn(Object o, Throwable throwable) {
+<span class="nc" id="L269">            log.warn(o, throwable);</span>
+<span class="nc" id="L270">            printStream.println(o);</span>
+
+<span class="nc" id="L272">        }</span>
+
+        public void error(Object o) {
+<span class="nc" id="L275">            log.error(o);</span>
+<span class="nc" id="L276">            printStream.println(o);</span>
+
+<span class="nc" id="L278">        }</span>
+
+        public void error(Object o, Throwable throwable) {
+<span class="nc" id="L281">            log.error(o, throwable);</span>
+<span class="nc" id="L282">            printStream.println(o);</span>
+
+<span class="nc" id="L284">        }</span>
+
+        public void fatal(Object o) {
+<span class="nc" id="L287">            log.fatal(o);</span>
+<span class="nc" id="L288">            printStream.println(o);</span>
+
+<span class="nc" id="L290">        }</span>
+
+        public void fatal(Object o, Throwable throwable) {
+<span class="nc" id="L293">            log.fatal(o, throwable);</span>
+<span class="nc" id="L294">            printStream.println(o);</span>
+
+<span class="nc" id="L296">        }</span>
+    }
+
+    /**
+     * {@link Remote} subclass which prints a log message identifying the Sauce session id, which will be
+     * picked up by the Sauce CI plugin.
+     */
+<span class="nc" id="L303">    private class SauceRemoteDriver extends Remote {</span>
+
+        private RemoteWebDriver driver;
+
+        public static final String PLATFORM = &quot;platform&quot;;
+        private PrintStream printStream;
+
+<span class="nc" id="L310">        public SauceRemoteDriver(PrintStream printStream) {</span>
+<span class="nc" id="L311">            this.printStream = printStream;</span>
+<span class="nc" id="L312">        }</span>
+
+        @Override
+        public RemoteWebDriver make(HashMap&lt;String, String&gt; config) throws MalformedURLException {
+
+<span class="nc bnc" id="L317" title="All 2 branches missed.">            if (driver != null) {</span>
+<span class="nc" id="L318">                return driver;</span>
+            }
+
+<span class="nc bnc" id="L321" title="All 2 branches missed.">            java.net.URL url = config.containsKey(URL_KEY)</span>
+<span class="nc" id="L322">                    ? new URL(config.get(URL_KEY))</span>
+                    : null;
+<span class="nc" id="L324">            HashMap&lt;String, String&gt; caps = new HashMap&lt;String, String&gt;(config);</span>
+<span class="nc" id="L325">            caps.get(URL_KEY);</span>
+<span class="nc" id="L326">            DesiredCapabilities capabilities = new DesiredCapabilities();</span>
+<span class="nc" id="L327">            capabilities.setCapability(CapabilityType.BROWSER_NAME, config.get(BROWSER_NAME));</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">            if (config.containsKey(VERSION)) {</span>
+<span class="nc" id="L329">                capabilities.setCapability(CapabilityType.VERSION, config.get(VERSION));</span>
+            }
+<span class="nc" id="L331">            capabilities.setCapability(CapabilityType.PLATFORM, config.get(PLATFORM));</span>
+<span class="nc" id="L332">            capabilities.setCapability(NAME, config.get(NAME));</span>
+<span class="nc" id="L333">            driver = new RemoteWebDriver(url, capabilities);</span>
+
+<span class="nc" id="L335">            driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);</span>
+<span class="nc" id="L336">            printStream.println(MessageFormat.format(&quot;SauceOnDemandSessionID={0} job-name={1}&quot;, driver.getSessionId(), config.get(&quot;name&quot;)));</span>
+<span class="nc" id="L337">            return driver;</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>
