@@ -49,7 +49,7 @@
         </contributor>
     </contributors>
     <issueManagement>
-        <system>Github Issues</system>
+        <system>github</system>
         <url>https://github.com/saucelabs/ci-sauce/issue</url>
     </issueManagement>
     <ciManagement>
