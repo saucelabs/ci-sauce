@@ -49,7 +49,6 @@ public class BrowserFactory {
             this.sauceREST = sauceREST;
         }
         try {
-            initializeSeleniumBrowsers();
             initializeWebDriverBrowsers();
             initializeAppiumBrowsers();
         } catch (IOException e) {
@@ -58,18 +57,6 @@ public class BrowserFactory {
         } catch (JSONException e) {
             logger.log(Level.WARNING, "Error retrieving browsers, attempting to continue", e);
         }
-    }
-
-    public List<Browser> getSeleniumBrowsers() throws IOException, JSONException {
-        List<Browser> browsers;
-        if (shouldRetrieveBrowsers()) {
-            browsers = initializeSeleniumBrowsers();
-        } else {
-            browsers = new ArrayList<Browser>(seleniumLookup.values());
-        }
-        Collections.sort(browsers);
-
-        return browsers;
     }
 
     public List<Browser> getAppiumBrowsers() throws IOException, JSONException {
@@ -100,16 +87,6 @@ public class BrowserFactory {
         return lastLookup == null || CacheTimeUtil.pastAcceptableDuration(lastLookup, ONE_HOUR_IN_MILLIS);
     }
 
-    private List<Browser> initializeSeleniumBrowsers() throws IOException, JSONException {
-        List<Browser> browsers = getSeleniumBrowsersFromSauceLabs();
-        seleniumLookup = new HashMap<String, Browser>();
-        for (Browser browser : browsers) {
-            seleniumLookup.put(browser.getKey(), browser);
-        }
-        lastLookup = new Timestamp(new Date().getTime());
-        return browsers;
-    }
-
     private List<Browser> initializeAppiumBrowsers() throws IOException, JSONException {
         List<Browser> browsers = getAppiumBrowsersFromSauceLabs();
         appiumLookup = new HashMap<String, Browser>();
@@ -127,24 +104,6 @@ public class BrowserFactory {
             webDriverLookup.put(browser.getKey(), browser);
         }
         lastLookup = new Timestamp(new Date().getTime());
-        return browsers;
-    }
-
-    private List<Browser> getSeleniumBrowsersFromSauceLabs() throws IOException, JSONException {
-        String response = sauceREST.getSupportedPlatforms("selenium-rc");
-        if (response.equals("")) {
-            response = "[]";
-        }
-        List<Browser> browsers = getBrowserListFromJson(response);
-        List<Browser> toRemove = new ArrayList<Browser>();
-        for (Browser browser : browsers) {
-            if (browser.getBrowserName().equals(CHROME)) {
-                toRemove.add(browser);
-            }
-        }
-        for (Browser browser : toRemove) {
-            browsers.remove(browser);
-        }
         return browsers;
     }
 

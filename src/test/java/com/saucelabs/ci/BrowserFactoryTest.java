@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -21,26 +22,17 @@ public class BrowserFactoryTest {
     public void setUp() throws Exception {
         SauceREST sauceREST = mock(SauceREST.class);
         when(
-            sauceREST.getSupportedPlatforms("selenium-rc")
-        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/selenium-rc.json")));
-        when(
             sauceREST.getSupportedPlatforms("appium")
-        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/appium.json")));
+        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/appium.json"), StandardCharsets.UTF_8));
         when(
             sauceREST.getSupportedPlatforms("webdriver")
-        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/webdriver.json")));
+        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/webdriver.json"), StandardCharsets.UTF_8));
         this.browserFactory = new BrowserFactory(sauceREST);
     }
 
     @After
     public void tearDown() throws Exception {
 
-    }
-
-    @Test
-    public void testGetSeleniumBrowsers() throws Exception {
-        List<Browser> browsers = this.browserFactory.getSeleniumBrowsers();
-        assertEquals("No results were returned", 0, browsers.size());
     }
 
     @Test
