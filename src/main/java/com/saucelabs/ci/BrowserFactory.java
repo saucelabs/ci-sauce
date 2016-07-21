@@ -132,6 +132,8 @@ public class BrowserFactory {
      */
     public List<Browser> getBrowserListFromJson(String browserListJson) throws JSONException {
         List<Browser> browsers = new ArrayList<Browser>();
+        HashMap<String, Boolean> latestBrowser = new HashMap();
+
 
         JSONArray browserArray = new JSONArray(browserListJson);
         for (int i = 0; i < browserArray.length(); i++) {
@@ -162,9 +164,17 @@ public class BrowserFactory {
                     //JENKINS-29047 set the browserName to 'Safari'
                     seleniumName = "Safari";
                 }
-                Browser browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait");
+                Browser browser;
+                if (latestBrowser.get("device_" + longName + "_" + longVersion) == null) {
+                    browser = createDeviceBrowser(seleniumName, longName, "latest", osName, device, deviceType, "latest", "portrait");
+                    browsers.add(browser);
+                    browser = createDeviceBrowser(seleniumName, longName, "latest", osName, device, deviceType, "latest", "landscape");
+                    browsers.add(browser);
+                    latestBrowser.put("device_" + longName + "_" + longVersion, Boolean.TRUE);
+                }
+                browser = createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait");
                 browsers.add(browser);
-                browser = createBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "landscape");
+                browser = createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "landscape");
                 browsers.add(browser);
 
 
@@ -174,19 +184,24 @@ public class BrowserFactory {
                 String longVersion = browserObject.getString("long_version");
                 String osName = browserObject.getString("os");
                 String shortVersion = browserObject.getString("short_version");
-                String browserKey = osName + seleniumName + shortVersion;
-                //replace any spaces with _s
-                browserKey = browserKey.replaceAll(" ", "_");
-                //replace any . with _
-                browserKey = browserKey.replaceAll("\\.", "_");
-                String label = OperatingSystemDescription.getOperatingSystemName(osName) + " " + longName + " " + shortVersion;
-                browsers.add(new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion, label));
+
+                Browser browser;
+
+                browser = createBrowserBrowser(seleniumName, longName, "latest", osName, "latest");
+                if (latestBrowser.get(browser.getKey()) == null) {
+                    browsers.add(browser);
+                    latestBrowser.put(browser.getKey(), Boolean.TRUE);
+                }
+                browser = createBrowserBrowser(seleniumName, longName, longVersion, osName, shortVersion);
+                browsers.add(browser);
             }
         }
+
+        latestBrowser = null;
         return browsers;
     }
 
-    private Browser createBrowser(String seleniumName, String longName, String longVersion, String osName, String device, String deviceType, String shortVersion, String orientation) {
+    private Browser createDeviceBrowser(String seleniumName, String longName, String longVersion, String osName, String device, String deviceType, String shortVersion, String orientation) {
         String browserKey = device + orientation + seleniumName + longVersion;
         //replace any spaces with _s
         browserKey = browserKey.replaceAll(" ", "_");
@@ -205,6 +220,16 @@ public class BrowserFactory {
         browser.setDeviceType(deviceType);
         browser.setDeviceOrientation(orientation);
         return browser;
+    }
+
+    private Browser createBrowserBrowser(String seleniumName, String longName, String longVersion, String osName, String shortVersion) {
+        String browserKey = osName + seleniumName + shortVersion;
+        //replace any spaces with _s
+        browserKey = browserKey.replaceAll(" ", "_");
+        //replace any . with _
+        browserKey = browserKey.replaceAll("\\.", "_");
+        String label = OperatingSystemDescription.getOperatingSystemName(osName) + " " + longName + " " + shortVersion;
+        return new Browser(browserKey, osName, seleniumName, longName, shortVersion, longVersion, label);
     }
 
     /**
