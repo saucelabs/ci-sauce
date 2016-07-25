@@ -131,13 +131,14 @@ public class BrowserFactory {
      * @throws JSONException Invalid JSON
      */
     public List<Browser> getBrowserListFromJson(String browserListJson) throws JSONException {
-        List<Browser> browsers = new ArrayList<Browser>();
-        HashMap<String, Boolean> latestBrowser = new HashMap();
-
+        HashMap<String, Browser> browsers = new HashMap<String, Browser>();
 
         JSONArray browserArray = new JSONArray(browserListJson);
         for (int i = 0; i < browserArray.length(); i++) {
             JSONObject browserObject = browserArray.getJSONObject(i);
+            // Empty object, not normal use case
+            if (browserObject.length() == 0) { continue; }
+
             String seleniumName = browserObject.getString("api_name");
             if (seleniumName.equals(IEHTA)) {
                 //exclude these browsers from the list, as they replicate iexplore and firefox
@@ -165,17 +166,10 @@ public class BrowserFactory {
                     seleniumName = "Safari";
                 }
                 Browser browser;
-                if (latestBrowser.get("device_" + longName + "_" + longVersion) == null) {
-                    browser = createDeviceBrowser(seleniumName, longName, "latest", osName, device, deviceType, "latest", "portrait");
-                    browsers.add(browser);
-                    browser = createDeviceBrowser(seleniumName, longName, "latest", osName, device, deviceType, "latest", "landscape");
-                    browsers.add(browser);
-                    latestBrowser.put("device_" + longName + "_" + longVersion, Boolean.TRUE);
-                }
                 browser = createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait");
-                browsers.add(browser);
+                browsers.put(browser.getKey(), browser);
                 browser = createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "landscape");
-                browsers.add(browser);
+                browsers.put(browser.getKey(), browser);
 
 
             } else {
@@ -188,17 +182,13 @@ public class BrowserFactory {
                 Browser browser;
 
                 browser = createBrowserBrowser(seleniumName, longName, "latest", osName, "latest");
-                if (latestBrowser.get(browser.getKey()) == null) {
-                    browsers.add(browser);
-                    latestBrowser.put(browser.getKey(), Boolean.TRUE);
-                }
+                browsers.put(browser.getKey(), browser);
                 browser = createBrowserBrowser(seleniumName, longName, longVersion, osName, shortVersion);
-                browsers.add(browser);
+                browsers.put(browser.getKey(), browser);
             }
         }
 
-        latestBrowser = null;
-        return browsers;
+        return new ArrayList<Browser>(browsers.values());
     }
 
     private Browser createDeviceBrowser(String seleniumName, String longName, String longVersion, String osName, String device, String deviceType, String shortVersion, String orientation) {
