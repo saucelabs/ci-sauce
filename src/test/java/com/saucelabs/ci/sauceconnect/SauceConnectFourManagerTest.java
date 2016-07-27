@@ -76,13 +76,6 @@ public class SauceConnectFourManagerTest {
 
     @Test(expected=AbstractSauceTunnelManager.SauceConnectDidNotStartException.class)
     public void openConnectionTest_closes() throws Exception {
-
-        File sauceConnectJar = null;
-        String options = "";
-        PrintStream printStream = mock(PrintStream.class);
-        Boolean verboseLogging = true;
-        String sauceConnectPath = "";
-
         when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes("UTF-8")));
         when(mockProcess.getInputStream()).thenReturn(getClass().getResourceAsStream("/started_sc_closes.log"));
 
