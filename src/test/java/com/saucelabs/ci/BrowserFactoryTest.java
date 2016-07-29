@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,10 +23,10 @@ public class BrowserFactoryTest {
         SauceREST sauceREST = mock(SauceREST.class);
         when(
             sauceREST.getSupportedPlatforms("appium")
-        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/appium.json"), StandardCharsets.UTF_8));
+        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/appium.json")));
         when(
             sauceREST.getSupportedPlatforms("webdriver")
-        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/webdriver.json"), StandardCharsets.UTF_8));
+        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/webdriver.json")));
         this.browserFactory = new BrowserFactory(sauceREST);
     }
 

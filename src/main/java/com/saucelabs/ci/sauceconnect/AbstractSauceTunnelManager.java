@@ -14,8 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 /**
@@ -252,7 +250,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     protected Process createProcess(String[] args, File directory) throws IOException {
         ProcessBuilder processBuilder = new ProcessBuilder(args);
         processBuilder.directory(directory);
-        if (processBuilder == null) return null;
         return processBuilder.start();
     }
 
@@ -306,7 +303,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
                 //check active tunnels via Sauce REST API
                 if (tunnelIdentifier == null) {
-                    logMessage(printStream, "Process count non-zero, but no active tunnels found for identifier: " + tunnelIdentifier);
+                    logMessage(printStream, "Process count non-zero, but no active tunnels found for identifier: " + identifier);
                     logMessage(printStream, "Process count reset to zero");
                     //if no active tunnels, we have a mismatch of the tunnel count
                     //reset tunnel count to zero and continue to launch Sauce Connect
@@ -632,51 +629,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     public static class SauceConnectDidNotStartException extends SauceConnectException {
         public SauceConnectDidNotStartException(String message) {
             super(message);
-        }
-    }
-
-    private class TunnelInformation {
-        private final String identifier;
-        private Process process;
-        private Integer processCount = 0;
-        private final Lock lock = new ReentrantLock();
-        private String tunnelId;
-
-        public TunnelInformation(String identifier) {
-            this.identifier = identifier;
-        }
-
-        private Lock getLock() {
-            return lock;
-        }
-
-        private Process getProcess() {
-            return process;
-        }
-
-        private void setProcess(Process process) {
-            this.process = process;
-        }
-
-        private Integer getProcessCount() {
-            return processCount;
-        }
-
-        private void setProcessCount(Integer processCount) {
-            this.processCount = processCount;
-        }
-
-        private String getTunnelId() {
-            return tunnelId;
-        }
-
-        private void setTunnelId(String tunnelId) {
-            this.tunnelId = tunnelId;
-        }
-
-        @Override
-        public String toString() {
-            return identifier;
         }
     }
 

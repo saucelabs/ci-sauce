@@ -18,6 +18,7 @@
         <selenium.version>2.53.1</selenium.version>
         <github.global.server>github</github.global.server>
         <github.global.oauth2Token>${env.GH_TOKEN}</github.global.oauth2Token>
+        <java.level>7</java.level>
     </properties>
 
     <licenses>

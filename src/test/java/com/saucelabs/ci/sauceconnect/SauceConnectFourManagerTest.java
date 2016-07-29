@@ -80,7 +80,7 @@ public class SauceConnectFourManagerTest {
         when(mockProcess.getInputStream()).thenReturn(getClass().getResourceAsStream("/started_sc_closes.log"));
 
         try {
-            Process p = this.tunnelManager.openConnection(
+            this.tunnelManager.openConnection(
                 "fakeuser", "fakeapikey", 12345,
                 null, "", ps, false,
                 ""

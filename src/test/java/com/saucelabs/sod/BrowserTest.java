@@ -17,7 +17,7 @@ import static org.junit.Assert.assertFalse;
  */
 public class BrowserTest  {
     private static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/jobs?full=true";
-    private SauceREST sauceREST;
+    private SauceREST sauceREST = new SauceREST(null, null);
 
     @Test
     public void osNames() throws Exception {
