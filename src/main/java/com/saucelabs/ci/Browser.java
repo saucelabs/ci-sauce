@@ -1,5 +1,6 @@
 package com.saucelabs.ci;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.openqa.selenium.Platform;
 
 import java.util.Locale;
@@ -24,17 +25,62 @@ public class Browser implements Comparable<Browser> {
     private String deviceType;
     private String deviceOrientation;
 
-    public Browser(String key, String os, String browserName, String longName, String version, String shortVersion, String name) {
+    /**
+     * Create a new browser object
+     *
+     * @param key unique key for the object (eg Windows_2003internet_explorer7)
+     * @param os Operating System (eg Windows 2003)
+     * @param browserName Browser Name (eg internet explorer)
+     * @param longName Full Pretty browser name (eg Internet Explorer)
+     * @param version Short versioon number (eg 7)
+     * @param longVersion Full version number (eg 7.0.5730.13.)
+     * @param name Full Pretty name (ie Windows eg Internet Explorer 7)
+     */
+    public Browser(String key, String os, String browserName, String longName, String version, String longVersion, String name) {
         this.key = key;
         this.os = os;
         this.browserName = browserName;
         this.longName = longName;
         this.version = version;
-        this.longVersion = shortVersion;
+        this.longVersion = longVersion;
         this.name = name;
     }
 
+    /**
+     * Copy constructor
+     * @see #Browser(String, String, String, String, String, String, String)
+     *
+     * @param original Original Browser Object
+     * @param useLatest Replace version strings with "latest" to grab the latest of that browser
+     */
+    public Browser(Browser original, boolean useLatest) {
+        this.key = null;
+        this.os = original.os;
+        this.browserName = original.browserName;
+        this.name = original.name;
+        if (useLatest) {
+            this.version = "latest";
+            this.longVersion = "latest";
+        } else {
+            this.version = original.version;
+            this.longVersion = original.longVersion;
+        }
+        this.longName = original.longName;
+        this.device = original.device;
+        this.deviceType = original.deviceType;
+        this.deviceOrientation = original.deviceOrientation;
+    }
+
     public String getKey() {
+        if (key == null) {
+            /* New behavior, see BrowserFactory for the weird versions */
+            String browserKey = os + "_" + device + "_" + deviceOrientation + "_" + name + "_" + longVersion;
+            //replace any spaces with _s
+            browserKey = browserKey.replaceAll(" ", "_");
+            //replace any . with _
+            browserKey = browserKey.replaceAll("\\.", "_");
+            return browserKey;
+        }
         return key;
     }
 
@@ -170,4 +216,6 @@ public class Browser implements Comparable<Browser> {
     public String getLongName() {
         return longName;
     }
+
+
 }

@@ -11,12 +11,12 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * @author Ross Rowe
  */
 public class BrowserTest  {
-    private static final String JOB_DETAILS_URL = "http://saucelabs.com/rest/v1/%1$s/jobs?full=true";
     private SauceREST sauceREST = new SauceREST(null, null);
 
     @Test
@@ -48,5 +48,17 @@ public class BrowserTest  {
         assertFalse("browsers is empty", browsers.isEmpty());
     }
 
+
+    @Test
+    public void copyBrowser() throws Exception {
+        Browser orig = new Browser("thisismykey", "Windows 2008", "Firefox", "Mozilla Firefox", "47.0.12345", "47", "firefox");
+        Browser browser = new Browser(orig, false);
+        Browser latest = new Browser(orig, true);
+
+        assertNotEquals(orig.getKey(), browser.getKey());
+        assertNotEquals(orig.getKey(), latest.getKey());
+        assertNotEquals(browser.getKey(), latest.getKey());
+        assertEquals(latest.getVersion(), "latest");
+    }
 
 }
