@@ -1,6 +1,11 @@
+ci-sauce
+========
+
+[![Maven Central](https://img.shields.io/maven-central/v/com.saucelabs/ci-sauce.svg)](https://mvnrepository.com/artifact/com.saucelabs/ci-sauce)
+
 This folder contains the common code for the Bamboo and Jenkins Sauce OnDemand plugins.
 
-To build the plugin, you will need <a href="http://maven.apache.org">Maven 2</a>.
+To build the plugin, you will need [Maven 2](http://maven.apache.org).
 
 The plugin also references the Sauce Connect 2 library, which is hosted in the Sauce Labs Cloudbees Maven repository (https://repository-saucelabs.forge.cloudbees.com/release).  
 
@@ -11,7 +16,7 @@ It can also be built from source and can be obtained from git@github.com:saucela
 To build (compile,test,jar) the plugin run: 
 
 	mvn package
-	
+
 To build and deploy a new version of the library, you will need to modify your Maven settings.xml file to include the username/password for the Sauce Labs CloudBees instance (https://cloudbees.zendesk.com/entries/421064-maven-guide), then:
 
 	    - Run atlas-mvn release:prepare.  You will be prompted to enter the version to be released, the tag to be applied, and the next version number (ending with SNAPSHOT)
