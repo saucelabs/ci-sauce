@@ -1,9 +1,8 @@
 package com.saucelabs.ci;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
-import org.openqa.selenium.Platform;
-
-import java.util.Locale;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -24,6 +23,23 @@ public class Browser implements Comparable<Browser> {
     private String device;
     private String deviceType;
     private String deviceOrientation;
+
+    private static final Map<String, String> oses;
+    static {
+        Map<String, String> aMap = new HashMap<String, String>();
+        aMap.put("windows 10", "Windows 10");
+        aMap.put("windows 2012 r2", "Windows 8.1");
+        aMap.put("windows 2012", "Windows 8");
+        aMap.put("windows 2008", "Windows 7");
+        aMap.put("windows 2003", "Windows XP");
+        aMap.put("linux", "Linux");
+        aMap.put("mac 10.11", "OS X El Capitan");
+        aMap.put("mac 10.10", "OS X Yosemite");
+        aMap.put("mac 10.9", "OS X Mavericks");
+        aMap.put("mac 10.8", "OS X Mountain Lion");
+
+        oses = Collections.unmodifiableMap(aMap);
+    }
 
     /**
      * Create a new browser object
@@ -100,23 +116,16 @@ public class Browser implements Comparable<Browser> {
         return version;
     }
 
-    public Platform getPlatform() {
-        //convert the operating system into the Platform enum
-        if (os.toLowerCase(Locale.getDefault()).contains("windows 2008")) {
+    private static boolean isBetterMatch(String previous, String matcher) {
+        return previous == null || matcher.length() >= previous.length();
+    }
 
-            return Platform.VISTA;
-        } else if (os.toLowerCase(Locale.getDefault()).contains("windows 2012 r2")) {
-
-            return Platform.WIN8_1;
-        } else if (os.toLowerCase(Locale.getDefault()).contains("windows 2012")) {
-
-            return Platform.WIN8;
-        } else if (os.toLowerCase(Locale.getDefault()).contains("windows 2003")) {
-
-            return Platform.XP;
+    public String getPlatform() {
+        String osName = os.toLowerCase();
+        if (oses.containsKey(osName)) {
+            return oses.get(osName);
         }
-        //otherwise just return the os
-        return Platform.extractFromSysProperty(os);
+        return os;
     }
 
     public boolean equals(Object object) {

@@ -1,14 +1,12 @@
 package com.saucelabs.ci.sauceconnect;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import com.saucelabs.saucerest.SauceREST;
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -32,9 +30,9 @@ public class SauceConnectFourManagerTest {
     private final String STRING_JSON_GET_TUNNEL;
 
     public SauceConnectFourManagerTest() throws URISyntaxException, IOException {
-        STRING_JSON_TUNNELS_ACTIVE = Resources.toString(getClass().getResource("/tunnels_active_tunnel.json").toURI().toURL(), Charsets.UTF_8);
-        STRING_JSON_TUNNELS_EMPTY = Resources.toString(getClass().getResource("/tunnels_empty.json").toURI().toURL(), Charsets.UTF_8);
-        STRING_JSON_GET_TUNNEL = Resources.toString(getClass().getResource("/single_tunnel.json").toURI().toURL(), Charsets.UTF_8);
+        STRING_JSON_TUNNELS_ACTIVE = IOUtils.toString(getClass().getResourceAsStream("/tunnels_active_tunnel.json"), "UTF-8");
+        STRING_JSON_TUNNELS_EMPTY = IOUtils.toString(getClass().getResourceAsStream("/tunnels_empty.json"), "UTF-8");
+        STRING_JSON_GET_TUNNEL = IOUtils.toString(getClass().getResourceAsStream("/single_tunnel.json"), "UTF-8");
     }
 
 
