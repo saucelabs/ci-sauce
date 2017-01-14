@@ -19,13 +19,11 @@ public class BrowserTest  {
     private SauceREST sauceREST = new SauceREST(null, null);
 
     @Test
-    public void osNames() throws Exception {
-        Browser browser = new Browser(null, "Windows 2008", null, null, null, null, null);
-        assertEquals("Platform is not Windows", browser.getPlatform(), "Windows 7");
-        browser = new Browser(null, "Windows 2003", null, null, null, null, null);
-        assertEquals("Platform is not Windows", browser.getPlatform(), "Windows XP");
-        browser = new Browser(null, "Linux", null, null, null, null, null);
-        assertEquals("Platform is not Linux", browser.getPlatform(), "Linux");
+    public void testNames() throws Exception {
+        Browser browser = new Browser(null, null, null, null, null, null, "Windows 2008");
+        assertEquals("windows 2008 is really windows 7", browser.getName(), "Windows 7");
+        browser = new Browser(null, null, null, null, null, null, "Windows 2003");
+        assertEquals("windows 2003 is really windows xp", browser.getName(), "Windows XP");
     }
 
     @Test

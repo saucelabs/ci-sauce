@@ -33,6 +33,7 @@ public class Browser implements Comparable<Browser> {
         aMap.put("windows 2008", "Windows 7");
         aMap.put("windows 2003", "Windows XP");
         aMap.put("linux", "Linux");
+        aMap.put("mac 10.12", "macOS Sierra");
         aMap.put("mac 10.11", "OS X El Capitan");
         aMap.put("mac 10.10", "OS X Yosemite");
         aMap.put("mac 10.9", "OS X Mavericks");
@@ -105,6 +106,10 @@ public class Browser implements Comparable<Browser> {
     }
 
     public String getName() {
+        String newName = name.toLowerCase();
+        if (oses.containsKey(newName)) {
+            return oses.get(newName);
+        }
         return name;
     }
 
@@ -121,10 +126,6 @@ public class Browser implements Comparable<Browser> {
     }
 
     public String getPlatform() {
-        String osName = os.toLowerCase();
-        if (oses.containsKey(osName)) {
-            return oses.get(osName);
-        }
         return os;
     }
 
