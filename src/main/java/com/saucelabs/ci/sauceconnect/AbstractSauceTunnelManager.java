@@ -572,6 +572,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             if (StringUtils.containsIgnoreCase(line, "Tunnel ID:")) {
                 tunnelId = StringUtils.substringAfter(line, "Tunnel ID: ");
             }
+            if (StringUtils.containsIgnoreCase(line, "Provisioned tunnel:")) {
+                tunnelId = StringUtils.substringAfter(line, "Provisioned tunnel: ");
+            }
             if (StringUtils.containsIgnoreCase(line, "Goodbye")) {
                 failed = true;
             }
