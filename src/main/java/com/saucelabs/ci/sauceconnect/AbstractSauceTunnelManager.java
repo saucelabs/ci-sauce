@@ -320,9 +320,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             try {
                 Semaphore semaphore = new Semaphore(1);
                 semaphore.acquire();
-                StreamGobbler errorGobbler = new SystemErrorGobbler("ErrorGobbler", process.getErrorStream(), printStream);
+                StreamGobbler errorGobbler = makeErrorGobbler(printStream, process.getErrorStream());
                 errorGobbler.start();
-                SystemOutGobbler outputGobbler = new SystemOutGobbler("OutputGobbler", process.getInputStream(), semaphore, printStream);
+                SystemOutGobbler outputGobbler = makeOutputGobbler(printStream, process.getInputStream(), semaphore);
                 outputGobbler.start();
 
                 boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
@@ -395,6 +395,14 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             launchAttempts.set(0);
         }
 
+    }
+
+    public SystemErrorGobbler makeErrorGobbler(PrintStream printStream, InputStream errorStream) {
+        return new SystemErrorGobbler("ErrorGobbler", errorStream, printStream);
+    }
+
+    public SystemOutGobbler makeOutputGobbler(PrintStream printStream, InputStream inputStream, Semaphore semaphore) {
+        return new SystemOutGobbler("OutputGobbler", inputStream, semaphore, printStream, getSauceStartedMessage());
     }
 
     /**
@@ -541,14 +549,16 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     public class SystemOutGobbler extends StreamGobbler {
 
         private final Semaphore semaphore;
+        private final String startedMessage;
 
         private String tunnelId;
         private boolean failed;
         private boolean cantLockPidfile;
 
-        public SystemOutGobbler(String name, InputStream is, final Semaphore semaphore, PrintStream printStream) {
+        public SystemOutGobbler(String name, InputStream is, final Semaphore semaphore, PrintStream printStream, String startedMessage) {
             super(name, is, printStream);
             this.semaphore = semaphore;
+            this.startedMessage = startedMessage;
         }
 
         /**
@@ -568,7 +578,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 cantLockPidfile = true;
             }
 
-
             if (StringUtils.containsIgnoreCase(line, "Tunnel ID:")) {
                 tunnelId = StringUtils.substringAfter(line, "Tunnel ID: ");
             }
@@ -578,7 +587,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             if (StringUtils.containsIgnoreCase(line, "Goodbye")) {
                 failed = true;
             }
-            if (StringUtils.containsIgnoreCase(line, getSauceStartedMessage()) || failed || cantLockPidfile) {
+            if (StringUtils.containsIgnoreCase(line, startedMessage) || failed || cantLockPidfile) {
                 //unlock processMonitor
                 semaphore.release();
             }
@@ -634,6 +643,4 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             super(message);
         }
     }
-
-
 }
