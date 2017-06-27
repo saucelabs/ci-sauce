@@ -13,8 +13,14 @@ To build the plugin, you will need [Maven 2](http://maven.apache.org).
 
 To build (compile,test,jar) the plugin run: 
 
-	mvn package
-  
+```
+mvn package
+```
+
 To release the plugin to maven central
 
-  mvn release:prepare release:perform
+```
+mvn release:prepare release:perform
+```
+
+http://central.sonatype.org/pages/ossrh-guide.html for more details
