@@ -219,7 +219,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
             args = generateSauceConnectArgs(args, username, apiKey, port, options);
 
-            julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + Arrays.toString(args));
+            julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + Arrays.toString(args).replaceAll("\\w+-\\w+-\\w+-\\w+-\\w+", "****"));
             return createProcess(args, unzipDirectory);
         } catch (IOException e) {
             throw new SauceConnectException(e);
