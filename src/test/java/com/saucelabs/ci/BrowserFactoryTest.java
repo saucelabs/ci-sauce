@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,6 +17,8 @@ import static org.mockito.Mockito.when;
 
 public class BrowserFactoryTest {
 
+    private static final Charset UTF_8 = Charset.forName("UTF-8");
+
     private BrowserFactory browserFactory;
 
     @Before
@@ -23,10 +26,10 @@ public class BrowserFactoryTest {
         SauceREST sauceREST = mock(SauceREST.class);
         when(
             sauceREST.getSupportedPlatforms("appium")
-        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/appium.json")));
+        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/appium.json"), UTF_8));
         when(
             sauceREST.getSupportedPlatforms("webdriver")
-        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/webdriver.json")));
+        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/webdriver.json"), UTF_8));
         this.browserFactory = new BrowserFactory(sauceREST);
     }
 
