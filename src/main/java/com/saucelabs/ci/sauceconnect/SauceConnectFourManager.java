@@ -12,12 +12,21 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.logging.Level;
 
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.net.HttpURLConnection;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 /**
  * Handles launching Sauce Connect v4 (binary executable).
  *
  * @author Ross Rowe
  */
 public class SauceConnectFourManager extends AbstractSauceTunnelManager implements SauceTunnelManager {
+    private boolean useLatestSauceConnect = false;
 
     /**
      * Represents the operating system-specific Sauce Connect binary.
@@ -28,6 +37,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         WINDOWS(WINDOWS_DIR, WINDOWS_FILE, WINDOWS_TEMP_DIR, "bin" + File.separator + "sc.exe"),
         LINUX(LINUX_DIR, LINUX_FILE, UNIX_TEMP_DIR),
         LINUX32(LINUX32_DIR, LINUX32_FILE, UNIX_TEMP_DIR);
+
         private final String directory;
         private final String fileName;
         private final String executable;
@@ -111,8 +121,16 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             return directory;
         }
 
+        public String getLatestDirectory() {
+            return directory.replace(CURRENT_SC_VERSION, LATEST_SC_VERSION);
+        }
+
         public String getFileName() {
             return fileName;
+        }
+
+        public String getLatestFileName() {
+            return fileName.replace(CURRENT_SC_VERSION, LATEST_SC_VERSION);
         }
 
         public String getExecutable() {
@@ -135,8 +153,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
 
     public static final String CURRENT_SC_VERSION = "4.4.11";
-    public static final String SAUCE_CONNECT_4 = "sc-" + CURRENT_SC_VERSION;
+    public static final String LATEST_SC_VERSION = getLatestSauceConnectVersion();
 
+    public static final String SAUCE_CONNECT_4 = "sc-" + CURRENT_SC_VERSION;
     private static final String OSX_DIR = SAUCE_CONNECT_4 + "-osx";
     private static final String WINDOWS_DIR = SAUCE_CONNECT_4 + "-win32";
     private static final String LINUX_DIR = SAUCE_CONNECT_4 + "-linux";
@@ -226,6 +245,30 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         }
     }
 
+    public void setUseLatestSauceConnect(Boolean useLatestSauceConnect) {
+        this.useLatestSauceConnect = useLatestSauceConnect;
+    }
+
+    public static String getLatestSauceConnectVersion() {
+        try {
+            String SCUrl = "https://saucelabs.com/versions.json";
+            URL url = new URL(SCUrl);
+            HttpURLConnection request = (HttpURLConnection) url.openConnection();
+            request.connect();
+
+            JsonParser jp = new JsonParser();
+            JsonElement root = jp.parse(new InputStreamReader((InputStream) request.getContent()));
+            JsonObject rootobj = root.getAsJsonObject();
+
+            String latestVersion = rootobj.getAsJsonObject("Sauce Connect").get("version").getAsString();
+            return latestVersion;
+        } catch (MalformedURLException e) {
+            return null;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     /**
      * @param args     the initial Sauce Connect command line args
      * @param username name of the user which launched Sauce Connect
@@ -254,8 +297,12 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @throws IOException thrown if an error occurs extracting the files
      */
     public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
-
-        File zipFile = extractFile(workingDirectory, operatingSystem.getFileName());
+        File zipFile;
+        if (this.useLatestSauceConnect) {
+            zipFile = extractFile(workingDirectory, operatingSystem.getLatestFileName());
+        } else {
+            zipFile = extractFile(workingDirectory, operatingSystem.getFileName());
+        }
         if (operatingSystem.equals(OperatingSystem.OSX) || operatingSystem.equals(OperatingSystem.WINDOWS)) {
             unzipFile(zipFile, workingDirectory);
         } else if (operatingSystem.equals(OperatingSystem.LINUX) || operatingSystem.equals(OperatingSystem.LINUX32)) {
@@ -267,6 +314,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     private File getUnzipDir(File workingDirectory, OperatingSystem operatingSystem) {
+        if (this.useLatestSauceConnect) {
+            return new File(workingDirectory, operatingSystem.getLatestDirectory());
+        }
         return new File(workingDirectory, operatingSystem.getDirectory());
     }
 
