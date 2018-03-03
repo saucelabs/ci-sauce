@@ -131,25 +131,25 @@ public class SauceConnectFourManagerTest {
         SauceConnectFourManager manager = new SauceConnectFourManager();
         manager.extractZipFile(linux_destination, SauceConnectFourManager.OperatingSystem.LINUX);
         assertTrue("Linux executable exists", new File(
-            new File(linux_destination, SauceConnectFourManager.OperatingSystem.LINUX.getDirectory()),
+            new File(linux_destination, SauceConnectFourManager.OperatingSystem.LINUX.getDirectory(false)),
             SauceConnectFourManager.OperatingSystem.LINUX.getExecutable()
         ).exists());
 
         manager.extractZipFile(linux32_destination, SauceConnectFourManager.OperatingSystem.LINUX32);
         assertTrue("Linux32 executable exists", new File(
-            new File(linux32_destination, SauceConnectFourManager.OperatingSystem.LINUX32.getDirectory()),
+            new File(linux32_destination, SauceConnectFourManager.OperatingSystem.LINUX32.getDirectory(false)),
             SauceConnectFourManager.OperatingSystem.LINUX32.getExecutable()
         ).exists());
 
         manager.extractZipFile(windows_destination, SauceConnectFourManager.OperatingSystem.WINDOWS);
         assertTrue("windows executable exists", new File(
-            new File(windows_destination, SauceConnectFourManager.OperatingSystem.WINDOWS.getDirectory()),
+            new File(windows_destination, SauceConnectFourManager.OperatingSystem.WINDOWS.getDirectory(false)),
             SauceConnectFourManager.OperatingSystem.WINDOWS.getExecutable()
         ).exists());
 
         manager.extractZipFile(osx_destination, SauceConnectFourManager.OperatingSystem.OSX);
         assertTrue("osx executable exists", new File(
-            new File(osx_destination, SauceConnectFourManager.OperatingSystem.OSX.getDirectory()),
+            new File(osx_destination, SauceConnectFourManager.OperatingSystem.OSX.getDirectory(false)),
             SauceConnectFourManager.OperatingSystem.OSX.getExecutable()
         ).exists());
     }
