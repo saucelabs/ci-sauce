@@ -1,6 +1,6 @@
 package com.saucelabs.ci.sauceconnect;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.logging.Level;
 
 import java.net.URL;
-import java.net.MalformedURLException;
 import java.net.HttpURLConnection;
 
 import com.google.gson.JsonElement;
@@ -117,26 +116,17 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             return (os.indexOf("nux") >= 0);
         }
 
-        public String getDirectory() {
-            return directory;
+        public String getDirectory(boolean useLatestSauceConnect) {
+            return useLatestSauceConnect ? directory.replace(CURRENT_SC_VERSION, LATEST_SC_VERSION) : directory;
         }
 
-        public String getLatestDirectory() {
-            return directory.replace(CURRENT_SC_VERSION, LATEST_SC_VERSION);
-        }
-
-        public String getFileName() {
-            return fileName;
-        }
-
-        public String getLatestFileName() {
-            return fileName.replace(CURRENT_SC_VERSION, LATEST_SC_VERSION);
+        public String getFileName(boolean useLatestSauceConnect) {
+            return useLatestSauceConnect ? fileName.replace(CURRENT_SC_VERSION, LATEST_SC_VERSION) : fileName;
         }
 
         public String getExecutable() {
             return executable;
         }
-
 
         public String getDefaultSauceConnectLogDirectory() {
             return tempDirectory;
@@ -245,7 +235,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         }
     }
 
-    public void setUseLatestSauceConnect(Boolean useLatestSauceConnect) {
+    public void setUseLatestSauceConnect(boolean useLatestSauceConnect) {
         this.useLatestSauceConnect = useLatestSauceConnect;
     }
 
@@ -260,10 +250,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             JsonElement root = jp.parse(new InputStreamReader((InputStream) request.getContent()));
             JsonObject rootobj = root.getAsJsonObject();
 
-            String latestVersion = rootobj.getAsJsonObject("Sauce Connect").get("version").getAsString();
-            return latestVersion;
-        } catch (MalformedURLException e) {
-            return null;
+            return rootobj.getAsJsonObject("Sauce Connect").get("version").getAsString();
         } catch (IOException e) {
             return null;
         }
@@ -297,12 +284,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @throws IOException thrown if an error occurs extracting the files
      */
     public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
-        File zipFile;
-        if (this.useLatestSauceConnect) {
-            zipFile = extractFile(workingDirectory, operatingSystem.getLatestFileName());
-        } else {
-            zipFile = extractFile(workingDirectory, operatingSystem.getFileName());
-        }
+        File zipFile = extractFile(workingDirectory, operatingSystem.getFileName(useLatestSauceConnect));
         if (operatingSystem.equals(OperatingSystem.OSX) || operatingSystem.equals(OperatingSystem.WINDOWS)) {
             unzipFile(zipFile, workingDirectory);
         } else if (operatingSystem.equals(OperatingSystem.LINUX) || operatingSystem.equals(OperatingSystem.LINUX32)) {
@@ -314,10 +296,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     private File getUnzipDir(File workingDirectory, OperatingSystem operatingSystem) {
-        if (this.useLatestSauceConnect) {
-            return new File(workingDirectory, operatingSystem.getLatestDirectory());
-        }
-        return new File(workingDirectory, operatingSystem.getDirectory());
+        return new File(workingDirectory, operatingSystem.getDirectory(useLatestSauceConnect));
     }
 
     /**
@@ -325,20 +304,14 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @param destination the destination directory
      */
     private void untarGzFile(File zipFile, File destination) throws SauceConnectException {
-        //remove tar file if it exists first
         File tarFile = new File(zipFile.getParentFile(), zipFile.getName().replaceAll(".gz", ""));
-        if (tarFile.exists()) {
-            if (tarFile.delete() == false) {
-                throw new SauceConnectException("Unable to delete old tar");
-            }
-        }
+        removeFileIfExists(tarFile, "Unable to delete old tar");
 
         final TarGZipUnArchiver unArchiver = new TarGZipUnArchiver();
         unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, "Sauce"));
         unArchiver.setSourceFile(zipFile);
         unArchiver.setDestDirectory(destination);
         unArchiver.extract();
-
     }
 
     /**
@@ -360,43 +333,18 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @throws IOException thrown if an error occurs extracting the files
      */
     private File extractFile(File workingDirectory, String fileName) throws IOException {
-        InputStream inputStream = null;
-        FileOutputStream outputStream = null;
-
-        File destination;
-
-        try {
-            inputStream = getClass().getClassLoader().getResourceAsStream(fileName);
-            //copy input stream to a file
-            destination = new File(workingDirectory, fileName);
-            //remove file if it already exists
-            if (destination.exists()) {
-                if (destination.delete() == false) {
-                    throw new SauceConnectException("Unable to delete old zip");
-                }
-            }
-            outputStream = new FileOutputStream(destination);
-            IOUtils.copy(inputStream, outputStream);
-            outputStream.flush();
-        } catch (IOException e) {
-            throw e;
-        } finally {
-            if (outputStream != null) {
-                try {
-                    outputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        File destination = new File(workingDirectory, fileName);
+        removeFileIfExists(destination, "Unable to delete old zip");
+        InputStream inputStream = useLatestSauceConnect ? new URL("https://saucelabs.com/downloads/" + fileName)
+            .openStream() : getClass().getClassLoader().getResourceAsStream(fileName);
+        FileUtils.copyInputStreamToFile(inputStream, destination);
         return destination;
+    }
+
+    private static void removeFileIfExists(File file, String exceptionMessage) throws SauceConnectException {
+        if (file.exists() && !file.delete()) {
+            throw new SauceConnectException(exceptionMessage);
+        }
     }
 
     /**
@@ -408,7 +356,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
     @Override
     protected String getCurrentVersion() {
-        return CURRENT_SC_VERSION;
+        return useLatestSauceConnect ? LATEST_SC_VERSION : CURRENT_SC_VERSION;
     }
 
     /**
