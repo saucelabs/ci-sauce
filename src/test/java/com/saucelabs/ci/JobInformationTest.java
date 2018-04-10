@@ -69,6 +69,8 @@ public class JobInformationTest {
         json.put("browser_short_version", "");
         json.put("video_url", "");
         json.put("log_url", "");
+        json.put("start_time", 1448576067);
+        json.put("end_time", 1448576078);
 
         /* Name */
         json.put("name", (String) null);
@@ -107,6 +109,14 @@ public class JobInformationTest {
         job = new JobInformation("1234", "hmac");
         job.populateFromJson(json);
         assertEquals("Failed", job.getStatus());
+
+        json.put("start_time", 1448576000);
+        json.put("end_time", 1448576100);
+        job = new JobInformation("1234", "hmac");
+        job.populateFromJson(json);
+        assertEquals(1448576000, job.getStartTime());
+        assertEquals(1448576100, job.getEndTime());
+        assertEquals(100, job.getDuration());
     }
 
     @Test
@@ -209,7 +219,6 @@ public class JobInformationTest {
         updates.put("os", "Windows 2012 R2");
         assertEquals(updates, job.getChanges());
     }
-
 
     @Test
     public void testVideoUrl() throws Exception {

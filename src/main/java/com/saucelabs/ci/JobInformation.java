@@ -30,6 +30,9 @@ public class JobInformation implements Serializable {
     private String logUrl;
     private String build;
 
+    private int startTime;
+    private int endTime;
+
     final private HashMap<String, Object> changes = new HashMap<String, Object>();
 
     /**
@@ -205,6 +208,48 @@ public class JobInformation implements Serializable {
         changes.put("version", version);
     }
 
+    /**
+     * set start time
+     * @param startTime start time
+     */
+    public void setStartTime(int startTime) {
+        this.startTime = startTime;
+        changes.put("startTime", startTime);
+    }
+
+    /**
+     * get start time
+     * @return startTime
+     */
+    public int getStartTime() {
+        return startTime;
+    }
+
+    /**
+     * set end time
+     * @param endTime end time
+     */
+    public void setEndTime(int endTime) {
+        this.endTime = endTime;
+        changes.put("endTime", endTime);
+    }
+
+    /**
+     * get end time
+     * @return endTime
+     */
+    public int getEndTime() {
+        return endTime;
+    }
+
+    /**
+     * get duration
+     * @return endTime - startTime
+     */
+    public int getDuration() {
+        return endTime - startTime;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -222,6 +267,8 @@ public class JobInformation implements Serializable {
         if (videoUrl != null ? !videoUrl.equals(that.videoUrl) : that.videoUrl != null) return false;
         if (logUrl != null ? !logUrl.equals(that.logUrl) : that.logUrl != null) return false;
         if (build != null ? !build.equals(that.build) : that.build != null) return false;
+        if (startTime != that.startTime) return false;
+        if (endTime != that.endTime) return false;
         return changes != null ? changes.equals(that.changes) : that.changes == null;
 
     }
@@ -278,6 +325,8 @@ public class JobInformation implements Serializable {
         setVersion(jobData.getString("browser_short_version"));
         setVideoUrl(jobData.getString("video_url"));
         setLogUrl(jobData.getString("log_url"));
+        setStartTime(jobData.getInt("start_time"));
+        setEndTime(jobData.getInt("end_time"));
         clearChanges();
     }
 
