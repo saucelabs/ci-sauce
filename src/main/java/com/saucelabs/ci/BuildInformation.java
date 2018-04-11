@@ -3,7 +3,6 @@ package com.saucelabs.ci;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -205,15 +204,17 @@ public class BuildInformation implements Serializable {
 
         BuildInformation that = (BuildInformation) o;
 
-        if (buildId != null ? !buildId.equals(that.buildId) : that.buildId != null) return false;
-        if (status != null ? !status.equals(that.status) : that.status != null) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (startTime != that.startTime) return false;
         if (endTime != that.endTime) return false;
         if (jobsFinished != that.jobsFinished) return false;
         if (jobsPassed != that.jobsPassed) return false;
         if (jobsFailed != that.jobsFailed) return false;
         if (jobsErrored != that.jobsErrored) return false;
+
+        if (buildId != null ? !buildId.equals(that.buildId) : that.buildId != null) return false;
+        if (status != null ? !status.equals(that.status) : that.status != null) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (startTime != that.startTime) return false;
+
         return changes != null ? changes.equals(that.changes) : that.changes == null;
     }
 

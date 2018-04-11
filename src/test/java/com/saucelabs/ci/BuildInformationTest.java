@@ -13,8 +13,8 @@ import static org.junit.Assert.*;
  * Created by gavinmogan on 2016-02-10.
  */
 public class BuildInformationTest {
-    BuildInformation build;
-    JSONObject jobs;
+    private BuildInformation build;
+    private JSONObject jobs;
 
     @Before
     public void setUp() throws Exception {

@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
  * Created by gavinmogan on 2016-02-10.
  */
 public class JobInformationTest {
-    JobInformation job;
+    private JobInformation job;
 
     @Before
     public void setUp() throws Exception {
