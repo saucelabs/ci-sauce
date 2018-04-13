@@ -117,6 +117,33 @@ public class JobInformationTest {
         assertEquals(1448576000, job.getStartTime());
         assertEquals(1448576100, job.getEndTime());
         assertEquals(100, job.getDuration());
+
+        JSONObject customData = new JSONObject();
+        customData.put("FAILURE_MESSAGE", "test failure");
+        json.put("custom-data",customData);
+        job = new JobInformation("1234", "hmac");
+        job.populateFromJson(json);
+        assertEquals("test failure", job.getFailureMessage());
+    }
+
+    @Test
+    public void testFailureMessage() throws Exception {
+        HashMap<String, Object> updates = new HashMap<String, Object>();
+        updates.put("failureMessage", "test failure");
+
+        assertNull(job.getFailureMessage());
+        assertFalse(job.hasFailureMessage());
+        assertFalse(job.hasChanges());
+        job.setFailureMessage(null);
+        assertFalse(job.hasFailureMessage());
+        job.setFailureMessage("");
+        assertFalse(job.hasFailureMessage());
+        job.setFailureMessage("null");
+        assertFalse(job.hasFailureMessage());
+        job.setFailureMessage("test failure");
+        assertTrue(job.hasFailureMessage());
+        assertTrue(job.hasChanges());
+        assertEquals(updates, job.getChanges());
     }
 
     @Test
@@ -257,6 +284,7 @@ public class JobInformationTest {
 
         assertEquals(updates, job.getChanges());
     }
+
 
     @Test
     public void testGetChange() throws Exception {
