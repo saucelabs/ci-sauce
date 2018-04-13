@@ -33,6 +33,8 @@ public class JobInformation implements Serializable {
     private int startTime;
     private int endTime;
 
+    private String failureMessage;
+
     final private HashMap<String, Object> changes = new HashMap<String, Object>();
 
     /**
@@ -267,6 +269,7 @@ public class JobInformation implements Serializable {
         if (videoUrl != null ? !videoUrl.equals(that.videoUrl) : that.videoUrl != null) return false;
         if (logUrl != null ? !logUrl.equals(that.logUrl) : that.logUrl != null) return false;
         if (build != null ? !build.equals(that.build) : that.build != null) return false;
+        if (failureMessage != null ? !failureMessage.equals(that.failureMessage) : that.failureMessage != null) return false;
         if (startTime != that.startTime) return false;
         if (endTime != that.endTime) return false;
         return changes != null ? changes.equals(that.changes) : that.changes == null;
@@ -297,6 +300,20 @@ public class JobInformation implements Serializable {
         return logUrl;
     }
 
+    public void setFailureMessage(String failureMessage) {
+        this.failureMessage = failureMessage;
+        changes.put("failureMessage", failureMessage);
+    }
+
+    @Nullable
+    public String getFailureMessage() {
+        return failureMessage;
+    }
+
+    public boolean hasFailureMessage() {
+        return failureMessage != null && !failureMessage.equals("") && !failureMessage.equals("null");
+    }
+
     /**
      * Takes in a JSONObject, and populates the current object with all values
      * Also resets the list of changes
@@ -319,6 +336,13 @@ public class JobInformation implements Serializable {
         if (jobData.has("build") && !jobData.isNull("build")) {
             String build = jobData.getString("build");
             setBuild(build);
+        }
+        if (jobData.has("custom-data")&& !jobData.isNull("custom-data")) {
+            JSONObject customData = jobData.getJSONObject("custom-data");
+            if (customData.has("FAILURE_MESSAGE")) {
+                String failureMessage = customData.getString("FAILURE_MESSAGE");
+                setFailureMessage(failureMessage);
+            }
         }
         setOs(jobData.getString("os"));
         setBrowser(jobData.getString("browser"));
