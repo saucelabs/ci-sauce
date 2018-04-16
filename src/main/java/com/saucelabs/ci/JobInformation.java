@@ -30,8 +30,8 @@ public class JobInformation implements Serializable {
     private String logUrl;
     private String build;
 
-    private int startTime;
-    private int endTime;
+    private long startTime;
+    private long endTime;
 
     private String failureMessage;
 
@@ -214,7 +214,7 @@ public class JobInformation implements Serializable {
      * set start time
      * @param startTime start time
      */
-    public void setStartTime(int startTime) {
+    public void setStartTime(long startTime) {
         this.startTime = startTime;
         changes.put("startTime", startTime);
     }
@@ -223,7 +223,7 @@ public class JobInformation implements Serializable {
      * get start time
      * @return startTime
      */
-    public int getStartTime() {
+    public long getStartTime() {
         return startTime;
     }
 
@@ -231,7 +231,7 @@ public class JobInformation implements Serializable {
      * set end time
      * @param endTime end time
      */
-    public void setEndTime(int endTime) {
+    public void setEndTime(long endTime) {
         this.endTime = endTime;
         changes.put("endTime", endTime);
     }
@@ -240,7 +240,7 @@ public class JobInformation implements Serializable {
      * get end time
      * @return endTime
      */
-    public int getEndTime() {
+    public long getEndTime() {
         return endTime;
     }
 
@@ -248,7 +248,7 @@ public class JobInformation implements Serializable {
      * get duration
      * @return endTime - startTime
      */
-    public int getDuration() {
+    public long getDuration() {
         return endTime - startTime;
     }
 
@@ -349,8 +349,8 @@ public class JobInformation implements Serializable {
         setVersion(jobData.getString("browser_short_version"));
         setVideoUrl(jobData.getString("video_url"));
         setLogUrl(jobData.getString("log_url"));
-        setStartTime(jobData.getInt("start_time"));
-        setEndTime(jobData.getInt("end_time"));
+        setStartTime(jobData.getLong("start_time"));
+        setEndTime(jobData.getLong("end_time"));
         clearChanges();
     }
 

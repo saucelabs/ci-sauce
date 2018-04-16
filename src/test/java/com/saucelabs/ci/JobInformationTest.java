@@ -114,8 +114,8 @@ public class JobInformationTest {
         json.put("end_time", 1448576100);
         job = new JobInformation("1234", "hmac");
         job.populateFromJson(json);
-        assertEquals(1448576000, job.getStartTime());
-        assertEquals(1448576100, job.getEndTime());
+        assertEquals(1448576000L, job.getStartTime());
+        assertEquals(1448576100L, job.getEndTime());
         assertEquals(100, job.getDuration());
 
         JSONObject customData = new JSONObject();

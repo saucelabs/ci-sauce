@@ -21,8 +21,8 @@ public class BuildInformation implements Serializable {
     private String status;
     private String name;
 
-    private int startTime;
-    private int endTime;
+    private long startTime;
+    private long endTime;
 
     private int jobsPassed;
     private int jobsFinished;
@@ -80,7 +80,7 @@ public class BuildInformation implements Serializable {
      * set start time
      * @param startTime start time
      */
-    public void setStartTime(int startTime) {
+    public void setStartTime(long startTime) {
         this.startTime = startTime;
         changes.put("startTime", startTime);
     }
@@ -89,7 +89,7 @@ public class BuildInformation implements Serializable {
      * get start time
      * @return startTime
      */
-    public int getStartTime() {
+    public long getStartTime() {
         return startTime;
     }
 
@@ -97,7 +97,7 @@ public class BuildInformation implements Serializable {
      * set end time
      * @param endTime end time
      */
-    public void setEndTime(int endTime) {
+    public void setEndTime(long endTime) {
         this.endTime = endTime;
         changes.put("endTime", endTime);
     }
@@ -106,7 +106,7 @@ public class BuildInformation implements Serializable {
      * get end time
      * @return endTime
      */
-    public int getEndTime() {
+    public long getEndTime() {
         return endTime;
     }
 
@@ -242,8 +242,8 @@ public class BuildInformation implements Serializable {
             setName(buildName);
         }
 
-        setStartTime(buildData.getInt("start_time"));
-        setEndTime(buildData.getInt("end_time"));
+        setStartTime(buildData.getLong("start_time"));
+        setEndTime(buildData.getLong("end_time"));
 
         JSONObject buildJobs = buildData.getJSONObject("jobs");
 

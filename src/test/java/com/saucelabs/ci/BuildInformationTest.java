@@ -116,12 +116,12 @@ public class BuildInformationTest {
         assertEquals(0, build.getJobsErrored());
 
         /* Time */
-        json.put("start_time", 1448576000);
-        json.put("end_time", 1448576100);
+        json.put("start_time", 1523657508);
+        json.put("end_time", 1523657534);
         build = new BuildInformation("1234");
         build.populateFromJson(json);
-        assertEquals(1448576000, build.getStartTime());
-        assertEquals(1448576100, build.getEndTime());
+        assertEquals(1523657508L, build.getStartTime());
+        assertEquals(1523657534L, build.getEndTime());
     }
 
     @Test
