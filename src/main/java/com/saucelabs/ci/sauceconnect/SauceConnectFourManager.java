@@ -1,23 +1,21 @@
 package com.saucelabs.ci.sauceconnect;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.logging.Logger;
 import org.codehaus.plexus.logging.console.ConsoleLogger;
+import org.json.JSONObject;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.logging.Level;
 
 import java.net.URL;
-import java.net.HttpURLConnection;
-
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 /**
  * Handles launching Sauce Connect v4 (binary executable).
@@ -241,16 +239,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
     public static String getLatestSauceConnectVersion() {
         try {
-            String SCUrl = "https://saucelabs.com/versions.json";
-            URL url = new URL(SCUrl);
-            HttpURLConnection request = (HttpURLConnection) url.openConnection();
-            request.connect();
-
-            JsonParser jp = new JsonParser();
-            JsonElement root = jp.parse(new InputStreamReader((InputStream) request.getContent()));
-            JsonObject rootobj = root.getAsJsonObject();
-
-            return rootobj.getAsJsonObject("Sauce Connect").get("version").getAsString();
+            URL url = new URL("https://saucelabs.com/versions.json");
+            String versionsJson = IOUtils.toString(url, StandardCharsets.UTF_8);
+            return new JSONObject(versionsJson).getJSONObject("Sauce Connect").getString("version");
         } catch (IOException e) {
             return null;
         }
