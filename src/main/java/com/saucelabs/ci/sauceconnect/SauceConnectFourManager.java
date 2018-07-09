@@ -74,30 +74,13 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
          * @return boolean indicating whether OS is 64-bit
          */
         private static boolean is64BitLinux() {
-            BufferedReader reader = null;
             try {
                 Runtime runtime = Runtime.getRuntime();
                 Process process = runtime.exec("uname -a");
                 process.waitFor();
-                reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                StringBuilder builder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    builder.append(line);
-                }
-                return builder.toString().contains("64");
-            } catch (InterruptedException e) {
+                return IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8).contains("64");
+            } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException e1) {
-                        //ignore
-                    }
-                }
             }
             return false;
         }
