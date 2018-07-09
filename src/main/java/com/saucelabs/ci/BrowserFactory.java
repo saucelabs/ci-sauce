@@ -29,9 +29,9 @@ public class BrowserFactory {
 
     private SauceREST sauceREST;
 
-    private Map<String, Browser> seleniumLookup = new HashMap<String, Browser>();
-    private Map<String, Browser> appiumLookup = new HashMap<String, Browser>();
-    private Map<String, Browser> webDriverLookup = new HashMap<String, Browser>();
+    private Map<String, Browser> seleniumLookup = new HashMap<>();
+    private Map<String, Browser> appiumLookup = new HashMap<>();
+    private Map<String, Browser> webDriverLookup = new HashMap<>();
     protected Timestamp lastLookup = null;
     private static final String IEHTA = "iehta";
     private static final String CHROME = "chrome";
@@ -60,7 +60,7 @@ public class BrowserFactory {
         if (shouldRetrieveBrowsers()) {
             browsers = initializeAppiumBrowsers();
         } else {
-            browsers = new ArrayList<Browser>(appiumLookup.values());
+            browsers = new ArrayList<>(appiumLookup.values());
         }
         Collections.sort(browsers);
 
@@ -72,7 +72,7 @@ public class BrowserFactory {
         if (shouldRetrieveBrowsers()) {
             browsers = initializeWebDriverBrowsers();
         } else {
-            browsers = new ArrayList<Browser>(webDriverLookup.values());
+            browsers = new ArrayList<>(webDriverLookup.values());
         }
         Collections.sort(browsers);
 
@@ -85,7 +85,7 @@ public class BrowserFactory {
 
     private List<Browser> initializeAppiumBrowsers() throws JSONException {
         List<Browser> browsers = getAppiumBrowsersFromSauceLabs();
-        appiumLookup = new HashMap<String, Browser>();
+        appiumLookup = new HashMap<>();
         for (Browser browser : browsers) {
             appiumLookup.put(browser.getKey(), browser);
         }
@@ -95,7 +95,7 @@ public class BrowserFactory {
 
     private List<Browser> initializeWebDriverBrowsers() throws JSONException {
         List<Browser> browsers = getWebDriverBrowsersFromSauceLabs();
-        webDriverLookup = new HashMap<String, Browser>();
+        webDriverLookup = new HashMap<>();
         for (Browser browser : browsers) {
             webDriverLookup.put(browser.getKey(), browser);
         }
@@ -127,7 +127,7 @@ public class BrowserFactory {
      * @throws JSONException Invalid JSON
      */
     public List<Browser> getBrowserListFromJson(String browserListJson) throws JSONException {
-        HashMap<String, Browser> browsers = new HashMap<String, Browser>();
+        HashMap<String, Browser> browsers = new HashMap<>();
 
         JSONArray browserArray = new JSONArray(browserListJson);
         for (int i = 0; i < browserArray.length(); i++) {
@@ -184,7 +184,7 @@ public class BrowserFactory {
             }
         }
 
-        return new ArrayList<Browser>(browsers.values());
+        return new ArrayList<>(browsers.values());
     }
 
     private Browser createDeviceBrowser(String seleniumName, String longName, String longVersion, String osName, String device, String deviceType, String shortVersion, String orientation) {

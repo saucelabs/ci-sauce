@@ -35,7 +35,7 @@ public class SODSeleniumConfiguration
         this.username = username;
         this.accessKey = accessKey;
         this.browser = browser;
-        this.userExtensions = new ArrayList<String>();
+        this.userExtensions = new ArrayList<>();
     }
 
     public String toJson() throws JSONException

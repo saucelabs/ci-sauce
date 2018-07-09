@@ -26,7 +26,7 @@ public class Browser implements Comparable<Browser> {
 
     private static final Map<String, String> oses;
     static {
-        Map<String, String> aMap = new HashMap<String, String>();
+        Map<String, String> aMap = new HashMap<>();
         aMap.put("windows 10", "Windows 10");
         aMap.put("windows 2012 r2", "Windows 8.1");
         aMap.put("windows 2012", "Windows 8");

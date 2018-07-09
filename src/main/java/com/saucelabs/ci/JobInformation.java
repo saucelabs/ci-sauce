@@ -35,7 +35,7 @@ public class JobInformation implements Serializable {
 
     private String failureMessage;
 
-    final private HashMap<String, Object> changes = new HashMap<String, Object>();
+    final private HashMap<String, Object> changes = new HashMap<>();
 
     /**
      *
@@ -375,6 +375,6 @@ public class JobInformation implements Serializable {
      * @return map of all the changes
      */
     public Map<String, Object> getChanges() {
-        return new HashMap<String, Object>(changes);
+        return new HashMap<>(changes);
     }
 }
