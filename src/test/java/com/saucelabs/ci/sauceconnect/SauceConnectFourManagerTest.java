@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
-import java.net.URISyntaxException;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -29,7 +28,7 @@ public class SauceConnectFourManagerTest {
     private final String STRING_JSON_TUNNELS_ACTIVE;
     private final String STRING_JSON_GET_TUNNEL;
 
-    public SauceConnectFourManagerTest() throws URISyntaxException, IOException {
+    public SauceConnectFourManagerTest() throws IOException {
         STRING_JSON_TUNNELS_ACTIVE = IOUtils.toString(getClass().getResourceAsStream("/tunnels_active_tunnel.json"), "UTF-8");
         STRING_JSON_TUNNELS_EMPTY = IOUtils.toString(getClass().getResourceAsStream("/tunnels_empty.json"), "UTF-8");
         STRING_JSON_GET_TUNNEL = IOUtils.toString(getClass().getResourceAsStream("/single_tunnel.json"), "UTF-8");
@@ -47,7 +46,7 @@ public class SauceConnectFourManagerTest {
     }
 
     @After
-    public void teardown() throws Exception {
+    public void teardown() {
         verifyNoMoreInteractions(mockSauceRest);
         verify(tunnelManager, times(1)).setSauceRest(mockSauceRest);
     }

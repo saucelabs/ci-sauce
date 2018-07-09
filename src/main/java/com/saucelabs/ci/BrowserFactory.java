@@ -10,7 +10,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
@@ -51,15 +50,12 @@ public class BrowserFactory {
         try {
             initializeWebDriverBrowsers();
             initializeAppiumBrowsers();
-        } catch (IOException e) {
-            //TODO exception could mean we're behind firewall
-            logger.log(Level.WARNING, "Error retrieving browsers, attempting to continue", e);
         } catch (JSONException e) {
             logger.log(Level.WARNING, "Error retrieving browsers, attempting to continue", e);
         }
     }
 
-    public List<Browser> getAppiumBrowsers() throws IOException, JSONException {
+    public List<Browser> getAppiumBrowsers() throws JSONException {
         List<Browser> browsers;
         if (shouldRetrieveBrowsers()) {
             browsers = initializeAppiumBrowsers();
@@ -71,7 +67,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    public List<Browser> getWebDriverBrowsers() throws IOException, JSONException {
+    public List<Browser> getWebDriverBrowsers() throws JSONException {
         List<Browser> browsers;
         if (shouldRetrieveBrowsers()) {
             browsers = initializeWebDriverBrowsers();
@@ -87,7 +83,7 @@ public class BrowserFactory {
         return lastLookup == null || CacheTimeUtil.pastAcceptableDuration(lastLookup, ONE_HOUR_IN_MILLIS);
     }
 
-    private List<Browser> initializeAppiumBrowsers() throws IOException, JSONException {
+    private List<Browser> initializeAppiumBrowsers() throws JSONException {
         List<Browser> browsers = getAppiumBrowsersFromSauceLabs();
         appiumLookup = new HashMap<String, Browser>();
         for (Browser browser : browsers) {
@@ -97,7 +93,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    private List<Browser> initializeWebDriverBrowsers() throws IOException, JSONException {
+    private List<Browser> initializeWebDriverBrowsers() throws JSONException {
         List<Browser> browsers = getWebDriverBrowsersFromSauceLabs();
         webDriverLookup = new HashMap<String, Browser>();
         for (Browser browser : browsers) {
@@ -107,7 +103,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException, JSONException {
+    private List<Browser> getWebDriverBrowsersFromSauceLabs() throws JSONException {
         String response = sauceREST.getSupportedPlatforms("webdriver");
         if (response.equals("")) {
             response = "[]";
@@ -115,7 +111,7 @@ public class BrowserFactory {
         return getBrowserListFromJson(response);
     }
 
-    private List<Browser> getAppiumBrowsersFromSauceLabs() throws IOException, JSONException {
+    private List<Browser> getAppiumBrowsersFromSauceLabs() throws JSONException {
         String response = sauceREST.getSupportedPlatforms("appium");
         if (response.equals("")) {
             response = "[]";

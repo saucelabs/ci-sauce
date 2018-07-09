@@ -19,7 +19,7 @@ public class BrowserTest  {
     private SauceREST sauceREST = new SauceREST(null, null);
 
     @Test
-    public void testNames() throws Exception {
+    public void testNames() {
         Browser browser = new Browser(null, null, null, null, null, null, "Windows 2008");
         assertEquals("windows 2008 is really windows 7", browser.getName(), "Windows 7");
         browser = new Browser(null, null, null, null, null, null, "Windows 2003");
@@ -37,7 +37,7 @@ public class BrowserTest  {
     }
 
     @Test
-    public void browserFromSaucelabs() throws Exception {
+    public void browserFromSaucelabs() {
         BrowserFactory factory = new BrowserFactory(sauceREST);
         List<Browser> browsers = factory.getWebDriverBrowsers();
         assertFalse("browsers is empty", browsers.isEmpty());
@@ -47,7 +47,7 @@ public class BrowserTest  {
 
 
     @Test
-    public void copyBrowser() throws Exception {
+    public void copyBrowser() {
         Browser orig = new Browser("thisismykey", "Windows 2008", "Firefox", "Mozilla Firefox", "47.0.12345", "47", "firefox");
         Browser browser = new Browser(orig, false);
         Browser latest = new Browser(orig, true);
