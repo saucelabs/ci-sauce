@@ -82,8 +82,6 @@ public class SauceConnectFourManagerTest {
                 null, "", ps, false,
                 ""
             );
-        } catch (Exception e) {
-            throw e;
         } finally {
             verify(mockSauceRest).getTunnels();
             verify(tunnelManager).createProcess(
