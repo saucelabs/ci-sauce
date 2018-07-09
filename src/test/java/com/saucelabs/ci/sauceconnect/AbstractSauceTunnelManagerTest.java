@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 public class AbstractSauceTunnelManagerTest {
 
     @Test
-    public void testGetTunnelIdentifier() throws Exception {
+    public void testGetTunnelIdentifier() {
         assertEquals("missing parameter", "default", AbstractSauceTunnelManager.getTunnelIdentifier("basic -c", "default"));
         assertEquals("basic -i", "basic", AbstractSauceTunnelManager.getTunnelIdentifier("-i basic -c", "default"));
         assertEquals("basic --tunnel-identifier", "basic", AbstractSauceTunnelManager.getTunnelIdentifier("--tunnel-identifier basic -c", "default"));
@@ -22,7 +22,7 @@ public class AbstractSauceTunnelManagerTest {
     }
 
     @Test
-    public void testGetLogfile() throws Exception {
+    public void testGetLogfile() {
         assertNull("missing parameter", AbstractSauceTunnelManager.getLogfile("basic -c"));
         assertEquals("basic -l", "basic", AbstractSauceTunnelManager.getLogfile("-l basic -c"));
         assertEquals("basic --logfile", "basic", AbstractSauceTunnelManager.getLogfile("--logfile basic -c"));
@@ -30,7 +30,7 @@ public class AbstractSauceTunnelManagerTest {
     }
 
     @Test
-    public void testSystemOutGobbler_ProcessLine() throws Exception {
+    public void testSystemOutGobbler_ProcessLine() {
         Semaphore semaphore = new Semaphore(1);
         SauceConnectFourManager man = new SauceConnectFourManager(true);
         AbstractSauceTunnelManager.SystemOutGobbler sot = man.makeOutputGobbler(null, null, semaphore);

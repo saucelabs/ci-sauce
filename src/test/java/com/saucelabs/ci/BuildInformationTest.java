@@ -26,12 +26,12 @@ public class BuildInformationTest {
     }
 
     @Test
-    public void testBuildId() throws Exception {
+    public void testBuildId() {
         assertEquals("1234", build.getBuildId());
     }
 
     @Test
-    public void testStatus() throws Exception {
+    public void testStatus() {
         assertEquals("failed", build.getStatus());
 
         build.clearChanges();
@@ -52,7 +52,7 @@ public class BuildInformationTest {
     }
 
     @Test
-    public void testPopulateFromJson() throws Exception {
+    public void testPopulateFromJson() {
         assertEquals("test-name", build.getName());
 
         jobs = new JSONObject();
@@ -125,7 +125,7 @@ public class BuildInformationTest {
     }
 
     @Test
-    public void testBuildName() throws Exception {
+    public void testBuildName() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("name", "Gavin's first build");
 
@@ -144,7 +144,7 @@ public class BuildInformationTest {
     }
 
     @Test
-    public void testGetChange() throws Exception {
+    public void testGetChange() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("name", "name-name-name");
 

@@ -25,19 +25,19 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testHMAC() throws Exception {
+    public void testHMAC() {
         assertEquals("hmac", job.getHmac());
         job.setHmac("newhmac");
         assertEquals("newhmac", job.getHmac());
     }
 
     @Test
-    public void testJobId() throws Exception {
+    public void testJobId() {
         assertEquals("1234", job.getJobId());
     }
 
     @Test
-    public void testStatus() throws Exception {
+    public void testStatus() {
         assertEquals("Passed", job.getStatus());
 
         job.clearChanges();
@@ -56,7 +56,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testPopulateFromJson() throws Exception {
+    public void testPopulateFromJson() {
         assertFalse(job.hasJobName());
         assertNull(job.getName());
 
@@ -127,7 +127,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testFailureMessage() throws Exception {
+    public void testFailureMessage() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("failureMessage", "test failure");
 
@@ -147,7 +147,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testJobName() throws Exception {
+    public void testJobName() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("name", "Gavin's first job");
 
@@ -167,7 +167,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testBuildName() throws Exception {
+    public void testBuildName() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("build", "build-name");
 
@@ -190,7 +190,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testBrowser() throws Exception {
+    public void testBrowser() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("browser", "firefox");
 
@@ -206,7 +206,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testVersion() throws Exception {
+    public void testVersion() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("version", "20");
 
@@ -222,7 +222,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testOs() throws Exception {
+    public void testOs() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("os", "20");
 
@@ -248,7 +248,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testVideoUrl() throws Exception {
+    public void testVideoUrl() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("videoUrl", "20");
 
@@ -267,7 +267,7 @@ public class JobInformationTest {
     }
 
     @Test
-    public void testLogUrl() throws Exception {
+    public void testLogUrl() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("logUrl", "20");
 
@@ -287,7 +287,7 @@ public class JobInformationTest {
 
 
     @Test
-    public void testGetChange() throws Exception {
+    public void testGetChange() {
         HashMap<String, Object> updates = new HashMap<String, Object>();
         updates.put("build", "build-name");
         updates.put("name", "name-name-name");

@@ -33,12 +33,12 @@ public class BrowserFactoryTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
 
     }
 
     @Test
-    public void testGetAppiumBrowsers() throws Exception {
+    public void testGetAppiumBrowsers() {
         List<Browser> browsers = this.browserFactory.getAppiumBrowsers();
         assertEquals(176, browsers.size());
 
@@ -68,7 +68,7 @@ public class BrowserFactoryTest {
     }
 
     @Test
-    public void testGetWebDriverBrowsers() throws Exception {
+    public void testGetWebDriverBrowsers() {
         List<Browser> browsers = this.browserFactory.getWebDriverBrowsers();
         assertEquals(801, browsers.size());
 
@@ -122,7 +122,7 @@ public class BrowserFactoryTest {
     }
 
     @Test
-    public void testDuplicateMobileDevice() throws Exception {
+    public void testDuplicateMobileDevice() {
         String obj = "{\"deprecated_backend_versions\": [\"1.4.13\"], \"short_version\": \"4.4\", \"long_name\": \"Amazon Kindle Fire HD 8.9 GoogleAPI Emulator\", \"recommended_backend_version\": \"1.5.3\", \"long_version\": \"4.4.\", \"api_name\": \"android\", \"supported_backend_versions\": [\"1.4.16\", \"1.5.1\", \"1.5.2\", \"1.5.3\"], \"device\": \"KindleFireHDGoogleAPI\", \"latest_stable_version\": \"\", \"automation_backend\": \"appium\", \"os\": \"Linux\"}";
 
         List<Browser> browsers = this.browserFactory.getBrowserListFromJson(
@@ -158,7 +158,7 @@ public class BrowserFactoryTest {
     }
 
     @Test
-    public void testDuplicateWebDevice() throws Exception {
+    public void testDuplicateWebDevice() {
         String obj = "{\"short_version\": \"4\", \"long_name\": \"Firefox\", \"api_name\": \"firefox\", \"long_version\": \"4.0.1.\", \"latest_stable_version\": \"\", \"automation_backend\": \"webdriver\", \"os\": \"Linux\"}";
         List<Browser> browsers = this.browserFactory.getBrowserListFromJson(
             "[" + obj + "," + obj + "]"
