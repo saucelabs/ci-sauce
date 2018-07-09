@@ -103,15 +103,15 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         }
 
         private static boolean isWindows(String os) {
-            return (os.indexOf("win") >= 0);
+            return os.contains("win");
         }
 
         private static boolean isMac(String os) {
-            return (os.indexOf("mac") >= 0);
+            return os.contains("mac");
         }
 
         private static boolean isUnix(String os) {
-            return (os.indexOf("nux") >= 0);
+            return os.contains("nux");
         }
 
         public String getDirectory(boolean useLatestSauceConnect) {
