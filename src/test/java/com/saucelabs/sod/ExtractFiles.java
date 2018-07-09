@@ -1,7 +1,6 @@
 package com.saucelabs.sod;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -12,11 +11,6 @@ import java.io.File;
 public class ExtractFiles {
 
     private SauceConnectFourManager manager = new SauceConnectFourManager();
-
-    @Before
-    public void setup() {
-
-    }
 
     @Test
     public void linux() throws Exception {

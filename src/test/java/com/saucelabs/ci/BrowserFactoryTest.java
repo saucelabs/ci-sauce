@@ -2,7 +2,6 @@ package com.saucelabs.ci;
 
 import com.saucelabs.saucerest.SauceREST;
 import org.apache.commons.io.IOUtils;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,11 +29,6 @@ public class BrowserFactoryTest {
             sauceREST.getSupportedPlatforms("webdriver")
         ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/webdriver.json"), UTF_8));
         this.browserFactory = new BrowserFactory(sauceREST);
-    }
-
-    @After
-    public void tearDown() {
-
     }
 
     @Test
