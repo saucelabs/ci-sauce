@@ -29,7 +29,7 @@ public class BuildInformation implements Serializable {
     private int jobsFailed;
     private int jobsErrored;
 
-    final private HashMap<String, Object> changes = new HashMap<String, Object>();
+    final private HashMap<String, Object> changes = new HashMap<>();
 
     /**
      *
@@ -276,6 +276,6 @@ public class BuildInformation implements Serializable {
      * @return map of all the changes
      */
     public Map<String, Object> getChanges() {
-        return new HashMap<String, Object>(changes);
+        return new HashMap<>(changes);
     }
 }

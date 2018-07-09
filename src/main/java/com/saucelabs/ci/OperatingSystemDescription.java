@@ -19,7 +19,7 @@ enum OperatingSystemDescription {
     private final String key;
     private final String description;
 
-    private static final Map<String, String> descriptionMap = new HashMap<String, String>();
+    private static final Map<String, String> descriptionMap = new HashMap<>();
 
     static {
         for (OperatingSystemDescription operatingSystemDescription : OperatingSystemDescription.values()) {

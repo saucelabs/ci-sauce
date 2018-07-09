@@ -128,7 +128,7 @@ public class JobInformationTest {
 
     @Test
     public void testFailureMessage() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("failureMessage", "test failure");
 
         assertNull(job.getFailureMessage());
@@ -148,7 +148,7 @@ public class JobInformationTest {
 
     @Test
     public void testJobName() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("name", "Gavin's first job");
 
         assertFalse(job.hasJobName());
@@ -168,7 +168,7 @@ public class JobInformationTest {
 
     @Test
     public void testBuildName() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("build", "build-name");
 
         assertFalse(job.hasBuild());
@@ -191,7 +191,7 @@ public class JobInformationTest {
 
     @Test
     public void testBrowser() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("browser", "firefox");
 
         assertEquals("iexplore", job.getBrowser());
@@ -207,7 +207,7 @@ public class JobInformationTest {
 
     @Test
     public void testVersion() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("version", "20");
 
         assertEquals("10", job.getVersion());
@@ -223,7 +223,7 @@ public class JobInformationTest {
 
     @Test
     public void testOs() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("os", "20");
 
         assertEquals("Windows 7", job.getOs());
@@ -249,7 +249,7 @@ public class JobInformationTest {
 
     @Test
     public void testVideoUrl() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("videoUrl", "20");
 
         assertEquals(
@@ -268,7 +268,7 @@ public class JobInformationTest {
 
     @Test
     public void testLogUrl() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("logUrl", "20");
 
         assertEquals(
@@ -288,7 +288,7 @@ public class JobInformationTest {
 
     @Test
     public void testGetChange() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("build", "build-name");
         updates.put("name", "name-name-name");
 

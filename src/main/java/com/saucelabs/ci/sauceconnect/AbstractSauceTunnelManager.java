@@ -37,9 +37,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     /**
      * Contains all the Sauce Connect {@link Process} instances that have been launched.
      */
-    private Map<String, List<Process>> openedProcesses = new HashMap<String, List<Process>>();
+    private Map<String, List<Process>> openedProcesses = new HashMap<>();
 
-    protected Map<String, TunnelInformation> tunnelInformationMap = new ConcurrentHashMap<String, TunnelInformation>();
+    protected Map<String, TunnelInformation> tunnelInformationMap = new ConcurrentHashMap<>();
 
     private SauceREST sauceRest;
 
@@ -378,7 +378,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             tunnelInformation.setProcess(process);
             List<Process> processes = openedProcesses;
             if (processes == null) {
-                processes = new ArrayList<Process>();
+                processes = new ArrayList<>();
                 this.openedProcesses.put(identifier, processes);
             }
             processes.add(process);

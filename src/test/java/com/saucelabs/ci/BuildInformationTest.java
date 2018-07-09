@@ -126,7 +126,7 @@ public class BuildInformationTest {
 
     @Test
     public void testBuildName() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("name", "Gavin's first build");
 
         assertEquals("test-name", build.getName());
@@ -145,7 +145,7 @@ public class BuildInformationTest {
 
     @Test
     public void testGetChange() {
-        HashMap<String, Object> updates = new HashMap<String, Object>();
+        HashMap<String, Object> updates = new HashMap<>();
         updates.put("name", "name-name-name");
 
         assertEquals("test-name", build.getName());
