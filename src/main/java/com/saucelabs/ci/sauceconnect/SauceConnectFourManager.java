@@ -3,6 +3,7 @@ package com.saucelabs.ci.sauceconnect;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.plexus.archiver.AbstractUnArchiver;
 import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.codehaus.plexus.logging.Logger;
@@ -259,13 +260,16 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      */
     public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
         File zipFile = extractFile(workingDirectory, operatingSystem.getFileName(useLatestSauceConnect));
-        if (operatingSystem.equals(OperatingSystem.OSX) || operatingSystem.equals(OperatingSystem.WINDOWS)) {
-            unzipFile(zipFile, workingDirectory);
-        } else if (operatingSystem.equals(OperatingSystem.LINUX) || operatingSystem.equals(OperatingSystem.LINUX32)) {
-            untarGzFile(zipFile, workingDirectory);
+        AbstractUnArchiver unArchiver;
+        if (operatingSystem == OperatingSystem.OSX || operatingSystem == OperatingSystem.WINDOWS) {
+            unArchiver = new ZipUnArchiver();
+        } else if (operatingSystem == OperatingSystem.LINUX || operatingSystem == OperatingSystem.LINUX32) {
+            removeOldTarFile(zipFile);
+            unArchiver = new TarGZipUnArchiver();
         } else {
             throw new RuntimeException("Unknown operating system: " + operatingSystem.name());
         }
+        extractArchive(unArchiver, zipFile, workingDirectory);
         return getUnzipDir(workingDirectory, operatingSystem);
     }
 
@@ -273,29 +277,19 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         return new File(workingDirectory, operatingSystem.getDirectory(useLatestSauceConnect));
     }
 
-    /**
-     * @param zipFile     the compressed file to extract
-     * @param destination the destination directory
-     */
-    private void untarGzFile(File zipFile, File destination) throws SauceConnectException {
+    private void removeOldTarFile(File zipFile) throws SauceConnectException {
         File tarFile = new File(zipFile.getParentFile(), zipFile.getName().replaceAll(".gz", ""));
         removeFileIfExists(tarFile, "Unable to delete old tar");
-
-        final TarGZipUnArchiver unArchiver = new TarGZipUnArchiver();
-        unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, "Sauce"));
-        unArchiver.setSourceFile(zipFile);
-        unArchiver.setDestDirectory(destination);
-        unArchiver.extract();
     }
 
     /**
-     * @param zipFile     the compressed file to extract
+     * @param unArchiver  the unarchiver
+     * @param archive     the compressed file to extract
      * @param destination the destination directory
      */
-    private void unzipFile(File zipFile, File destination) {
-        final ZipUnArchiver unArchiver = new ZipUnArchiver();
+    private void extractArchive(AbstractUnArchiver unArchiver, File archive, File destination) {
         unArchiver.enableLogging(new ConsoleLogger(Logger.LEVEL_DEBUG, "Sauce"));
-        unArchiver.setSourceFile(zipFile);
+        unArchiver.setSourceFile(archive);
         unArchiver.setDestDirectory(destination);
         unArchiver.extract();
     }
