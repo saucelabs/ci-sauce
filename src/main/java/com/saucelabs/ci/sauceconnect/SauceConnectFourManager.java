@@ -31,42 +31,40 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      */
     public enum OperatingSystem {
 
-        OSX(OSX_DIR, OSX_FILE, UNIX_TEMP_DIR),
-        WINDOWS(WINDOWS_DIR, WINDOWS_FILE, WINDOWS_TEMP_DIR, "bin" + File.separator + "sc.exe"),
-        LINUX(LINUX_DIR, LINUX_FILE, UNIX_TEMP_DIR),
-        LINUX32(LINUX32_DIR, LINUX32_FILE, UNIX_TEMP_DIR);
+        OSX("osx", "zip", UNIX_TEMP_DIR),
+        WINDOWS("win32", "zip", WINDOWS_TEMP_DIR, "sc.exe"),
+        LINUX("linux", "tar.gz", UNIX_TEMP_DIR),
+        LINUX32("linux32", "tar.gz", UNIX_TEMP_DIR);
 
-        private final String directory;
-        private final String fileName;
+        private final String directoryEnding;
+        private final String archiveExtension;
         private final String executable;
         private final String tempDirectory;
 
-        OperatingSystem(String directory, String fileName, String tempDirectory, String executable) {
-            this.directory = directory;
-            this.fileName = fileName;
-            this.executable = executable;
+        OperatingSystem(String directoryEnding, String archiveExtension, String tempDirectory, String executable) {
+            this.directoryEnding = directoryEnding;
+            this.archiveExtension = archiveExtension;
+            this.executable = "bin" + File.separatorChar + executable;
             this.tempDirectory = tempDirectory;
         }
 
-        OperatingSystem(String directory, String fileName, String tempDirectory) {
-            this(directory, fileName, tempDirectory, "bin/sc");
+        OperatingSystem(String directoryEnding, String archiveExtension, String tempDirectory) {
+            this(directoryEnding, archiveExtension, tempDirectory, "sc");
         }
 
         public static OperatingSystem getOperatingSystem() {
             String os = System.getProperty("os.name").toLowerCase();
             if (isWindows(os)) {
                 return WINDOWS;
-            } else if (isMac(os)) {
-                return OSX;
-            } else if (isUnix(os)) {
-                //check to see if we are on 64 bit
-                if (is64BitLinux()) {
-                    return LINUX;
-                } else {
-                    return LINUX32;
-                }
             }
-            return null;
+            if (isMac(os)) {
+                return OSX;
+            }
+            if (isUnix(os)) {
+                //check to see if we are on 64 bit
+                return is64BitLinux() ? LINUX : LINUX32;
+            }
+            throw new IllegalStateException("Unsupported OS: " + os);
         }
 
         /**
@@ -99,11 +97,15 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         }
 
         public String getDirectory(boolean useLatestSauceConnect) {
-            return useLatestSauceConnect ? directory.replace(CURRENT_SC_VERSION, LATEST_SC_VERSION) : directory;
+            return SAUCE_CONNECT + getVersion(useLatestSauceConnect) + '-' + directoryEnding;
         }
 
         public String getFileName(boolean useLatestSauceConnect) {
-            return useLatestSauceConnect ? fileName.replace(CURRENT_SC_VERSION, LATEST_SC_VERSION) : fileName;
+            return getDirectory(useLatestSauceConnect) + '.' + archiveExtension;
+        }
+
+        private String getVersion(boolean useLatestSauceConnect) {
+            return useLatestSauceConnect ? LATEST_SC_VERSION : CURRENT_SC_VERSION;
         }
 
         public String getExecutable() {
@@ -127,17 +129,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     public static final String CURRENT_SC_VERSION = "4.4.12";
     public static final String LATEST_SC_VERSION = getLatestSauceConnectVersion();
 
-    public static final String SAUCE_CONNECT_4 = "sc-" + CURRENT_SC_VERSION;
-    private static final String OSX_DIR = SAUCE_CONNECT_4 + "-osx";
-    private static final String WINDOWS_DIR = SAUCE_CONNECT_4 + "-win32";
-    private static final String LINUX_DIR = SAUCE_CONNECT_4 + "-linux";
-    private static final String LINUX32_DIR = SAUCE_CONNECT_4 + "-linux32";
-
-    private static final String BASE_FILE_NAME = SAUCE_CONNECT_4 + "-";
-    private static final String LINUX_FILE = BASE_FILE_NAME + "linux.tar.gz";
-    private static final String LINUX32_FILE = BASE_FILE_NAME + "linux32.tar.gz";
-    private static final String OSX_FILE = BASE_FILE_NAME + "osx.zip";
-    private static final String WINDOWS_FILE = BASE_FILE_NAME + "win32.zip";
+    private static final String SAUCE_CONNECT = "sc-";
+    public static final String SAUCE_CONNECT_4 = SAUCE_CONNECT + CURRENT_SC_VERSION;
 
     /**
      * Constructs a new instance with quiet mode disabled.
@@ -185,11 +178,6 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
                     throw new SauceConnectException("Can't write to " + workingDirectory.getAbsolutePath() + ", please check the directory permissions");
                 }
                 OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
-                if (operatingSystem == null) {
-                    //TODO log an error
-                    return null;
-                }
-
                 unzipDirectory = getUnzipDir(workingDirectory, operatingSystem);
                 File binPath = new File(unzipDirectory, operatingSystem.getExecutable());
                 if (!binPath.exists()) {
