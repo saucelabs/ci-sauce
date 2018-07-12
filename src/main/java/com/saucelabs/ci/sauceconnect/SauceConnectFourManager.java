@@ -164,8 +164,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
         //find zip file to extract
         try {
-            String[] args;
-            File unzipDirectory;
+            File sauceConnectBinary;
             if (sauceConnectPath == null || sauceConnectPath.equals("")) {
                 File workingDirectory = null;
                 if (sauceConnectJar != null && sauceConnectJar.exists()) {
@@ -178,28 +177,26 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
                     throw new SauceConnectException("Can't write to " + workingDirectory.getAbsolutePath() + ", please check the directory permissions");
                 }
                 OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
-                unzipDirectory = getUnzipDir(workingDirectory, operatingSystem);
-                File binPath = new File(unzipDirectory, operatingSystem.getExecutable());
-                if (!binPath.exists()) {
-                    unzipDirectory = extractZipFile(workingDirectory, operatingSystem);
-                } else {
-                    logMessage(printStream, binPath + " already exists, so not extracting");
-                }
-                //although we are setting the working directory, we need to specify the full path to the exe
-                args = new String[]{binPath.getPath()};
-            } else {
-                File sauceConnectBinary = new File(sauceConnectPath);
+                File unzipDirectory = getUnzipDir(workingDirectory, operatingSystem);
+                sauceConnectBinary = new File(unzipDirectory, operatingSystem.getExecutable());
                 if (!sauceConnectBinary.exists()) {
-                    throw new SauceConnectException(sauceConnectPath + "doesn't exist, please check the location");
+                    extractZipFile(workingDirectory, operatingSystem);
+                } else {
+                    logMessage(printStream, sauceConnectBinary + " already exists, so not extracting");
                 }
-                unzipDirectory = sauceConnectBinary.getParentFile();
-                args = new String[]{sauceConnectBinary.getPath()};
+            } else {
+                sauceConnectBinary = new File(sauceConnectPath);
+                if (!sauceConnectBinary.exists()) {
+                    throw new SauceConnectException(sauceConnectPath + " doesn't exist, please check the location");
+                }
             }
 
+            //although we are setting the working directory, we need to specify the full path to the exe
+            String[] args = { sauceConnectBinary.getPath() };
             args = generateSauceConnectArgs(args, username, apiKey, port, options);
 
             julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + Arrays.toString(args).replaceAll("\\w+-\\w+-\\w+-\\w+-\\w+", "****"));
-            return createProcess(args, unzipDirectory);
+            return createProcess(args, sauceConnectBinary.getParentFile());
         } catch (IOException e) {
             throw new SauceConnectException(e);
         }
