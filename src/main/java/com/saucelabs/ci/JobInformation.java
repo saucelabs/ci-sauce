@@ -326,16 +326,13 @@ public class JobInformation implements Serializable {
     public void populateFromJson(JSONObject jobData) throws JSONException {
 
         if (jobData.has("passed") && !jobData.isNull("passed")) {
-            Boolean status = jobData.getBoolean("passed");
-            setStatus(status);
+            setStatus(jobData.getBoolean("passed"));
         }
         if (jobData.has("name") && !jobData.isNull("name")) {
-            String jobName = jobData.getString("name");
-            setName(jobName);
+            setName(jobData.getString("name"));
         }
         if (jobData.has("build") && !jobData.isNull("build")) {
-            String build = jobData.getString("build");
-            setBuild(build);
+            setBuild(jobData.getString("build"));
         }
         if (jobData.has("custom-data")&& !jobData.isNull("custom-data")) {
             JSONObject customData = jobData.getJSONObject("custom-data");
@@ -344,13 +341,15 @@ public class JobInformation implements Serializable {
                 setFailureMessage(failureMessage);
             }
         }
+        if (jobData.has("end_time") && !jobData.isNull("end_time")) {
+            setEndTime(jobData.getLong("end_time"));
+        }
+        setStartTime(jobData.getLong("start_time"));
         setOs(jobData.getString("os"));
         setBrowser(jobData.getString("browser"));
         setVersion(jobData.getString("browser_short_version"));
         setVideoUrl(jobData.getString("video_url"));
         setLogUrl(jobData.getString("log_url"));
-        setStartTime(jobData.getLong("start_time"));
-        setEndTime(jobData.getLong("end_time"));
         clearChanges();
     }
 

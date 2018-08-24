@@ -122,6 +122,11 @@ public class BuildInformationTest {
         build.populateFromJson(json);
         assertEquals(1523657508L, build.getStartTime());
         assertEquals(1523657534L, build.getEndTime());
+        json.put("end_time", (String) null);
+        build = new BuildInformation("1234");
+        build.populateFromJson(json);
+        assertEquals(0, build.getEndTime());
+
     }
 
     @Test
