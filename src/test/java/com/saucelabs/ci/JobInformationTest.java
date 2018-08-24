@@ -118,6 +118,13 @@ public class JobInformationTest {
         assertEquals(1448576100L, job.getEndTime());
         assertEquals(100, job.getDuration());
 
+        /* handle null end_time */
+        json.put("end_time", (String) null);
+        job = new JobInformation("1234", "hmac");
+        job.populateFromJson(json);
+        assertEquals(0, job.getEndTime());
+
+
         JSONObject customData = new JSONObject();
         customData.put("FAILURE_MESSAGE", "test failure");
         json.put("custom-data",customData);

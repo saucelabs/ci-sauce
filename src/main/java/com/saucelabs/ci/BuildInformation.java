@@ -234,19 +234,17 @@ public class BuildInformation implements Serializable {
      */
     public void populateFromJson(JSONObject buildData) throws JSONException {
         if (buildData.has("status") && !buildData.isNull("status")) {
-            String status = buildData.getString("status");
-            setStatus(status);
+            setStatus(buildData.getString("status"));
         }
         if (buildData.has("name") && !buildData.isNull("name")) {
-            String buildName = buildData.getString("name");
-            setName(buildName);
+            setName(buildData.getString("name"));
+        }
+        if (buildData.has("end_time") && !buildData.isNull("end_time")) {
+            setEndTime(buildData.getLong("end_time"));
         }
 
         setStartTime(buildData.getLong("start_time"));
-        setEndTime(buildData.getLong("end_time"));
-
         JSONObject buildJobs = buildData.getJSONObject("jobs");
-
         setJobsFinished(buildJobs.getInt("finished"));
         setJobsPassed(buildJobs.getInt("passed"));
         setJobsFailed(buildJobs.getInt("failed"));
