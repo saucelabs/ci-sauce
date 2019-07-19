@@ -239,7 +239,7 @@
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-archiver</artifactId>
-            <version>3.6.0</version>
+            <version>3.4</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -298,7 +298,7 @@
         <dependency>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-container-default</artifactId>
-            <version>1.7.1</version>
+            <version>1.5.5</version>
         </dependency>
 
 
