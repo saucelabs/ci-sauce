@@ -232,7 +232,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         args = addElement(args, "-P");
         args = addElement(args, String.valueOf(port));
         if (StringUtils.isNotBlank(options)) {
-            args = addElement(args, options);
+            args = addElement(args, options.trim());
         }
         return args;
     }
