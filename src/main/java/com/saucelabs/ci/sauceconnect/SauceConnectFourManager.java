@@ -231,7 +231,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         args = addElement(args, apiKey);
         args = addElement(args, "-P");
         args = addElement(args, String.valueOf(port));
-        if (StringUtils.isNotBlank(options)) {
+        if (StringUtils.isNotBlank(options.trim())) {
             args = addElement(args, options.trim());
         }
         return args;
