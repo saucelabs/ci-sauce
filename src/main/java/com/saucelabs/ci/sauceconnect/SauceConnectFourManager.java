@@ -188,7 +188,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
                 File unzipDirectory = getUnzipDir(workingDirectory, operatingSystem);
                 sauceConnectBinary = new File(unzipDirectory, operatingSystem.getExecutable());
                 if (!sauceConnectBinary.exists()) {
-                    extractZipFile(workingDirectory, operatingSystem);
+                    synchronized (this) {
+                        if (!sauceConnectBinary.exists()) {
+                            extractZipFile(workingDirectory, operatingSystem);
+                        }
+                    }
                 } else {
                     logMessage(printStream, sauceConnectBinary + " already exists, so not extracting");
                 }
