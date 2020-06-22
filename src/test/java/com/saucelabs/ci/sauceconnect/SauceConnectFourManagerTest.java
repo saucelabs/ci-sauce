@@ -1,5 +1,6 @@
 package com.saucelabs.ci.sauceconnect;
 
+import com.saucelabs.ci.sauceconnect.SauceConnectFourManager.OperatingSystem;
 import com.saucelabs.saucerest.SauceREST;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
@@ -9,6 +10,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -52,12 +54,24 @@ public class SauceConnectFourManagerTest {
     }
 
     @Test
-    public void openConnectionTest_success() throws Exception {
-        when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes("UTF-8")));
+    public void testOpenConnectionSuccessfullyWithoutCleanUpOnExit() throws Exception {
+        testOpenConnectionSuccessfully(false);
+    }
+
+    @Test
+    public void testOpenConnectionSuccessfullyWithCleanUpOnExit() throws Exception {
+        testOpenConnectionSuccessfully(true);
+    }
+
+    private void testOpenConnectionSuccessfully(boolean cleanUpOnExit) throws IOException {
+        when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
         when(mockProcess.getInputStream()).thenReturn(getClass().getResourceAsStream("/started_sc.log"));
 
-        Process p = this.tunnelManager.openConnection(
-            "fakeuser", "fakeapikey", 12345,
+        String username = "fakeuser";
+        String apiKey = "fakeapikey";
+
+        tunnelManager.setCleanUpOnExit(cleanUpOnExit);
+        Process p = tunnelManager.openConnection(username, apiKey, 12345,
             null, "", ps, false,
             ""
         );
@@ -66,7 +80,7 @@ public class SauceConnectFourManagerTest {
 
         verify(mockSauceRest).getTunnels();
         verify(tunnelManager).createProcess(
-            new String[] { anyString(), "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345" },
+            new String[] { anyString(), "-u", username, "-k", apiKey, "-P", "12345" },
             new File(anyString())
         );
     }
@@ -119,35 +133,39 @@ public class SauceConnectFourManagerTest {
     public TemporaryFolder folder= new TemporaryFolder();
 
     @Test
-    public void testExtractZipFile() throws Exception {
+    public void testExtractZipFileWithoutCleanUpOnExit() throws Exception {
+        testExtractZipFile(false);
+    }
+
+    @Test
+    public void testExtractZipFileWithCleanUpOnExit() throws Exception {
+        testExtractZipFile(true);
+    }
+
+    private void testExtractZipFile(boolean cleanUpOnExit) throws IOException
+    {
         File linux_destination = folder.newFolder("sauceconnect_linux");
         File linux32_destination = folder.newFolder("sauceconnect_linux32");
         File windows_destination = folder.newFolder("sauceconnect_windows");
         File osx_destination = folder.newFolder("sauceconnect_osx");
 
         SauceConnectFourManager manager = new SauceConnectFourManager();
-        manager.extractZipFile(linux_destination, SauceConnectFourManager.OperatingSystem.LINUX);
-        assertTrue("Linux executable exists", new File(
-            new File(linux_destination, SauceConnectFourManager.OperatingSystem.LINUX.getDirectory(false)),
-            SauceConnectFourManager.OperatingSystem.LINUX.getExecutable()
-        ).exists());
+        manager.setCleanUpOnExit(cleanUpOnExit);
 
-        manager.extractZipFile(linux32_destination, SauceConnectFourManager.OperatingSystem.LINUX32);
-        assertTrue("Linux32 executable exists", new File(
-            new File(linux32_destination, SauceConnectFourManager.OperatingSystem.LINUX32.getDirectory(false)),
-            SauceConnectFourManager.OperatingSystem.LINUX32.getExecutable()
-        ).exists());
+        manager.extractZipFile(linux_destination, OperatingSystem.LINUX);
+        assertSauceConnectFileExists("Linux executable exists", linux_destination, OperatingSystem.LINUX);
 
-        manager.extractZipFile(windows_destination, SauceConnectFourManager.OperatingSystem.WINDOWS);
-        assertTrue("windows executable exists", new File(
-            new File(windows_destination, SauceConnectFourManager.OperatingSystem.WINDOWS.getDirectory(false)),
-            SauceConnectFourManager.OperatingSystem.WINDOWS.getExecutable()
-        ).exists());
+        manager.extractZipFile(linux32_destination, OperatingSystem.LINUX32);
+        assertSauceConnectFileExists("Linux32 executable exists", linux32_destination, OperatingSystem.LINUX32);
 
-        manager.extractZipFile(osx_destination, SauceConnectFourManager.OperatingSystem.OSX);
-        assertTrue("osx executable exists", new File(
-            new File(osx_destination, SauceConnectFourManager.OperatingSystem.OSX.getDirectory(false)),
-            SauceConnectFourManager.OperatingSystem.OSX.getExecutable()
-        ).exists());
+        manager.extractZipFile(windows_destination, OperatingSystem.WINDOWS);
+        assertSauceConnectFileExists("windows executable exists", windows_destination, OperatingSystem.WINDOWS);
+
+        manager.extractZipFile(osx_destination, OperatingSystem.OSX);
+        assertSauceConnectFileExists("osx executable exists", osx_destination, OperatingSystem.OSX);
+    }
+
+    private void assertSauceConnectFileExists(String message, File destination, OperatingSystem os) {
+        assertTrue(message, new File(new File(destination, os.getDirectory(false)), os.getExecutable()).exists());
     }
 }

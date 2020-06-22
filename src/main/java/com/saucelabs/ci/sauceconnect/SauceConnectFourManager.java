@@ -27,6 +27,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     private boolean useLatestSauceConnect = false;
 
     /**
+     * Remove all created files and directories on exit
+     */
+    private boolean cleanUpOnExit;
+
+    /**
      * Represents the operating system-specific Sauce Connect binary.
      */
     public enum OperatingSystem {
@@ -206,6 +211,10 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         this.useLatestSauceConnect = useLatestSauceConnect;
     }
 
+    public void setCleanUpOnExit(boolean cleanUpOnExit) {
+        this.cleanUpOnExit = cleanUpOnExit;
+    }
+
     public static String getLatestSauceConnectVersion() {
         try {
             URL url = new URL("https://saucelabs.com/versions.json");
@@ -245,6 +254,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      */
     public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
         File zipFile = extractFile(workingDirectory, operatingSystem.getFileName(useLatestSauceConnect));
+        if (cleanUpOnExit) {
+            zipFile.deleteOnExit();
+        }
         AbstractUnArchiver unArchiver;
         if (operatingSystem == OperatingSystem.OSX || operatingSystem == OperatingSystem.WINDOWS) {
             unArchiver = new ZipUnArchiver();
@@ -255,7 +267,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             throw new RuntimeException("Unknown operating system: " + operatingSystem.name());
         }
         extractArchive(unArchiver, zipFile, workingDirectory);
-        return getUnzipDir(workingDirectory, operatingSystem);
+        File unzipDir = getUnzipDir(workingDirectory, operatingSystem);
+        if (cleanUpOnExit) {
+            unzipDir.deleteOnExit();
+        }
+        return unzipDir;
     }
 
     private File getUnzipDir(File workingDirectory, OperatingSystem operatingSystem) {
