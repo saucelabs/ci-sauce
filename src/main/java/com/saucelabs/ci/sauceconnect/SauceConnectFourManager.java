@@ -200,11 +200,21 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             String[] args = { sauceConnectBinary.getPath() };
             args = generateSauceConnectArgs(args, username, apiKey, port, options);
 
-            julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + Arrays.toString(args).replaceAll("\\w+-\\w+-\\w+-\\w+-\\w+", "****"));
+            julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + hideSauceConnectCommandlineSecrets(Arrays.toString(args)));
             return createProcess(args, sauceConnectBinary.getParentFile());
         } catch (IOException e) {
             throw new SauceConnectException(e);
         }
+    }
+
+    public String hideSauceConnectCommandlineSecrets(String text) {
+        return text
+            .replaceAll("(-k, )\\w+-\\w+-\\w+-\\w+-\\w+", "$1****")
+            .replaceAll("(--api-key, )\\w+-\\w+-\\w+-\\w+-\\w+", "$1****")
+            .replaceAll("(-w, \\w+:)\\w+", "$1****")
+            .replaceAll("(--proxy-userpwd, \\w+:)\\w+", "$1****")
+            .replaceAll("(-a, \\w+:\\w+:\\w+:)\\w+", "$1****")
+            .replaceAll("(--auth, \\w+:\\w+:\\w+:)\\w+", "$1****");
     }
 
     public void setUseLatestSauceConnect(boolean useLatestSauceConnect) {
