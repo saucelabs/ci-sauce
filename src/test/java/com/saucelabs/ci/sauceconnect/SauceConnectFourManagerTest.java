@@ -11,6 +11,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
@@ -167,5 +168,21 @@ public class SauceConnectFourManagerTest {
 
     private void assertSauceConnectFileExists(String message, File destination, OperatingSystem os) {
         assertTrue(message, new File(new File(destination, os.getDirectory(false)), os.getExecutable()).exists());
+    }
+
+    @Test
+    public void testSauceConnectSecretsCoveredWithStars() throws Exception {
+        SauceConnectFourManager manager = new SauceConnectFourManager();
+        String[] args = { "/sauce/connect/binary/path/" };
+        args = manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apiKey-apiKey-apiKey-apiKey-apiKey",
+            1234,
+            "--api-key apiKey-apiKey-apiKey-apiKey-apiKey -w user:pwd --proxy-userpwd user:pwd -a host:port:user:pwd --auth host:port:user:pwd -p host:port --proxy host:port -o pwd --other pwd"
+        );
+        String result = manager.hideSauceConnectCommandlineSecrets(Arrays.toString(args));
+
+        assertEquals("[/sauce/connect/binary/path/, -u, username, -k, ****, -P, 1234, --api-key, ****, -w, user:****, --proxy-userpwd, user:****, -a, host:port:user:****, --auth, host:port:user:****, -p, host:port, --proxy, host:port, -o, pwd, --other, pwd]", result);
     }
 }
