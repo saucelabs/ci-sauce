@@ -13,7 +13,10 @@ import org.json.JSONObject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 
 import java.net.URL;
@@ -208,14 +211,26 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     public String hideSauceConnectCommandlineSecrets(String[] args) {
-        String text = Arrays.toString(args);
-        return text
-            .replaceAll("(-k, )\\w+-\\w+-\\w+-\\w+-\\w+", "$1****")
-            .replaceAll("(--api-key, )\\w+-\\w+-\\w+-\\w+-\\w+", "$1****")
-            .replaceAll("(-w, \\w+:)\\w+", "$1****")
-            .replaceAll("(--proxy-userpwd, \\w+:)\\w+", "$1****")
-            .replaceAll("(-a, \\S+:\\d+:\\w+:)\\w+", "$1****")
-            .replaceAll("(--auth, \\S+:\\d+:\\w+:)\\w+", "$1****");
+        HashMap<String, String> map = new HashMap<>();
+        map.put("-k", "()\\w+-\\w+-\\w+-\\w+-\\w+");
+        map.put("--api-key", "()\\w+-\\w+-\\w+-\\w+-\\w+");
+        map.put("-w", "(\\w+:)\\w+");
+        map.put("--proxy-userpwd", "(\\w+:)\\w+");
+        map.put("-a", "(\\S+:\\d+:\\w+:)\\w+");
+        map.put("--auth", "(\\S+:\\d+:\\w+:)\\w+");
+        String regexpForNextElement = null;
+        List<String> hiddenArgs = new ArrayList<>();
+
+        for (String arg: args) {
+            if (regexpForNextElement != null) {
+                hiddenArgs.add(arg.replaceAll(regexpForNextElement, "$1****"));
+                regexpForNextElement = null;
+            } else {
+                hiddenArgs.add(arg);
+                regexpForNextElement = map.getOrDefault(arg, null);
+            }
+        }
+        return Arrays.toString(hiddenArgs.toArray());
     }
 
     public void setUseLatestSauceConnect(boolean useLatestSauceConnect) {
