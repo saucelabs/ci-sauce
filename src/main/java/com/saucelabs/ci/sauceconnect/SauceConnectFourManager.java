@@ -200,14 +200,15 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             String[] args = { sauceConnectBinary.getPath() };
             args = generateSauceConnectArgs(args, username, apiKey, port, options);
 
-            julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + hideSauceConnectCommandlineSecrets(Arrays.toString(args)));
+            julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + hideSauceConnectCommandlineSecrets(args));
             return createProcess(args, sauceConnectBinary.getParentFile());
         } catch (IOException e) {
             throw new SauceConnectException(e);
         }
     }
 
-    public String hideSauceConnectCommandlineSecrets(String text) {
+    public String hideSauceConnectCommandlineSecrets(String[] args) {
+        String text = Arrays.toString(args);
         return text
             .replaceAll("(-k, )\\w+-\\w+-\\w+-\\w+-\\w+", "$1****")
             .replaceAll("(--api-key, )\\w+-\\w+-\\w+-\\w+-\\w+", "$1****")
