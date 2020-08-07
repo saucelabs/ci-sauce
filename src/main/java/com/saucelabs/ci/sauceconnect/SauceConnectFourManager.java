@@ -213,8 +213,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             .replaceAll("(--api-key, )\\w+-\\w+-\\w+-\\w+-\\w+", "$1****")
             .replaceAll("(-w, \\w+:)\\w+", "$1****")
             .replaceAll("(--proxy-userpwd, \\w+:)\\w+", "$1****")
-            .replaceAll("(-a, \\w+:\\w+:\\w+:)\\w+", "$1****")
-            .replaceAll("(--auth, \\w+:\\w+:\\w+:)\\w+", "$1****");
+            .replaceAll("(-a, \\S+:\\d+:\\w+:)\\w+", "$1****")
+            .replaceAll("(--auth, \\S+:\\d+:\\w+:)\\w+", "$1****");
     }
 
     public void setUseLatestSauceConnect(boolean useLatestSauceConnect) {
