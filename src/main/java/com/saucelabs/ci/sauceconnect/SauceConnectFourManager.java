@@ -214,10 +214,10 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         HashMap<String, String> map = new HashMap<>();
         map.put("-k", "()\\w+-\\w+-\\w+-\\w+-\\w+");
         map.put("--api-key", "()\\w+-\\w+-\\w+-\\w+-\\w+");
-        map.put("-w", "(\\w+:)\\w+");
-        map.put("--proxy-userpwd", "(\\w+:)\\w+");
-        map.put("-a", "(\\S+:\\d+:\\w+:)\\w+");
-        map.put("--auth", "(\\S+:\\d+:\\w+:)\\w+");
+        map.put("-w", "(\\S+:)\\S+");
+        map.put("--proxy-userpwd", "(\\S+:)\\S+");
+        map.put("-a", "(\\S+:\\d+:\\S+:)\\S+");
+        map.put("--auth", "(\\S+:\\d+:\\S+:)\\S+");
         String regexpForNextElement = null;
         List<String> hiddenArgs = new ArrayList<>();
 

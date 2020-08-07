@@ -191,5 +191,17 @@ public class SauceConnectFourManagerTest {
         SauceConnectFourManager manager = new SauceConnectFourManager();
         String[] args = {"-a", "web-proxy.domain.com:8080:user:pwd"};
         assertEquals("[-a, web-proxy.domain.com:8080:user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+
+        args = new String[]{"-a", "host:8080:user:passwd%#123"};
+        assertEquals("[-a, host:8080:user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+
+        args = new String[]{"-a", "host:8080:super-user:passwd"};
+        assertEquals("[-a, host:8080:super-user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+
+        args = new String[]{"-w", "user:passwd%#123"};
+        assertEquals("[-w, user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+
+        args = new String[]{"-w", "super-user:passwd"};
+        assertEquals("[-w, super-user:****]", manager.hideSauceConnectCommandlineSecrets(args));
     }
 }
