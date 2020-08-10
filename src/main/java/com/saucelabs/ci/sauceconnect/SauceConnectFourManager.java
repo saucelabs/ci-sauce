@@ -13,7 +13,10 @@ import org.json.JSONObject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.logging.Level;
 
 import java.net.URL;
@@ -200,21 +203,34 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             String[] args = { sauceConnectBinary.getPath() };
             args = generateSauceConnectArgs(args, username, apiKey, port, options);
 
-            julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + hideSauceConnectCommandlineSecrets(Arrays.toString(args)));
+            julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + hideSauceConnectCommandlineSecrets(args));
             return createProcess(args, sauceConnectBinary.getParentFile());
         } catch (IOException e) {
             throw new SauceConnectException(e);
         }
     }
 
-    public String hideSauceConnectCommandlineSecrets(String text) {
-        return text
-            .replaceAll("(-k, )\\w+-\\w+-\\w+-\\w+-\\w+", "$1****")
-            .replaceAll("(--api-key, )\\w+-\\w+-\\w+-\\w+-\\w+", "$1****")
-            .replaceAll("(-w, \\w+:)\\w+", "$1****")
-            .replaceAll("(--proxy-userpwd, \\w+:)\\w+", "$1****")
-            .replaceAll("(-a, \\w+:\\w+:\\w+:)\\w+", "$1****")
-            .replaceAll("(--auth, \\w+:\\w+:\\w+:)\\w+", "$1****");
+    public String hideSauceConnectCommandlineSecrets(String[] args) {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("-k", "()\\w+-\\w+-\\w+-\\w+-\\w+");
+        map.put("--api-key", "()\\w+-\\w+-\\w+-\\w+-\\w+");
+        map.put("-w", "(\\S+:)\\S+");
+        map.put("--proxy-userpwd", "(\\S+:)\\S+");
+        map.put("-a", "(\\S+:\\d+:\\S+:)\\S+");
+        map.put("--auth", "(\\S+:\\d+:\\S+:)\\S+");
+        String regexpForNextElement = null;
+        List<String> hiddenArgs = new ArrayList<>();
+
+        for (String arg: args) {
+            if (regexpForNextElement != null) {
+                hiddenArgs.add(arg.replaceAll(regexpForNextElement, "$1****"));
+                regexpForNextElement = null;
+            } else {
+                hiddenArgs.add(arg);
+                regexpForNextElement = map.getOrDefault(arg, null);
+            }
+        }
+        return Arrays.toString(hiddenArgs.toArray());
     }
 
     public void setUseLatestSauceConnect(boolean useLatestSauceConnect) {

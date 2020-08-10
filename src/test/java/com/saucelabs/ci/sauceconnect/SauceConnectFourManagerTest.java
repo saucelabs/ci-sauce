@@ -179,10 +179,29 @@ public class SauceConnectFourManagerTest {
             "username",
             "apiKey-apiKey-apiKey-apiKey-apiKey",
             1234,
-            "--api-key apiKey-apiKey-apiKey-apiKey-apiKey -w user:pwd --proxy-userpwd user:pwd -a host:port:user:pwd --auth host:port:user:pwd -p host:port --proxy host:port -o pwd --other pwd"
+            "--api-key apiKey-apiKey-apiKey-apiKey-apiKey -w user:pwd --proxy-userpwd user:pwd -a host:8080:user:pwd --auth host:8080:user:pwd -p host:8080 --proxy host:8080 -o pwd --other pwd"
         );
-        String result = manager.hideSauceConnectCommandlineSecrets(Arrays.toString(args));
+        String result = manager.hideSauceConnectCommandlineSecrets(args);
 
-        assertEquals("[/sauce/connect/binary/path/, -u, username, -k, ****, -P, 1234, --api-key, ****, -w, user:****, --proxy-userpwd, user:****, -a, host:port:user:****, --auth, host:port:user:****, -p, host:port, --proxy, host:port, -o, pwd, --other, pwd]", result);
+        assertEquals("[/sauce/connect/binary/path/, -u, username, -k, ****, -P, 1234, --api-key, ****, -w, user:****, --proxy-userpwd, user:****, -a, host:8080:user:****, --auth, host:8080:user:****, -p, host:8080, --proxy, host:8080, -o, pwd, --other, pwd]", result);
+    }
+
+    @Test
+    public void testSauceConnectSecretsWithSpecialCharactersCoveredWithStars() throws Exception {
+        SauceConnectFourManager manager = new SauceConnectFourManager();
+        String[] args = {"-a", "web-proxy.domain.com:8080:user:pwd"};
+        assertEquals("[-a, web-proxy.domain.com:8080:user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+
+        args = new String[]{"-a", "host:8080:user:passwd%#123"};
+        assertEquals("[-a, host:8080:user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+
+        args = new String[]{"-a", "host:8080:super-user:passwd"};
+        assertEquals("[-a, host:8080:super-user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+
+        args = new String[]{"-w", "user:passwd%#123"};
+        assertEquals("[-w, user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+
+        args = new String[]{"-w", "super-user:passwd"};
+        assertEquals("[-w, super-user:****]", manager.hideSauceConnectCommandlineSecrets(args));
     }
 }
