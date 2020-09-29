@@ -383,12 +383,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             }
             processes.add(process);
             return process;
-        } catch (SauceConnectException e) {
-            throw e;
-        } catch (IOException e) {
-            //thrown if an error occurs starting the process builder
-            julLogger.log(Level.WARNING, "Exception occurred during invocation of Sauce Connect", e);
-            throw new SauceConnectException(e);
         } finally {
             //release the access lock
             tunnelInformation.getLock().unlock();
