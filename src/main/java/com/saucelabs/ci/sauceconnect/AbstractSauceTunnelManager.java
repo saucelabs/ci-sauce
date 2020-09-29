@@ -73,7 +73,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         }
         try {
             tunnelInformation.getLock().lock();
-            Integer count = decrementProcessCountForUser(tunnelInformation, printStream);
+            int count = decrementProcessCountForUser(tunnelInformation, printStream);
             if (count == 0) {
                 //we can now close the process
                 final Process sauceConnect = tunnelInformation.getProcess();
@@ -130,8 +130,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @param printStream the output stream to send log messages
      * @return current count of active Sauce Connect processes for the user
      */
-    private Integer decrementProcessCountForUser(TunnelInformation identifier, PrintStream printStream) {
-        Integer count = identifier.getProcessCount() - 1;
+    private int decrementProcessCountForUser(TunnelInformation identifier, PrintStream printStream) {
+        int count = identifier.getProcessCount() - 1;
         identifier.setProcessCount(count);
         logMessage(printStream, "Decremented process count for " + identifier + ", now " + count);
         return count;
