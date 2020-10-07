@@ -9,7 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 class TunnelInformation {
     private final String identifier;
     private Process process;
-    private Integer processCount = 0;
+    private int processCount;
     private final Lock lock = new ReentrantLock();
     private String tunnelId;
 
@@ -29,11 +29,11 @@ class TunnelInformation {
         this.process = process;
     }
 
-    public Integer getProcessCount() {
+    public int getProcessCount() {
         return processCount;
     }
 
-    public void setProcessCount(Integer processCount) {
+    public void setProcessCount(int processCount) {
         this.processCount = processCount;
     }
 
