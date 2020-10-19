@@ -8,138 +8,134 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class SauceConnectFourManagerTest {
 
-    private SauceConnectFourManager tunnelManager;
+    @Rule public TemporaryFolder folder= new TemporaryFolder();
 
-    private Process mockProcess;
+    @Mock private Process mockProcess;
+    @Mock private SauceREST mockSauceRest;
+    @Spy private final SauceConnectFourManager tunnelManager = new SauceConnectFourManager(false);
 
-    private SauceREST mockSauceRest;
-
-    private PrintStream ps = System.out;
-
-    private final String STRING_JSON_TUNNELS_EMPTY;
-    private final String STRING_JSON_TUNNELS_ACTIVE;
-    private final String STRING_JSON_GET_TUNNEL;
-
-    public SauceConnectFourManagerTest() throws IOException {
-        STRING_JSON_TUNNELS_ACTIVE = IOUtils.toString(getClass().getResourceAsStream("/tunnels_active_tunnel.json"), "UTF-8");
-        STRING_JSON_TUNNELS_EMPTY = IOUtils.toString(getClass().getResourceAsStream("/tunnels_empty.json"), "UTF-8");
-        STRING_JSON_GET_TUNNEL = IOUtils.toString(getClass().getResourceAsStream("/single_tunnel.json"), "UTF-8");
-    }
-
+    private final PrintStream ps = System.out;
 
     @Before
-    public void setup() throws Exception {
-        mockProcess = mock(Process.class);
-        tunnelManager = spy(new SauceConnectFourManager(false));
-        doReturn(mockProcess).when(tunnelManager).createProcess(any(String[].class), any(File.class));
-        mockSauceRest = mock(SauceREST.class);
+    public void setup() {
+        MockitoAnnotations.initMocks(this);
         tunnelManager.setSauceRest(mockSauceRest);
-        doReturn(STRING_JSON_TUNNELS_EMPTY).when(mockSauceRest).getTunnels();
     }
 
     @After
     public void teardown() {
         verifyNoMoreInteractions(mockSauceRest);
-        verify(tunnelManager, times(1)).setSauceRest(mockSauceRest);
+    }
+
+    private String readResource(String resourceName) throws IOException {
+        try (InputStream resourceAsStream = getResourceAsStream(resourceName)) {
+            return IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
+        }
+    }
+
+    private InputStream getResourceAsStream(String resourceName) {
+        return getClass().getResourceAsStream(resourceName);
     }
 
     @Test
-    public void testOpenConnectionSuccessfullyWithoutCleanUpOnExit() throws Exception {
+    public void testOpenConnectionSuccessfullyWithoutCleanUpOnExit() throws IOException {
         testOpenConnectionSuccessfully(false);
     }
 
     @Test
-    public void testOpenConnectionSuccessfullyWithCleanUpOnExit() throws Exception {
+    public void testOpenConnectionSuccessfullyWithCleanUpOnExit() throws IOException {
         testOpenConnectionSuccessfully(true);
     }
 
     private void testOpenConnectionSuccessfully(boolean cleanUpOnExit) throws IOException {
-        when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
-        when(mockProcess.getInputStream()).thenReturn(getClass().getResourceAsStream("/started_sc.log"));
-
-        String username = "fakeuser";
-        String apiKey = "fakeapikey";
-
+        when(mockSauceRest.getTunnels()).thenReturn(readResource("/tunnels_empty.json"));
         tunnelManager.setCleanUpOnExit(cleanUpOnExit);
-        Process p = tunnelManager.openConnection(username, apiKey, 12345,
-            null, "", ps, false,
-            ""
-        );
-
-        assertNotNull(p);
-
-        verify(mockSauceRest).getTunnels();
-        verify(tunnelManager).createProcess(
-            new String[] { anyString(), "-u", username, "-k", apiKey, "-P", "12345" },
-            new File(anyString())
-        );
+        Process process = testOpenConnection("/started_sc.log");
+        assertEquals(mockProcess, process);
     }
 
     @Test(expected=AbstractSauceTunnelManager.SauceConnectDidNotStartException.class)
-    public void openConnectionTest_closes() throws Exception {
-        when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes("UTF-8")));
-        when(mockProcess.getInputStream()).thenReturn(getClass().getResourceAsStream("/started_sc_closes.log"));
+    public void openConnectionTest_closes() throws IOException {
+        when(mockSauceRest.getTunnels()).thenReturn(readResource("/tunnels_empty.json"));
+        testOpenConnection("/started_sc_closes.log");
+    }
 
-        try {
-            this.tunnelManager.openConnection(
-                "fakeuser", "fakeapikey", 12345,
-                null, "", ps, false,
-                ""
-            );
+    @Test
+    public void testOpenConnectionWithExtraSpacesInArgs() throws IOException {
+        when(mockSauceRest.getTunnels()).thenReturn(readResource("/tunnels_empty.json"));
+        testOpenConnection("/started_sc.log", " username-with-spaces-around ");
+    }
+
+    private Process testOpenConnection(String logFile) throws IOException {
+        return testOpenConnection(logFile, "fakeuser");
+    }
+
+    private Process testOpenConnection(String logFile, String username) throws IOException {
+        String apiKey = "fakeapikey";
+        int port = 12345;
+
+        try (InputStream resourceAsStream = getResourceAsStream(logFile)) {
+            when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
+            when(mockProcess.getInputStream()).thenReturn(resourceAsStream);
+            doReturn(mockProcess).when(tunnelManager).createProcess(any(String[].class), any(File.class));
+            return tunnelManager.openConnection(username, apiKey, port, null, "  ", ps, false, "");
         } finally {
             verify(mockSauceRest).getTunnels();
-            verify(tunnelManager).createProcess(
-                new String[]{anyString(), "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345"},
-                new File(anyString())
-            );
+            ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
+            verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
+            String[] actualArgs = argsCaptor.getValue();
+            assertEquals(7, actualArgs.length);
+            assertEquals("-u", actualArgs[1]);
+            assertEquals(username.trim(), actualArgs[2]);
+            assertEquals("-k", actualArgs[3]);
+            assertEquals(apiKey, actualArgs[4]);
+            assertEquals("-P", actualArgs[5]);
+            assertEquals(Integer.toString(port), actualArgs[6]);
         }
     }
 
     @Test
-    public void openConnectionTest_existing_tunnel() throws Exception {
-        doReturn(STRING_JSON_TUNNELS_ACTIVE).when(mockSauceRest).getTunnels();
-        doReturn(STRING_JSON_GET_TUNNEL).when(mockSauceRest).getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494");
+    public void openConnectionTest_existing_tunnel() throws IOException {
+        when(mockSauceRest.getTunnels()).thenReturn(readResource("/tunnels_active_tunnel.json"));
+        when(mockSauceRest.getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494")).thenReturn(
+            readResource("/single_tunnel.json"));
 
-        when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes("UTF-8")));
-        when(mockProcess.getInputStream()).thenReturn(getClass().getResourceAsStream("/started_sc.log"));
-
-        Process p = this.tunnelManager.openConnection(
-            "fakeuser", "fakeapikey", 12345,
-            null, "", ps, false,
-            ""
-        );
-
-        assertNotNull(p);
+        Process process = testOpenConnection("/started_sc.log");
+        assertEquals(mockProcess, process);
 
         verify(mockSauceRest).getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494");
         verify(mockSauceRest).getTunnels();
-        verify(tunnelManager).createProcess(
-            new String[] { anyString(), "-u", "fakeuser", "-k", "fakeapikey", "-P", "12345" },
-            new File( anyString() )
-        );
     }
 
-    @Rule
-    public TemporaryFolder folder= new TemporaryFolder();
-
     @Test
-    public void testExtractZipFileWithoutCleanUpOnExit() throws Exception {
+    public void testExtractZipFileWithoutCleanUpOnExit() throws IOException {
         testExtractZipFile(false);
     }
 
     @Test
-    public void testExtractZipFileWithCleanUpOnExit() throws Exception {
+    public void testExtractZipFileWithCleanUpOnExit() throws IOException {
         testExtractZipFile(true);
     }
 
@@ -171,7 +167,7 @@ public class SauceConnectFourManagerTest {
     }
 
     @Test
-    public void testSauceConnectSecretsCoveredWithStars() throws Exception {
+    public void testSauceConnectSecretsCoveredWithStars() {
         SauceConnectFourManager manager = new SauceConnectFourManager();
         String[] args = { "/sauce/connect/binary/path/" };
         args = manager.generateSauceConnectArgs(
@@ -187,7 +183,7 @@ public class SauceConnectFourManagerTest {
     }
 
     @Test
-    public void testSauceConnectSecretsWithSpecialCharactersCoveredWithStars() throws Exception {
+    public void testSauceConnectSecretsWithSpecialCharactersCoveredWithStars() {
         SauceConnectFourManager manager = new SauceConnectFourManager();
         String[] args = {"-a", "web-proxy.domain.com:8080:user:pwd"};
         assertEquals("[-a, web-proxy.domain.com:8080:user:****]", manager.hideSauceConnectCommandlineSecrets(args));

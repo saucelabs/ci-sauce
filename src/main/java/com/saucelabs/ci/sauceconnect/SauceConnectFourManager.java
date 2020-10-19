@@ -264,16 +264,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      * @return String array representing the command line args to be used to launch Sauce Connect
      */
     protected String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port, String options) {
-        args = addElement(args, "-u");
-        args = addElement(args, username);
-        args = addElement(args, "-k");
-        args = addElement(args, apiKey);
-        args = addElement(args, "-P");
-        args = addElement(args, String.valueOf(port));
-        if (StringUtils.isNotBlank(options.trim())) {
-            args = addElement(args, options.trim());
-        }
-        return args;
+        String[] result = joinArgs(args, "-u", username.trim(), "-k", apiKey.trim(), "-P", String.valueOf(port));
+        result = addElement(result, options);
+        return result;
     }
 
     /**
