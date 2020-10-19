@@ -468,17 +468,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @param options  command line args specified by the user
      * @return String array representing the command line args to be used to launch Sauce Connect
      */
-    protected String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port, String options) {
-
-        args = addElement(args, username);
-        args = addElement(args, apiKey);
-        args = addElement(args, "-P");
-        args = addElement(args, String.valueOf(port));
-        if (StringUtils.isNotBlank(options)) {
-            args = addElement(args, options);
-        }
-        return args;
-    }
+    protected abstract String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port,
+        String options);
 
     /**
      * @return the user's home directory
