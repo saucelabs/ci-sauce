@@ -205,13 +205,13 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      */
     protected String[] addElement(String[] original, String added) {
         //split added on space
-        String[] split = added.split(" ");
-        String[] result = original;
-        for (String arg : split) {
-            String[] newResult = Arrays.copyOf(result, result.length + 1);
-            newResult[result.length] = arg;
-            result = newResult;
-        }
+        String[] split = StringUtils.split(added, ' ');
+        return joinArgs(original, split);
+    }
+
+    protected String[] joinArgs(String[] initial, String... toAdd) {
+        String[] result = Arrays.copyOf(initial, initial.length + toAdd.length);
+        System.arraycopy(toAdd, 0, result, initial.length, toAdd.length);
         return result;
     }
 
