@@ -2,7 +2,6 @@ package com.saucelabs.ci.sauceconnect;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.codehaus.plexus.archiver.AbstractUnArchiver;
 import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
@@ -110,10 +109,6 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
         public String getFileName(boolean useLatestSauceConnect) {
             return getDirectory(useLatestSauceConnect) + '.' + archiveExtension;
-        }
-
-        private String getVersion(boolean useLatestSauceConnect) {
-            return useLatestSauceConnect ? LATEST_SC_VERSION : CURRENT_SC_VERSION;
         }
 
         public String getExecutable() {
@@ -348,7 +343,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
     @Override
     protected String getCurrentVersion() {
-        return useLatestSauceConnect ? LATEST_SC_VERSION : CURRENT_SC_VERSION;
+        return getVersion(useLatestSauceConnect);
+    }
+
+    private static String getVersion(boolean useLatestSauceConnect) {
+        return useLatestSauceConnect && LATEST_SC_VERSION != null ? LATEST_SC_VERSION : CURRENT_SC_VERSION;
     }
 
     /**
