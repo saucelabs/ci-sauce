@@ -191,9 +191,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 logFile = split[i + 1];
             }
         }
-        if (logFile != null) { return logFile; }
-
-        return null;
+        return logFile;
     }
 
     /**
