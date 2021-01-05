@@ -103,7 +103,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    IOUtils.copy(sauceConnect.getInputStream(), new NullOutputStream());
+                    IOUtils.copy(sauceConnect.getInputStream(), NullOutputStream.NULL_OUTPUT_STREAM);
                 } catch (IOException e) {
                     //ignore
                 }
@@ -113,7 +113,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         new Thread(new Runnable() {
             public void run() {
                 try {
-                    IOUtils.copy(sauceConnect.getErrorStream(), new NullOutputStream());
+                    IOUtils.copy(sauceConnect.getErrorStream(), NullOutputStream.NULL_OUTPUT_STREAM);
                 } catch (IOException e) {
                     //ignore
                 }
@@ -191,9 +191,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 logFile = split[i + 1];
             }
         }
-        if (logFile != null) { return logFile; }
-
-        return null;
+        return logFile;
     }
 
     /**
