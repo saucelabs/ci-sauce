@@ -423,10 +423,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @return String the internal Sauce tunnel id
      */
     private String activeTunnelIdentifier(String username, String identifier) {
-        if (sauceRest == null) {
-            //TODO how to handle?
-            return null;
-        }
         try {
             JSONArray tunnelArray = new JSONArray(sauceRest.getTunnels());
             if (tunnelArray.length() == 0) {
