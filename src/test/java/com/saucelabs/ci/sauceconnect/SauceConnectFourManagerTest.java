@@ -142,7 +142,6 @@ public class SauceConnectFourManagerTest {
     private void testExtractZipFile(boolean cleanUpOnExit) throws IOException
     {
         File linux_destination = folder.newFolder("sauceconnect_linux");
-        File linux32_destination = folder.newFolder("sauceconnect_linux32");
         File windows_destination = folder.newFolder("sauceconnect_windows");
         File osx_destination = folder.newFolder("sauceconnect_osx");
 
@@ -151,9 +150,6 @@ public class SauceConnectFourManagerTest {
 
         manager.extractZipFile(linux_destination, OperatingSystem.LINUX);
         assertSauceConnectFileExists("Linux executable exists", linux_destination, OperatingSystem.LINUX);
-
-        manager.extractZipFile(linux32_destination, OperatingSystem.LINUX32);
-        assertSauceConnectFileExists("Linux32 executable exists", linux32_destination, OperatingSystem.LINUX32);
 
         manager.extractZipFile(windows_destination, OperatingSystem.WINDOWS);
         assertSauceConnectFileExists("windows executable exists", windows_destination, OperatingSystem.WINDOWS);
