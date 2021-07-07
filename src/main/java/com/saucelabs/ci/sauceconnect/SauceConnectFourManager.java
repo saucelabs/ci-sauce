@@ -40,8 +40,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
         OSX("osx", "zip", UNIX_TEMP_DIR),
         WINDOWS("win32", "zip", WINDOWS_TEMP_DIR, "sc.exe"),
-        LINUX("linux", "tar.gz", UNIX_TEMP_DIR),
-        LINUX32("linux32", "tar.gz", UNIX_TEMP_DIR);
+        LINUX("linux", "tar.gz", UNIX_TEMP_DIR);
 
         private final String directoryEnding;
         private final String archiveExtension;
@@ -68,27 +67,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
                 return OSX;
             }
             if (isUnix(os)) {
-                //check to see if we are on 64 bit
-                return is64BitLinux() ? LINUX : LINUX32;
+                return LINUX;
             }
             throw new IllegalStateException("Unsupported OS: " + os);
-        }
-
-        /**
-         * Executes 'uname -a', if the result of the command contains '64', then return true
-         *
-         * @return boolean indicating whether OS is 64-bit
-         */
-        private static boolean is64BitLinux() {
-            try {
-                Runtime runtime = Runtime.getRuntime();
-                Process process = runtime.exec("uname -a");
-                process.waitFor();
-                return IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8).contains("64");
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
-            }
-            return false;
         }
 
         private static boolean isWindows(String os) {
@@ -129,7 +110,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      */
     private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
 
-    public static final String CURRENT_SC_VERSION = "4.6.4";
+    public static final String CURRENT_SC_VERSION = "4.6.5";
     public static final String LATEST_SC_VERSION = getLatestSauceConnectVersion();
 
     private static final String SAUCE_CONNECT = "sc-";
@@ -278,7 +259,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         AbstractUnArchiver unArchiver;
         if (operatingSystem == OperatingSystem.OSX || operatingSystem == OperatingSystem.WINDOWS) {
             unArchiver = new ZipUnArchiver();
-        } else if (operatingSystem == OperatingSystem.LINUX || operatingSystem == OperatingSystem.LINUX32) {
+        } else if (operatingSystem == OperatingSystem.LINUX) {
             removeOldTarFile(zipFile);
             unArchiver = new TarGZipUnArchiver();
         } else {
