@@ -81,7 +81,12 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 String tunnelId = tunnelInformation.getTunnelId();
                 if (tunnelId != null && sauceRest != null) {
                     //forcibly delete tunnel
-                    sauceRest.deleteTunnel(tunnelId);
+                    try {
+                        sauceRest.deleteTunnel(tunnelId);
+                    }
+                    catch (java.io.IOException e) {
+                        logMessage(printStream, "Error during tunnel removal: " + e);
+                    }
                 }
                 tunnelInformationMap.remove(identifier);
                 List<Process> processes = openedProcesses.get(identifier);
