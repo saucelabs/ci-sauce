@@ -358,10 +358,10 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         String fileName = "sc.log";
         File logFileDirectory = new File(OperatingSystem.getOperatingSystem().getDefaultSauceConnectLogDirectory());
 
-        //has --tunnel-identifer been specified?
-        String tunnelIdentifier = getTunnelIdentifier(options, null);
-        if (tunnelIdentifier != null) {
-            fileName = MessageFormat.format("sc-{0}.log", tunnelIdentifier);
+        //has --tunnel-name been specified?
+        String tunnelName = getTunnelName(options, null);
+        if (tunnelName != null) {
+            fileName = MessageFormat.format("sc-{0}.log", tunnelName);
         }
         File sauceConnectLogFile = new File(logFileDirectory, fileName);
         if (!sauceConnectLogFile.exists()) {

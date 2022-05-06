@@ -12,11 +12,12 @@ import static org.junit.Assert.*;
 public class AbstractSauceTunnelManagerTest {
 
     @Test
-    public void testGetTunnelIdentifier() {
-        assertEquals("missing parameter", "default", AbstractSauceTunnelManager.getTunnelIdentifier("basic -c", "default"));
-        assertEquals("basic -i", "basic", AbstractSauceTunnelManager.getTunnelIdentifier("-i basic -c", "default"));
-        assertEquals("basic --tunnel-identifier", "basic", AbstractSauceTunnelManager.getTunnelIdentifier("--tunnel-identifier basic -c", "default"));
-        assertEquals("mix of -i and --tunnel-identifier still returns the last one", "third", AbstractSauceTunnelManager.getTunnelIdentifier("-i first --tunnel-identifier second -c -i third", "default"));
+    public void testGetTunnelName() {
+        assertEquals("missing parameter", "default", AbstractSauceTunnelManager.getTunnelName("basic -c", "default"));
+        assertEquals("basic -i", "basic", AbstractSauceTunnelManager.getTunnelName("-i basic -c", "default"));
+        assertEquals("basic --tunnel-name", "basic", AbstractSauceTunnelManager.getTunnelName("--tunnel-name basic -c", "default"));
+        assertEquals("old --tunnel-identifier", "basic", AbstractSauceTunnelManager.getTunnelName("--tunnel-identifier basic -c", "default"));
+        assertEquals("mix of -i and --tunnel-name still returns the last one", "third", AbstractSauceTunnelManager.getTunnelName("-i first --tunnel-name second -c -i third", "default"));
 
 
     }
