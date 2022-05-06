@@ -466,6 +466,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     protected abstract String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port,
         String options);
 
+    protected abstract String[] addExtraInfo(String[] args);
+
     /**
      * @return the user's home directory
      */

@@ -182,6 +182,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
             //although we are setting the working directory, we need to specify the full path to the exe
             String[] args = { sauceConnectBinary.getPath() };
             args = generateSauceConnectArgs(args, username, apiKey, port, options);
+            args = addExtraInfo(args);
 
             julLogger.log(Level.INFO, "Launching Sauce Connect " + getCurrentVersion() + " " + hideSauceConnectCommandlineSecrets(args));
             return createProcess(args, sauceConnectBinary.getParentFile());
@@ -242,6 +243,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     protected String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port, String options) {
         String[] result = joinArgs(args, "-u", username.trim(), "-k", apiKey.trim(), "-P", String.valueOf(port));
         result = addElement(result, options);
+        return result;
+    }
+
+    protected String[] addExtraInfo(String[] args) {
+        String[] result = joinArgs(args, "--extra-info", "'{\"runner\": \"jenkins\"}'");
         return result;
     }
 
