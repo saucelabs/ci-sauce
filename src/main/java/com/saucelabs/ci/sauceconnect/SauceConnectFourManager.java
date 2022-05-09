@@ -247,7 +247,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     protected String[] addExtraInfo(String[] args) {
-        String[] result = joinArgs(args, "--extra-info", "'{\"runner\": \"jenkins\"}'");
+        String[] result = joinArgs(args, "--extra-info", "{\"runner\": \"jenkins\"}");
         return result;
     }
 
