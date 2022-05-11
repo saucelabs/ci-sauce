@@ -66,8 +66,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @param printStream the output stream to send log messages
      */
     public void closeTunnelsForPlan(String userName, String options, PrintStream printStream) {
-        String identifier = getTunnelIdentifier(options, userName);
-        TunnelInformation tunnelInformation = getTunnelInformation(identifier);
+        String tunnelName = getTunnelName(options, userName);
+        TunnelInformation tunnelInformation = getTunnelInformation(tunnelName);
         if (tunnelInformation == null) {
             return;
         }
@@ -88,12 +88,12 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                         logMessage(printStream, "Error during tunnel removal: " + e);
                     }
                 }
-                tunnelInformationMap.remove(identifier);
-                List<Process> processes = openedProcesses.get(identifier);
+                tunnelInformationMap.remove(tunnelName);
+                List<Process> processes = openedProcesses.get(tunnelName);
                 if (processes != null) {
                     processes.remove(sauceConnect);
                 }
-                logMessage(printStream, "Sauce Connect stopped for: " + identifier);
+                logMessage(printStream, "Sauce Connect stopped for: " + tunnelName);
             } else {
                 logMessage(printStream, "Jobs still running, not closing Sauce Connect");
             }
@@ -131,14 +131,14 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     /**
      * Reduces the count of active Sauce Connect processes for the user by 1.
      *
-     * @param identifier  the tunnel identifier
+     * @param tunnelInfo  the tunnel
      * @param printStream the output stream to send log messages
      * @return current count of active Sauce Connect processes for the user
      */
-    private int decrementProcessCountForUser(TunnelInformation identifier, PrintStream printStream) {
-        int count = identifier.getProcessCount() - 1;
-        identifier.setProcessCount(count);
-        logMessage(printStream, "Decremented process count for " + identifier + ", now " + count);
+    private int decrementProcessCountForUser(TunnelInformation tunnelInfo, PrintStream printStream) {
+        int count = tunnelInfo.getProcessCount() - 1;
+        tunnelInfo.setProcessCount(count);
+        logMessage(printStream, "Decremented process count for " + tunnelInfo + ", now " + count);
         return count;
     }
 
@@ -157,24 +157,25 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
     /**
      * @param options      the command line options used to launch Sauce Connect
-     * @param defaultValue the default value to use for the identifier if none specified in the options
-     * @return String representing the tunnel identifier
+     * @param defaultValue the default value to use for the tunnel name if none specified in the options
+     * @return String representing the tunnel name
      */
-    public static String getTunnelIdentifier(String options, String defaultValue) {
+    public static String getTunnelName(String options, String defaultValue) {
         if (options == null || options.equals("")) {
             return defaultValue;
         }
 
-        String identifier = null;
+        String name = null;
         String[] split = options.split(" ");
         for (int i = 0; i < split.length; i++) {
             String option = split[i];
-            if (option.equals("-i") || option.equals("--tunnel-identifier")) {
-                //next option is identifier
-                identifier = split[i + 1];
+            // Handle old tunnel-identifier option and well as new tunnel-name
+            if (option.equals("-i") || option.equals("--tunnel-name") || option.equals("--tunnel-identifier")) {
+                //next option is name
+                name = split[i + 1];
             }
         }
-        if (identifier != null) { return identifier; }
+        if (name != null) { return name; }
 
         return defaultValue;
     }
@@ -192,7 +193,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         for (int i = 0; i < split.length; i++) {
             String option = split[i];
             if (option.equals("-l") || option.equals("--logfile")) {
-                //next option is identifier
+                //next option is logfile
                 logFile = split[i + 1];
             }
         }
@@ -221,14 +222,13 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     /**
      * Increases the number of Sauce Connect invocations for the user by 1.
      *
-     * @param identifier  the tunnel identifier
+     * @param name  the tunnel name
      * @param printStream the output stream to send log messages
      */
-    protected void incrementProcessCountForUser(TunnelInformation identifier, PrintStream printStream) {
-        int processCount = identifier.getProcessCount() + 1;
-        identifier.setProcessCount(processCount);
-        logMessage(printStream, "Incremented process count for " + identifier + ", now " + processCount);
-
+    protected void incrementProcessCountForUser(TunnelInformation name, PrintStream printStream) {
+        int processCount = name.getProcessCount() + 1;
+        name.setProcessCount(processCount);
+        logMessage(printStream, "Incremented process count for " + name + ", now " + processCount);
     }
 
     /**
@@ -276,8 +276,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         if (sauceRest == null) {
             sauceRest = new SauceREST(username, apiKey);
         }
-        String identifier = getTunnelIdentifier(options, username);
-        TunnelInformation tunnelInformation = getTunnelInformation(identifier);
+        String name = getTunnelName(options, username);
+        TunnelInformation tunnelInformation = getTunnelInformation(name);
         try {
 
             tunnelInformation.getLock().lock();
@@ -288,38 +288,34 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 this.quietMode = !verboseLogging;
             }
 
-            //do we have an instance for the tunnel identifier?
-            String tunnelIdentifier = activeTunnelIdentifier(username, identifier);
+            //do we have an instance for the tunnel name?
+            String tunnelName = activeTunnelName(username, name);
             if (tunnelInformation.getProcessCount() == 0) {
                 //if the count is zero, check to see if there are any active tunnels
 
-                if (tunnelIdentifier != null) {
+                if (tunnelName != null) {
                     //if we have an active tunnel, but the process count is zero, we have an orphaned SC process
                     //instead of deleting the tunnel, log a message
-                    //sauceRest.deleteTunnel(tunnelIdentifier);
-                    //wait a few minutes? (or log that user needs to wait?)
-                    logMessage(printStream, "Detected active tunnel: " + tunnelIdentifier);
-//                    logMessage(printStream, "Deleting tunnel: " + tunnelIdentifier);
-                    //continue creating tunnel
+                    logMessage(printStream, "Detected active tunnel: " + tunnelName);
                 }
             } else {
 
                 //check active tunnels via Sauce REST API
-                if (tunnelIdentifier == null) {
-                    logMessage(printStream, "Process count non-zero, but no active tunnels found for identifier: " + identifier);
+                if (tunnelName == null) {
+                    logMessage(printStream, "Process count non-zero, but no active tunnels found for name: " + name);
                     logMessage(printStream, "Process count reset to zero");
                     //if no active tunnels, we have a mismatch of the tunnel count
                     //reset tunnel count to zero and continue to launch Sauce Connect
                     tunnelInformation.setProcessCount(0);
                 } else {
                     //if we have an active tunnel, increment counter and return
-                    logMessage(printStream, "Sauce Connect already running for " + identifier);
+                    logMessage(printStream, "Sauce Connect already running for " + name);
                     incrementProcessCountForUser(tunnelInformation, printStream);
                     return tunnelInformation.getProcess();
                 }
             }
             final Process process = prepAndCreateProcess(username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath);
-            List<Process> openedProcesses = this.openedProcesses.get(tunnelIdentifier);
+            List<Process> openedProcesses = this.openedProcesses.get(tunnelName);
             try {
                 Semaphore semaphore = new Semaphore(1);
                 semaphore.acquire();
@@ -362,7 +358,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                         if (outputGobbler.getTunnelId() != null) {
                             tunnelInformation.setTunnelId(outputGobbler.getTunnelId());
                         }
-                        logMessage(printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + identifier);
+                        logMessage(printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + name);
                     }
                 } else {
                     File sauceConnectLogFile = getSauceConnectLogFile(options);
@@ -382,7 +378,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             List<Process> processes = openedProcesses;
             if (processes == null) {
                 processes = new ArrayList<>();
-                this.openedProcesses.put(identifier, processes);
+                this.openedProcesses.put(name, processes);
             }
             processes.add(process);
             return process;
@@ -404,30 +400,30 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
     /**
      *
-     * @param identifier
+     * @param name
      * @return
      */
-    private TunnelInformation getTunnelInformation(String identifier) {
-        if (identifier == null)
+    private TunnelInformation getTunnelInformation(String name) {
+        if (name == null)
         {
             return null;
         }
-        TunnelInformation tunnelInformation = tunnelInformationMap.get(identifier);
+        TunnelInformation tunnelInformation = tunnelInformationMap.get(name);
         if (tunnelInformation == null) {
-            tunnelInformation = new TunnelInformation(identifier);
-            tunnelInformationMap.put(identifier, tunnelInformation);
+            tunnelInformation = new TunnelInformation(name);
+            tunnelInformationMap.put(name, tunnelInformation);
         }
         return tunnelInformation;
     }
 
     /**
-     * Queries the Sauce REST API to find the active tunnel for the user/tunnel identifier.
+     * Queries the Sauce REST API to find the active tunnel for the user/tunnel name.
      *
      * @param username   the Sauce username
-     * @param identifier tunnel identifier, can be the same as the username
+     * @param tunnelName tunnel name, can be the same as the username
      * @return String the internal Sauce tunnel id
      */
-    private String activeTunnelIdentifier(String username, String identifier) {
+    private String activeTunnelName(String username, String tunnelName) {
         try {
             JSONArray tunnelArray = new JSONArray(sauceRest.getTunnels());
             if (tunnelArray.length() == 0) {
@@ -438,11 +434,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             for (int i = 0; i < tunnelArray.length(); i++) {
                 String tunnelId = tunnelArray.getString(i);
                 JSONObject tunnelInformation = new JSONObject(sauceRest.getTunnelInformation(tunnelId));
-                String tunnelIdentifier = tunnelInformation.getString("tunnel_identifier");
+                String configName = tunnelInformation.getString("tunnel_name");
                 String status = tunnelInformation.getString("status");
                 if (status.equals("running") &&
-                        (tunnelIdentifier.equals("null") && identifier.equals(username)) ||
-                        !tunnelIdentifier.equals("null") && tunnelIdentifier.equals(identifier)) {
+                        (configName.equals("null") && tunnelName.equals(username)) ||
+                        !configName.equals("null") && configName.equals(tunnelName)) {
                     //we have an active tunnel
                     return tunnelId;
                 }
@@ -469,6 +465,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      */
     protected abstract String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port,
         String options);
+
+    protected abstract String[] addExtraInfo(String[] args);
 
     /**
      * @return the user's home directory

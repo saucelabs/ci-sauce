@@ -7,14 +7,14 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by halkeye on 7/29/16.
  */
 class TunnelInformation {
-    private final String identifier;
+    private final String name;
     private Process process;
     private int processCount;
     private final Lock lock = new ReentrantLock();
     private String tunnelId;
 
-    public TunnelInformation(String identifier) {
-        this.identifier = identifier;
+    public TunnelInformation(String name) {
+        this.name = name;
     }
 
     public Lock getLock() {
@@ -47,6 +47,6 @@ class TunnelInformation {
 
     @Override
     public String toString() {
-        return identifier;
+        return name;
     }
 }

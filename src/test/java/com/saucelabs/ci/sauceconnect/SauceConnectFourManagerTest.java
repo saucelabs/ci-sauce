@@ -106,13 +106,15 @@ public class SauceConnectFourManagerTest {
             ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
             verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
             String[] actualArgs = argsCaptor.getValue();
-            assertEquals(7, actualArgs.length);
+            assertEquals(9, actualArgs.length);
             assertEquals("-u", actualArgs[1]);
             assertEquals(username.trim(), actualArgs[2]);
             assertEquals("-k", actualArgs[3]);
             assertEquals(apiKey, actualArgs[4]);
             assertEquals("-P", actualArgs[5]);
             assertEquals(Integer.toString(port), actualArgs[6]);
+            assertEquals("--extra-info", actualArgs[7]);
+            assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
         }
     }
 
