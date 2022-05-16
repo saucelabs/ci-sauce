@@ -40,7 +40,8 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
         OSX("osx", "zip", UNIX_TEMP_DIR),
         WINDOWS("win32", "zip", WINDOWS_TEMP_DIR, "sc.exe"),
-        LINUX("linux", "tar.gz", UNIX_TEMP_DIR);
+        LINUX("linux", "tar.gz", UNIX_TEMP_DIR),
+        LINUX_ARM64("linux-arm64", "tar.gz", UNIX_TEMP_DIR);
 
         private final String directoryEnding;
         private final String archiveExtension;
@@ -67,6 +68,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
                 return OSX;
             }
             if (isUnix(os)) {
+                String arch = System.getProperty("os.arch").toLowerCase();
+
+                if (isArm(arch)) {
+                  return LINUX_ARM64;
+                }
                 return LINUX;
             }
             throw new IllegalStateException("Unsupported OS: " + os);
@@ -82,6 +88,10 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
 
         private static boolean isUnix(String os) {
             return os.contains("nux");
+        }
+
+        private static boolean isArm(String arch) {
+            return arch.startsWith("arm");
         }
 
         public String getDirectory(boolean useLatestSauceConnect) {
@@ -110,7 +120,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
      */
     private static final String SAUCE_CONNECT_4_STARTED = "Sauce Connect is up, you may start your tests";
 
-    public static final String CURRENT_SC_VERSION = "4.7.1";
+    public static final String CURRENT_SC_VERSION = "4.8.0";
     public static final String LATEST_SC_VERSION = getLatestSauceConnectVersion();
 
     private static final String SAUCE_CONNECT = "sc-";
