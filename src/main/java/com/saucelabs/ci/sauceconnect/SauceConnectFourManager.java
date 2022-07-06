@@ -91,7 +91,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         }
 
         private static boolean isArm(String arch) {
-            return arch.startsWith("arm");
+            return arch.startsWith("arm") || arch.startsWith("aarch") || arch.startsWith("amd");
         }
 
         public String getDirectory(boolean useLatestSauceConnect) {
