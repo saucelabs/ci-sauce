@@ -146,7 +146,7 @@ public class BuildJobInformation implements Serializable {
 
     /**
      * clear status flags of the job
-     * @param flag Flag to clear on status
+     * @param completed Boolean to set completed status
      */
     public void setStatusCompleted(boolean completed) {
         setStatusFlag(completed, JobStatusFlag.COMPLETED);
@@ -154,7 +154,7 @@ public class BuildJobInformation implements Serializable {
 
     /**
      * set/clear status ERORED flag status of the job
-     * @param flag Flag to clear on status
+     * @param errored Boolean to set errored status
      */
     public void setStatusErrored(boolean errored) {
         setStatusFlag(errored, JobStatusFlag.ERRORED);
@@ -162,7 +162,7 @@ public class BuildJobInformation implements Serializable {
 
     /**
      * set/clear status FAILED flag status of the job
-     * @param flag Flag to clear on status
+     * @param failed Boolean to set failed status
      */
     public void setStatusFailed(boolean failed) {
         setStatusFlag(failed, JobStatusFlag.FAILED);
@@ -170,7 +170,7 @@ public class BuildJobInformation implements Serializable {
 
     /**
      * set/clear status FINISHED flag status of the job
-     * @param flag Flag to clear on status
+     * @param finished Boolean to set finished status
      */
     public void setStatusFinished(boolean finished) {
         setStatusFlag(finished, JobStatusFlag.FINISHED);
@@ -178,7 +178,7 @@ public class BuildJobInformation implements Serializable {
 
     /**
      * set/clear status NEW flag status of the job
-     * @param flag Flag to clear on status
+     * @param flagNew Boolean to set new status
      */
     public void setStatusNew(boolean flagNew) {
         setStatusFlag(flagNew, JobStatusFlag.NEW);
@@ -186,7 +186,7 @@ public class BuildJobInformation implements Serializable {
 
     /**
      * set/clear status PASSED flag status of the job
-     * @param flag Flag to clear on status
+     * @param passed Boolean to set passed status
      */
     public void setStatusPassed(boolean passed) {
         setStatusFlag(passed, JobStatusFlag.PASSED);
@@ -194,7 +194,7 @@ public class BuildJobInformation implements Serializable {
 
     /**
      * set/clear status PUBLIC flag status of the job
-     * @param flag Flag to clear on status
+     * @param flagPublic Boolean to set public status
      */
     public void setStatusPublic(boolean flagPublic) {
         setStatusFlag(flagPublic, JobStatusFlag.PUBLIC);
@@ -202,7 +202,7 @@ public class BuildJobInformation implements Serializable {
 
     /**
      * set/clear status QUEUED flag status of the job
-     * @param flag Flag to clear on status
+     * @param queued Boolean to set queued status
      */
     public void setStatusQueued(boolean queued) {
         setStatusFlag(queued, JobStatusFlag.QUEUED);
@@ -210,7 +210,7 @@ public class BuildJobInformation implements Serializable {
 
     /**
      * set/clear status RUNNING flag status of the job
-     * @param flag Flag to clear on status
+     * @param running Boolean to set running status
      */
     public void setStatusRunning(boolean running) {
         setStatusFlag(running, JobStatusFlag.RUNNING);
