@@ -434,7 +434,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             for (int i = 0; i < tunnelArray.length(); i++) {
                 String tunnelId = tunnelArray.getString(i);
                 JSONObject tunnelInformation = new JSONObject(sauceRest.getTunnelInformation(tunnelId));
-                String configName = tunnelInformation.getString("tunnel_name");
+                String configName = tunnelInformation.getString("tunnel_identifier");
                 String status = tunnelInformation.getString("status");
                 if (status.equals("running") &&
                         (configName.equals("null") && tunnelName.equals(username)) ||
