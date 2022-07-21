@@ -289,19 +289,19 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             }
 
             //do we have an instance for the tunnel name?
-            String tunnelName = activeTunnelName(username, name);
+            String tunnelID = activeTunnelID(username, name);
             if (tunnelInformation.getProcessCount() == 0) {
                 //if the count is zero, check to see if there are any active tunnels
 
-                if (tunnelName != null) {
+                if (tunnelID != null) {
                     //if we have an active tunnel, but the process count is zero, we have an orphaned SC process
                     //instead of deleting the tunnel, log a message
-                    logMessage(printStream, "Detected active tunnel: " + tunnelName);
+                    logMessage(printStream, "Detected active tunnel: " + tunnelID);
                 }
             } else {
 
                 //check active tunnels via Sauce REST API
-                if (tunnelName == null) {
+                if (tunnelID == null) {
                     logMessage(printStream, "Process count non-zero, but no active tunnels found for name: " + name);
                     logMessage(printStream, "Process count reset to zero");
                     //if no active tunnels, we have a mismatch of the tunnel count
@@ -315,7 +315,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 }
             }
             final Process process = prepAndCreateProcess(username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath);
-            List<Process> openedProcesses = this.openedProcesses.get(tunnelName);
+            List<Process> openedProcesses = this.openedProcesses.get(tunnelID);
             try {
                 Semaphore semaphore = new Semaphore(1);
                 semaphore.acquire();
@@ -423,7 +423,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @param tunnelName tunnel name, can be the same as the username
      * @return String the internal Sauce tunnel id
      */
-    private String activeTunnelName(String username, String tunnelName) {
+    private String activeTunnelID(String username, String tunnelName) {
         try {
             JSONArray tunnelArray = new JSONArray(sauceRest.getTunnels());
             if (tunnelArray.length() == 0) {
