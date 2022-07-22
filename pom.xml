@@ -53,8 +53,8 @@
         <url>https://github.com/saucelabs/ci-sauce/issue</url>
     </issueManagement>
     <ciManagement>
-        <system>travisci</system>
-        <url>https://travis-ci.org/saucelabs/ci-sauce</url>
+        <system>GitHub Actions</system>
+        <url>https://github.com/saucelabs/ci-sauce/actions</url>
     </ciManagement>
     <scm>
         <connection>scm:git:https://github.com/saucelabs/ci-sauce.git</connection>
