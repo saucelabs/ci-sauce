@@ -17,7 +17,7 @@
     "notyahoo.com"
   ],
   "shared_tunnel": false,
-  "tunnel_name": "gavin-tunnel-id",
+  "tunnel_identifier": "gavin-tunnel-id",
   "host": "maki81017.miso.saucelabs.com",
   "no_proxy_caching": false,
   "owner": "halkeye",
