@@ -93,14 +93,15 @@ public class SauceConnectFourManagerTest {
     }
 
     private Process testOpenConnection(String logFile, String username) throws IOException {
-        String apiKey = "fakeapikey";
-        int port = 12345;
+        final String apiKey = "fakeapikey";
+        final int port = 12345;
+        final String dataCenter = "US";
 
         try (InputStream resourceAsStream = getResourceAsStream(logFile)) {
             when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
             when(mockProcess.getInputStream()).thenReturn(resourceAsStream);
             doReturn(mockProcess).when(tunnelManager).createProcess(any(String[].class), any(File.class));
-            return tunnelManager.openConnection(username, apiKey, port, null, "  ", ps, false, "");
+            return tunnelManager.openConnection(username, apiKey, dataCenter, port, null, "  ", ps, false, "");
         } finally {
             verify(mockSauceRest).getTunnels();
             ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);

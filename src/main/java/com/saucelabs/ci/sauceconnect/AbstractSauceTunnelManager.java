@@ -261,6 +261,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      *
      * @param username         the name of the Sauce OnDemand user
      * @param apiKey           the API Key for the Sauce OnDemand user
+     * @param dataCenter       the Sauce Labs DataCenter name (US, EU, US_EAST)
      * @param port             the port which Sauce Connect should be run on
      * @param sauceConnectJar  the Jar file containing Sauce Connect.  If null, then we attempt to find Sauce Connect from the classpath (only used by SauceConnectTwoManager)
      * @param options          the command line options to pass to Sauce Connect
@@ -270,11 +271,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @return a {@link Process} instance which represents the Sauce Connect instance
      * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
      */
-    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+    public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
 
         //ensure that only a single thread attempts to open a connection
         if (sauceRest == null) {
-            sauceRest = new SauceREST(username, apiKey);
+            sauceRest = new SauceREST(username, apiKey, dataCenter);
         }
         String name = getTunnelName(options, username);
         TunnelInformation tunnelInformation = getTunnelInformation(name);
@@ -347,7 +348,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                             launchAttempts.incrementAndGet();
 
                             //call openConnection again to see if the process has closed
-                            return openConnection(username, apiKey, port, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath);
+                            return openConnection(username, apiKey, dataCenter, port, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath);
                         } else {
                             //we've tried relaunching Sauce Connect 3 times
                             throw new SauceConnectDidNotStartException("Unable to start Sauce Connect, please see the Sauce Connect log");
