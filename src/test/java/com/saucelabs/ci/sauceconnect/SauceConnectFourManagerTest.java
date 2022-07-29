@@ -92,6 +92,32 @@ public class SauceConnectFourManagerTest {
         return testOpenConnection(logFile, "fakeuser");
     }
 
+    private Process testDefaultOpenConnection(String logFile, String username) throws IOException {
+        final String apiKey = "fakeapikey";
+        final int port = 12345;
+
+        try (InputStream resourceAsStream = getResourceAsStream(logFile)) {
+            when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
+            when(mockProcess.getInputStream()).thenReturn(resourceAsStream);
+            doReturn(mockProcess).when(tunnelManager).createProcess(any(String[].class), any(File.class));
+            return tunnelManager.openConnection(username, apiKey, port, null, "  ", ps, false, "");
+        } finally {
+            verify(mockSauceRest).getTunnels();
+            ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
+            verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
+            String[] actualArgs = argsCaptor.getValue();
+            assertEquals(9, actualArgs.length);
+            assertEquals("-u", actualArgs[1]);
+            assertEquals(username.trim(), actualArgs[2]);
+            assertEquals("-k", actualArgs[3]);
+            assertEquals(apiKey, actualArgs[4]);
+            assertEquals("-P", actualArgs[5]);
+            assertEquals(Integer.toString(port), actualArgs[6]);
+            assertEquals("--extra-info", actualArgs[7]);
+            assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
+        }
+    }
+
     private Process testOpenConnection(String logFile, String username) throws IOException {
         final String apiKey = "fakeapikey";
         final int port = 12345;
