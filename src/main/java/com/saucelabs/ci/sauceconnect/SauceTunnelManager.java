@@ -35,7 +35,7 @@ public interface SauceTunnelManager {
      * @return a {@link Process} instance which represents the Sauce Connect instance
      * @throws IOException thrown if an error occurs launching Sauce Connect
      */
-    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws IOException;
+    Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws IOException;
 
     /**
      * Creates a new process to run Sauce Connect.
@@ -52,6 +52,6 @@ public interface SauceTunnelManager {
      * @return a {@link Process} instance which represents the Sauce Connect instance
      * @throws IOException thrown if an error occurs launching Sauce Connect
      */
-    Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws IOException;
+    Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws IOException;
 
 }

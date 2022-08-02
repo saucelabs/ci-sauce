@@ -270,7 +270,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @return a {@link Process} instance which represents the Sauce Connect instance
      * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
      */
-    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+    public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
         return openConnection(username, apiKey, "US", port, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath);
     }
 
@@ -289,7 +289,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @return a {@link Process} instance which represents the Sauce Connect instance
      * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
      */
-    public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options,  PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+    public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
 
         //ensure that only a single thread attempts to open a connection
         if (sauceRest == null) {
