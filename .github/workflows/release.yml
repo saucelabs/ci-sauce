@@ -1,0 +1,40 @@
+# Based on:
+# - https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+# - https://docs.github.com/en/actions/publishing-packages/publishing-java-packages-with-maven
+
+name: Release a new version
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Release version'
+        required: true
+        default: 'v0.1.0'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Maven Central Repository
+        uses: actions/setup-java@v3
+        with:
+          cache: maven
+          java-version: '8'
+          distribution: 'temurin'
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: MAVEN_GPG_PRIVATE_KEY
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Update POM version
+        run: mvn -B -ntp versions:set "-DnewVersion=${{ github.event.inputs.release_version }}" -DgenerateBackupPoms=false
+      - name: Package
+        run: mvn -B -ntp package
+      - name: Deploy to OSSRH
+        run: mvn -B -ntp deploy -DskipTests=true
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD}}
+          MAVEN_GPG_PRIVATE_KEY: ${{ secrets.OSSRH_GPG_PRIVATE_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_PASSPHRASE }}
