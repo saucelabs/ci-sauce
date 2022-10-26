@@ -114,7 +114,7 @@ public class SauceConnectFourManagerTest {
             assertEquals("-P", actualArgs[5]);
             assertEquals(Integer.toString(port), actualArgs[6]);
             assertEquals("--extra-info", actualArgs[7]);
-            assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
+            assertEquals("{\\\"runner\\\": \\\"jenkins\\\"}", actualArgs[8]);
         }
     }
 
@@ -141,7 +141,7 @@ public class SauceConnectFourManagerTest {
             assertEquals("-P", actualArgs[5]);
             assertEquals(Integer.toString(port), actualArgs[6]);
             assertEquals("--extra-info", actualArgs[7]);
-            assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
+            assertEquals("{\\\"runner\\\": \\\"jenkins\\\"}", actualArgs[8]);
         }
     }
 
