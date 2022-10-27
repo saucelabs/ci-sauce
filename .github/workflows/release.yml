@@ -31,12 +31,12 @@ jobs:
         run: mvn -B -ntp -Dgpg.skip versions:set "-DnewVersion=${{ github.event.inputs.release_version }}" -DgenerateBackupPoms=false
       - name: Package
         run: mvn -B -ntp -Dgpg.skip package
-#      - name: Deploy to OSSRH
-#        run: mvn -B -ntp clean deploy -DskipTests=true
-#        env:
-#          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-#          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD}}
-#          MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_PASSPHRASE }}
+      - name: Deploy to OSSRH
+        run: mvn -B -ntp clean deploy -DskipTests=true
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_PASSPHRASE }}
       - name: Generate changelog
         id: changelog
         uses: metcalfc/changelog-generator@v4.0.1
