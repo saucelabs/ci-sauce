@@ -10,7 +10,7 @@ on:
       release_version:
         description: 'Release version'
         required: true
-        default: 'v0.1.0'
+        default: '0.1.0-SNAPSHOT'
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -37,3 +37,30 @@ jobs:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD}}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_PASSPHRASE }}
+      - name: Generate changelog
+        id: changelog
+        uses: metcalfc/changelog-generator@v3.0.0
+        with:
+          myToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.release_version }}
+          release_name: ${{ github.event.inputs.release_version }}
+          body: |
+            ```
+            <dependencies>
+            	<dependency>
+            	    <groupId>com.saucelabs</groupId>
+            	    <artifactId>ci-sauce</artifactId>
+            	    <version>${{ github.event.inputs.release_version }}</version>
+            	</dependency>
+            </dependencies>
+            ```
+            ### Changelog
+            ${{ steps.changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
