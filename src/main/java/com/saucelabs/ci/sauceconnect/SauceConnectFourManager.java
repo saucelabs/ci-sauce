@@ -255,7 +255,13 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
     }
 
     protected String[] addExtraInfo(String[] args) {
-        String[] result = joinArgs(args, "--extra-info", "{\\\"runner\\\": \\\"jenkins\\\"}");
+        String[] result;
+        OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
+        if (operatingSystem == OperatingSystem.WINDOWS) {
+            result = joinArgs(args, "--extra-info", "{\\\"runner\\\": \\\"jenkins\\\"}");
+        } else {
+            result = joinArgs(args, "--extra-info", "{\"runner\": \"jenkins\"}");
+        }
         return result;
     }
 
