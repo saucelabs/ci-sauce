@@ -114,7 +114,12 @@ public class SauceConnectFourManagerTest {
             assertEquals("-P", actualArgs[5]);
             assertEquals(Integer.toString(port), actualArgs[6]);
             assertEquals("--extra-info", actualArgs[7]);
-            assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
+            OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
+            if (operatingSystem == OperatingSystem.WINDOWS) {
+                assertEquals("{\\\"runner\\\": \\\"jenkins\\\"}", actualArgs[8]);
+            } else {
+                assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
+            }
         }
     }
 
@@ -141,7 +146,12 @@ public class SauceConnectFourManagerTest {
             assertEquals("-P", actualArgs[5]);
             assertEquals(Integer.toString(port), actualArgs[6]);
             assertEquals("--extra-info", actualArgs[7]);
-            assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
+            OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
+            if (operatingSystem == OperatingSystem.WINDOWS) {
+                assertEquals("{\\\"runner\\\": \\\"jenkins\\\"}", actualArgs[8]);
+            } else {
+                assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
+            }
         }
     }
 
