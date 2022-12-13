@@ -117,7 +117,7 @@ public class SauceConnectFourManagerTest {
             OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
             if (operatingSystem == OperatingSystem.WINDOWS) {
                 assertEquals("{\\\"runner\\\": \\\"jenkins\\\"}", actualArgs[8]);
-	    } else {
+            } else {
                 assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
             }
         }
@@ -149,7 +149,7 @@ public class SauceConnectFourManagerTest {
             OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
             if (operatingSystem == OperatingSystem.WINDOWS) {
                 assertEquals("{\\\"runner\\\": \\\"jenkins\\\"}", actualArgs[8]);
-	    } else {
+            } else {
                 assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
             }
         }
