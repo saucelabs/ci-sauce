@@ -427,12 +427,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         {
             return null;
         }
-        TunnelInformation tunnelInformation = tunnelInformationMap.get(name);
-        if (tunnelInformation == null) {
-            tunnelInformation = new TunnelInformation(name);
-            tunnelInformationMap.put(name, tunnelInformation);
-        }
-        return tunnelInformation;
+        return tunnelInformationMap.computeIfAbsent(name, TunnelInformation::new);
     }
 
     /**
