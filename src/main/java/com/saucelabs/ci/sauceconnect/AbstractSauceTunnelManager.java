@@ -126,6 +126,16 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         }).start();
         logMessage(printStream, "Closing Sauce Connect process");
         sauceConnect.destroy();
+        try {
+            if (sauceConnect.waitFor(30, TimeUnit.SECONDS)) {
+                logMessage(printStream, "Sauce Connect process has exited");
+            } else {
+                logMessage(printStream, "Sauce Connect process has not exited during 30 seconds");
+            }
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**
