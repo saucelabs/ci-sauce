@@ -80,12 +80,17 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 closeSauceConnectProcess(printStream, sauceConnect);
                 String tunnelId = tunnelInformation.getTunnelId();
                 if (tunnelId != null && sauceRest != null) {
+                    logMessage(printStream, "Stopping Sauce Connect tunnel: " + tunnelId);
                     //forcibly delete tunnel
                     try {
                         sauceRest.deleteTunnel(tunnelId);
+                        logMessage(printStream, "Deleted tunnel");
                     }
                     catch (java.io.IOException e) {
                         logMessage(printStream, "Error during tunnel removal: " + e);
+                    }
+                    catch (NullPointerException e) {
+                        logMessage(printStream, "Error connecting to REST API: " + e);
                     }
                 }
                 tunnelInformationMap.remove(tunnelName);
