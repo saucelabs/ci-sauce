@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -77,9 +78,11 @@ public class SauceConnectFourManagerTest {
     }
 
     @Test(expected=AbstractSauceTunnelManager.SauceConnectDidNotStartException.class)
-    public void openConnectionTest_closes() throws IOException {
+    public void openConnectionTest_closes() throws IOException, InterruptedException {
         when(mockSauceRest.getTunnels()).thenReturn(readResource("/tunnels_empty.json"));
+        when(mockProcess.waitFor(30, TimeUnit.SECONDS)).thenReturn(true);
         testOpenConnection("/started_sc_closes.log");
+        verify(mockProcess).destroy();
     }
 
     @Test
