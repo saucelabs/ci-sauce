@@ -6,10 +6,12 @@
 package com.saucelabs.ci;
 
 import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.model.platform.Platform;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
@@ -43,19 +45,19 @@ public class BrowserFactory {
 
     public BrowserFactory(SauceREST sauceREST) {
         if (sauceREST == null) {
-            this.sauceREST = new SauceREST(null, null);
+            this.sauceREST = new SauceREST(null, null, "US_WEST");
         } else {
             this.sauceREST = sauceREST;
         }
         try {
             initializeWebDriverBrowsers();
             initializeAppiumBrowsers();
-        } catch (JSONException e) {
+        } catch (JSONException | IOException e) {
             logger.log(Level.WARNING, "Error retrieving browsers, attempting to continue", e);
         }
     }
 
-    public List<Browser> getAppiumBrowsers() throws JSONException {
+    public List<Browser> getAppiumBrowsers() throws JSONException, IOException {
         List<Browser> browsers;
         if (shouldRetrieveBrowsers()) {
             browsers = initializeAppiumBrowsers();
@@ -67,7 +69,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    public List<Browser> getWebDriverBrowsers() throws JSONException {
+    public List<Browser> getWebDriverBrowsers() throws JSONException, IOException {
         List<Browser> browsers;
         if (shouldRetrieveBrowsers()) {
             browsers = initializeWebDriverBrowsers();
@@ -83,7 +85,7 @@ public class BrowserFactory {
         return lastLookup == null || CacheTimeUtil.pastAcceptableDuration(lastLookup, ONE_HOUR_IN_MILLIS);
     }
 
-    private List<Browser> initializeAppiumBrowsers() throws JSONException {
+    private List<Browser> initializeAppiumBrowsers() throws JSONException, IOException {
         List<Browser> browsers = getAppiumBrowsersFromSauceLabs();
         appiumLookup = new HashMap<>();
         for (Browser browser : browsers) {
@@ -93,7 +95,7 @@ public class BrowserFactory {
         return browsers;
     }
 
-    private List<Browser> initializeWebDriverBrowsers() throws JSONException {
+    private List<Browser> initializeWebDriverBrowsers() throws JSONException, IOException {
         List<Browser> browsers = getWebDriverBrowsersFromSauceLabs();
         webDriverLookup = new HashMap<>();
         for (Browser browser : browsers) {
@@ -103,20 +105,56 @@ public class BrowserFactory {
         return browsers;
     }
 
-    private List<Browser> getWebDriverBrowsersFromSauceLabs() throws JSONException {
-        String response = sauceREST.getSupportedPlatforms("webdriver");
-        if (response.equals("")) {
-            response = "[]";
-        }
-        return getBrowserListFromJson(response);
+    private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException {
+        List<Platform> platforms = sauceREST.getPlatform().getSupportedPlatforms("webdriver").platforms;
+        return getBrowserListFromPlatforms(platforms);
     }
 
-    private List<Browser> getAppiumBrowsersFromSauceLabs() throws JSONException {
-        String response = sauceREST.getSupportedPlatforms("appium");
-        if (response.equals("")) {
-            response = "[]";
+    private List<Browser> getAppiumBrowsersFromSauceLabs() throws IOException {
+        List<Platform> platforms = sauceREST.getPlatform().getSupportedPlatforms("appium").platforms;
+        return getBrowserListFromPlatforms(platforms);
+    }
+
+    public List<Browser> getBrowserListFromPlatforms(List<Platform> platforms) {
+        List<Browser> browsers = new ArrayList<Browser>();
+
+        for (Platform platform: platforms) {
+            String seleniumName = platform.apiName;
+
+            if (seleniumName != null && seleniumName.equals(IEHTA)) {
+                //exclude these browsers from the list, as they replicate iexplore and firefox
+                continue;
+            }
+
+            String longName = platform.longName;
+            String longVersion = platform.longVersion;
+            String shortVersion = platform.shortVersion;
+            String osName = platform.os;
+
+            if (platform.device != null && platform.device != "") {
+                // Appium
+                String device = longName;
+                String deviceType = null;
+                osName = platform.apiName; //use api_name instead of os, as os was returning Linux/Mac OS
+
+                Browser browser;
+                browser = createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait");
+                browsers.add(browser);
+                browser = createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "landscape");
+                browsers.add(browser);
+                continue;
+            }
+
+            // Webdriver
+            Browser browser;
+
+            browser = createBrowserBrowser(seleniumName, longName, "latest", osName, "latest");
+            browsers.add(browser);
+            browser = createBrowserBrowser(seleniumName, longName, longVersion, osName, shortVersion);
+            browsers.add(browser);
         }
-        return getBrowserListFromJson(response);
+
+        return browsers;
     }
 
     /**

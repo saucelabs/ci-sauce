@@ -271,7 +271,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
      */
     public Process openConnection(String username, String apiKey, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
-        return openConnection(username, apiKey, "US", port, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath);
+        return openConnection(username, apiKey, "US_WEST", port, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath);
     }
 
     /**

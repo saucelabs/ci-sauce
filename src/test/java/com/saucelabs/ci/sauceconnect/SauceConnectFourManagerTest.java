@@ -126,7 +126,7 @@ public class SauceConnectFourManagerTest {
     private Process testOpenConnection(String logFile, String username) throws IOException {
         final String apiKey = "fakeapikey";
         final int port = 12345;
-        final String dataCenter = "US";
+        final String dataCenter = "US_WEST";
 
         try (InputStream resourceAsStream = getResourceAsStream(logFile)) {
             when(mockProcess.getErrorStream()).thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
