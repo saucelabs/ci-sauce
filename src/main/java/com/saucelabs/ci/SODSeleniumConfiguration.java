@@ -16,6 +16,7 @@ import java.util.logging.Logger;
  * @author <a href="http://www.sysbliss.com">Jonathan Doklovic</a>
  * @author Ross Rowe
  */
+@Deprecated
 public class SODSeleniumConfiguration
 {
     private static final Logger logger = Logger.getLogger(SODSeleniumConfiguration.class.getName());
