@@ -349,7 +349,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 }
             }
             final Process process = prepAndCreateProcess(username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath);
-            List<Process> openedProcesses = this.openedProcesses.get(tunnelID);
+            List<Process> openedProcesses = this.openedProcesses.get(name);
             try {
                 Semaphore semaphore = new Semaphore(1);
                 semaphore.acquire();
