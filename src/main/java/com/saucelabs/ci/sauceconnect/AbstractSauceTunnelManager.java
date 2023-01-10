@@ -548,7 +548,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 if (printStream != null) {
                     printStream.println(line);
                 }
-                System.out.println(line);
                 julLogger.info(line);
             }
         }
