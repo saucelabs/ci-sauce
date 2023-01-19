@@ -121,7 +121,7 @@ public class BrowserFactory {
         for (Platform platform: platforms) {
             String seleniumName = platform.apiName;
 
-            if (seleniumName != null && seleniumName.equals(IEHTA)) {
+            if (IEHTA.equals(seleniumName)) {
                 //exclude these browsers from the list, as they replicate iexplore and firefox
                 continue;
             }
@@ -131,27 +131,20 @@ public class BrowserFactory {
             String shortVersion = platform.shortVersion;
             String osName = platform.os;
 
-            if (platform.device != null && platform.device != "") {
+            if (platform.device != null && !platform.device.isEmpty()) {
                 // Appium
                 String device = longName;
                 String deviceType = null;
                 osName = platform.apiName; //use api_name instead of os, as os was returning Linux/Mac OS
 
-                Browser browser;
-                browser = createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait");
-                browsers.add(browser);
-                browser = createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "landscape");
-                browsers.add(browser);
+                browsers.add(createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "portrait"));
+                browsers.add(createDeviceBrowser(seleniumName, longName, longVersion, osName, device, deviceType, shortVersion, "landscape"));
                 continue;
             }
 
             // Webdriver
-            Browser browser;
-
-            browser = createBrowserBrowser(seleniumName, longName, "latest", osName, "latest");
-            browsers.add(browser);
-            browser = createBrowserBrowser(seleniumName, longName, longVersion, osName, shortVersion);
-            browsers.add(browser);
+            browsers.add(createBrowserBrowser(seleniumName, longName, "latest", osName, "latest"));
+            browsers.add(createBrowserBrowser(seleniumName, longName, longVersion, osName, shortVersion));
         }
 
         return browsers;
