@@ -1,13 +1,17 @@
 package com.saucelabs.ci;
 
 import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.model.platform.Platform;
+import com.saucelabs.saucerest.model.platform.SupportedPlatforms;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -21,20 +25,44 @@ public class BrowserFactoryTest {
 
     @Before
     public void setUp() throws Exception {
+
+        // Mock appium response
+        List<Platform> appiumPlatforms = new ArrayList<Platform>();
+
+        Platform kindle = new Platform("2.3", "Amazon Kindle Fire Emulator", "android", "2.3.7.", "2.3.7.", "appium", "android", null, null, null, "Amazon Kindle Fire Emulator");
+        Platform kindle2 = new Platform("2.4", "Amazon Kindle Fire Emulator", "android", "2.4.7.", "2.4.7.", "appium", "android", null, null, null, "Amazon Kindle Fire Emulator");
+
+        appiumPlatforms.add(kindle);
+
+        // Mock webdriver response
+        List<Platform> webdriverPlatforms = new ArrayList<Platform>();
+        Platform kindleHD = new Platform("4.0", "Amazon Kindle Fire HD 8.9 Emulator", "android", "4.0.4.", "4.0.4.", "appium", "android", null, null, null, "Amazon Kindle Fire HD 8.9 Emulator");
+        Platform linux = new Platform("4", "Firefox", "firefox", "4.0.1.", null, null, "Linux", null, null, null, null);
+        webdriverPlatforms.add(kindleHD);
+        webdriverPlatforms.add(linux);
+
         SauceREST sauceREST = mock(SauceREST.class);
+        com.saucelabs.saucerest.api.Platform mockPlatform = mock(com.saucelabs.saucerest.api.Platform.class);
+
         when(
-            sauceREST.getSupportedPlatforms("appium")
-        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/appium.json"), UTF_8));
+            sauceREST.getPlatform()
+        ).thenReturn(mockPlatform);
+
         when(
-            sauceREST.getSupportedPlatforms("webdriver")
-        ).thenReturn(IOUtils.toString(this.getClass().getResourceAsStream("/webdriver.json"), UTF_8));
+            mockPlatform.getSupportedPlatforms("appium")
+        ).thenReturn(new SupportedPlatforms(appiumPlatforms));
+
+        when(
+            mockPlatform.getSupportedPlatforms("webdriver")
+        ).thenReturn(new SupportedPlatforms(webdriverPlatforms));
+
         this.browserFactory = new BrowserFactory(sauceREST);
     }
 
     @Test
-    public void testGetAppiumBrowsers() {
+    public void testGetAppiumBrowsers() throws IOException {
         List<Browser> browsers = this.browserFactory.getAppiumBrowsers();
-        assertEquals(176, browsers.size());
+        assertEquals(2, browsers.size());
 
         int elm = 0;
         assertEquals("Amazon_Kindle_Fire_Emulatorlandscapeandroid2_3_7_", browsers.get(elm).getKey());
@@ -62,9 +90,9 @@ public class BrowserFactoryTest {
     }
 
     @Test
-    public void testGetWebDriverBrowsers() {
+    public void testGetWebDriverBrowsers() throws IOException {
         List<Browser> browsers = this.browserFactory.getWebDriverBrowsers();
-        assertEquals(801, browsers.size());
+        assertEquals(4, browsers.size());
 
         int elm = 0;
         assertEquals("Amazon_Kindle_Fire_HD_8_9_Emulatorlandscapeandroid4_0_4_", browsers.get(elm).getKey());
@@ -90,7 +118,7 @@ public class BrowserFactoryTest {
         assertEquals(null, browsers.get(elm).getDeviceType());
         assertEquals("portrait", browsers.get(elm).getDeviceOrientation());
 
-        elm = 126;
+        elm = 2;
         assertEquals("Linuxfirefox4", browsers.get(elm).getKey());
         assertEquals("Linux", browsers.get(elm).getOs());
         assertEquals("firefox", browsers.get(elm).getBrowserName());
@@ -102,7 +130,7 @@ public class BrowserFactoryTest {
         assertEquals(null, browsers.get(elm).getDeviceType());
         assertEquals(null, browsers.get(elm).getDeviceOrientation());
 
-        elm = 137;
+        elm = 3;
         assertEquals("Linuxfirefoxlatest", browsers.get(elm).getKey());
         assertEquals("Linux", browsers.get(elm).getOs());
         assertEquals("firefox", browsers.get(elm).getBrowserName());
