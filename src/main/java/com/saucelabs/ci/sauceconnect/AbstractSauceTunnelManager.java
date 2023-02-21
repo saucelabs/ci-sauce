@@ -1,6 +1,7 @@
 package com.saucelabs.ci.sauceconnect;
 
 import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.SauceException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -86,8 +87,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                         sauceRest.deleteTunnel(tunnelId);
                         logMessage(printStream, "Deleted tunnel");
                     }
-                    catch (java.io.IOException e) {
+                    catch (java.io.IOException|SauceException.UnknownError  e) {
                         logMessage(printStream, "Error during tunnel removal: " + e);
+                    }
+                    catch (SauceException.NotFound e) {
+                        // Tunnel has already been cleaned up, no need to do anything
                     }
                     catch (NullPointerException e) {
                         logMessage(printStream, "Error connecting to REST API: " + e);
