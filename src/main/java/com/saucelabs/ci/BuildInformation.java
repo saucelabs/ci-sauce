@@ -8,6 +8,8 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.saucelabs.saucerest.model.builds.Build;
+
 /**
  * Stores details about a sauce labs build/test
  * Does not contain everything
@@ -37,6 +39,18 @@ public class BuildInformation implements Serializable {
      */
     public BuildInformation(String buildId) {
         this.buildId = buildId;
+    }
+
+    public BuildInformation(Build build) {
+	    this.buildId = build.id;
+	    this.status = build.status;
+	    this.name = build.name;
+	    this.startTime = build.startTime;
+	    this.endTime = build.endTime;
+	    this.jobsPassed = build.jobs.passed;
+	    this.jobsFinished = build.jobs.finished;
+	    this.jobsFailed = build.jobs.failed;
+	    this.jobsErrored = build.jobs.errored;
     }
 
     /**

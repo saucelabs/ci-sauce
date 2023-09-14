@@ -5,7 +5,9 @@
 
 package com.saucelabs.ci;
 
+import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.api.PlatformEndpoint;
 import com.saucelabs.saucerest.model.platform.Platform;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,7 +47,7 @@ public class BrowserFactory {
 
     public BrowserFactory(SauceREST sauceREST) {
         if (sauceREST == null) {
-            this.sauceREST = new SauceREST(null, null, "US_WEST");
+            this.sauceREST = new SauceREST(null, null, DataCenter.US_WEST);
         } else {
             this.sauceREST = sauceREST;
         }
@@ -106,12 +108,14 @@ public class BrowserFactory {
     }
 
     private List<Browser> getWebDriverBrowsersFromSauceLabs() throws IOException {
-        List<Platform> platforms = sauceREST.getPlatform().getSupportedPlatforms("webdriver").platforms;
+        PlatformEndpoint pe = sauceREST.getPlatformEndpoint();
+        List<Platform> platforms = pe.getSupportedPlatforms("webdriver").getPlatforms();
         return getBrowserListFromPlatforms(platforms);
     }
 
     private List<Browser> getAppiumBrowsersFromSauceLabs() throws IOException {
-        List<Platform> platforms = sauceREST.getPlatform().getSupportedPlatforms("appium").platforms;
+        PlatformEndpoint pe = sauceREST.getPlatformEndpoint();
+        List<Platform> platforms = pe.getSupportedPlatforms("appium").getPlatforms();
         return getBrowserListFromPlatforms(platforms);
     }
 

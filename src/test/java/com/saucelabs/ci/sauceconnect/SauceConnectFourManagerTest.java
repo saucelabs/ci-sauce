@@ -2,6 +2,8 @@ package com.saucelabs.ci.sauceconnect;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager.OperatingSystem;
 import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.api.SauceConnectEndpoint;
+import com.saucelabs.saucerest.model.sauceconnect.TunnelInformation;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -20,6 +22,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +38,7 @@ public class SauceConnectFourManagerTest {
 
     @Mock private Process mockProcess;
     @Mock private SauceREST mockSauceRest;
+    @Mock private SauceConnectEndpoint mockSCEndpoint;
     @Spy private final SauceConnectFourManager tunnelManager = new SauceConnectFourManager(false);
 
     private final PrintStream ps = System.out;
@@ -71,7 +75,8 @@ public class SauceConnectFourManagerTest {
     }
 
     private void testOpenConnectionSuccessfully(boolean cleanUpOnExit) throws IOException {
-        when(mockSauceRest.getTunnels()).thenReturn(readResource("/tunnels_empty.json"));
+	ArrayList<String> empty = new ArrayList<String>();
+        when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(empty);
         tunnelManager.setCleanUpOnExit(cleanUpOnExit);
         Process process = testOpenConnection("/started_sc.log");
         assertEquals(mockProcess, process);
@@ -79,7 +84,8 @@ public class SauceConnectFourManagerTest {
 
     @Test(expected=AbstractSauceTunnelManager.SauceConnectDidNotStartException.class)
     public void openConnectionTest_closes() throws IOException, InterruptedException {
-        when(mockSauceRest.getTunnels()).thenReturn(readResource("/tunnels_empty.json"));
+	ArrayList<String> empty = new ArrayList<String>();
+        when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(empty);
         when(mockProcess.waitFor(30, TimeUnit.SECONDS)).thenReturn(true);
         testOpenConnection("/started_sc_closes.log");
         verify(mockProcess).destroy();
@@ -87,7 +93,8 @@ public class SauceConnectFourManagerTest {
 
     @Test
     public void testOpenConnectionWithExtraSpacesInArgs() throws IOException {
-        when(mockSauceRest.getTunnels()).thenReturn(readResource("/tunnels_empty.json"));
+	ArrayList<String> empty = new ArrayList<String>();
+        when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(empty);
         testOpenConnection("/started_sc.log", " username-with-spaces-around ");
     }
 
@@ -105,7 +112,7 @@ public class SauceConnectFourManagerTest {
             doReturn(mockProcess).when(tunnelManager).createProcess(any(String[].class), any(File.class));
             return tunnelManager.openConnection(username, apiKey, port, null, "  ", ps, false, "");
         } finally {
-            verify(mockSauceRest).getTunnels();
+            verify(mockSCEndpoint).getTunnelsForAUser();
             ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
             verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
             String[] actualArgs = argsCaptor.getValue();
@@ -137,7 +144,7 @@ public class SauceConnectFourManagerTest {
             doReturn(mockProcess).when(tunnelManager).createProcess(any(String[].class), any(File.class));
             return tunnelManager.openConnection(username, apiKey, dataCenter, port, null, "  ", ps, false, "");
         } finally {
-            verify(mockSauceRest).getTunnels();
+            verify(mockSCEndpoint).getTunnelsForAUser();
             ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
             verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
             String[] actualArgs = argsCaptor.getValue();
@@ -160,15 +167,19 @@ public class SauceConnectFourManagerTest {
 
     @Test
     public void openConnectionTest_existing_tunnel() throws IOException {
-        when(mockSauceRest.getTunnels()).thenReturn(readResource("/tunnels_active_tunnel.json"));
-        when(mockSauceRest.getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494")).thenReturn(
-            readResource("/single_tunnel.json"));
+	ArrayList<String> active = new ArrayList<String>();
+	active.add("8949e55fb5e14fd6bf6230b7a609b494");
+
+	TunnelInformation started = new TunnelInformation();
+
+        when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(active);
+        when(mockSCEndpoint.getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494")).thenReturn(started);
 
         Process process = testOpenConnection("/started_sc.log");
         assertEquals(mockProcess, process);
 
-        verify(mockSauceRest).getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494");
-        verify(mockSauceRest).getTunnels();
+        verify(mockSCEndpoint).getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494");
+        verify(mockSCEndpoint).getTunnelsForAUser();
     }
 
     @Test

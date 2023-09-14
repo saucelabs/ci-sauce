@@ -17,7 +17,7 @@
         <junit.version>4.13.2</junit.version>
         <github.global.server>github</github.global.server>
         <github.global.oauth2Token>${env.GH_TOKEN}</github.global.oauth2Token>
-        <java.level>8</java.level>
+        <java.level>11</java.level>
     </properties>
 
     <licenses>
@@ -261,7 +261,7 @@
         <dependency>
             <groupId>com.saucelabs</groupId>
             <artifactId>saucerest</artifactId>
-            <version>2.0.3</version>
+            <version>2.1.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

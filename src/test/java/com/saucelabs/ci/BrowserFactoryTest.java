@@ -42,10 +42,10 @@ public class BrowserFactoryTest {
         webdriverPlatforms.add(linux);
 
         SauceREST sauceREST = mock(SauceREST.class);
-        com.saucelabs.saucerest.api.Platform mockPlatform = mock(com.saucelabs.saucerest.api.Platform.class);
+        com.saucelabs.saucerest.api.PlatformEndpoint mockPlatform = mock(com.saucelabs.saucerest.api.PlatformEndpoint.class);
 
         when(
-            sauceREST.getPlatform()
+            sauceREST.getPlatformEndpoint()
         ).thenReturn(mockPlatform);
 
         when(

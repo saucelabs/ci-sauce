@@ -3,6 +3,7 @@ package com.saucelabs.sod;
 import com.saucelabs.ci.Browser;
 import com.saucelabs.ci.BrowserFactory;
 import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.api.PlatformEndpoint;
 import com.saucelabs.saucerest.model.platform.Platform;
 import com.saucelabs.saucerest.model.platform.SupportedPlatforms;
 import org.apache.commons.io.IOUtils;
@@ -44,10 +45,10 @@ public class BrowserTest  {
         webdriverPlatforms.add(linux);
 
         SauceREST sauceREST = mock(SauceREST.class);
-        com.saucelabs.saucerest.api.Platform mockPlatform = mock(com.saucelabs.saucerest.api.Platform.class);
+        PlatformEndpoint mockPlatform = mock(PlatformEndpoint.class);
 
         when(
-            sauceREST.getPlatform()
+            sauceREST.getPlatformEndpoint()
         ).thenReturn(mockPlatform);
 
         when(

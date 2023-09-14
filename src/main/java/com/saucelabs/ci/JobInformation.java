@@ -1,5 +1,6 @@
 package com.saucelabs.ci;
 
+import com.saucelabs.saucerest.model.jobs.Job;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -312,6 +313,54 @@ public class JobInformation implements Serializable {
 
     public boolean hasFailureMessage() {
         return failureMessage != null && !failureMessage.equals("") && !failureMessage.equals("null");
+    }
+
+    /**
+     * Takes in a SauceREST Job, and populates the current object with all values
+     * Also resets the list of changes
+     *
+     * @see JobInformation#clearChanges()
+     *
+     * @param job SauceREST Job
+     */
+    public void populate(Job job) {
+        if (job.passed != null) {
+            setStatus(job.passed);
+        }
+        if (job.name != null) {
+            setName(job.name);
+        }
+        if (job.build != null) {
+            setBuild(job.build);
+        }
+        if (job.customData != null) {
+            if (job.customData.containsKey("FAILURE_MESSAGE")) {
+                setFailureMessage(job.customData.get("FAILURE_MESSAGE"));
+            }
+        }
+        if (job.endTime != null) {
+            setEndTime(job.endTime);
+        }
+        if (job.startTime != null) {
+            setStartTime(job.startTime);
+        }
+        if (job.os != null) {
+            setOs(job.os);
+        }
+        if (job.browser != null) {
+            setBrowser(job.browser);
+        }
+        if (job.browserShortVersion != null) {
+            setVersion(job.browserShortVersion);
+        }
+        if (job.videoUrl != null) {
+            setVideoUrl(job.videoUrl);
+        }
+        if (job.logUrl != null) {
+            setLogUrl(job.logUrl);
+        }
+
+        clearChanges();
     }
 
     /**
