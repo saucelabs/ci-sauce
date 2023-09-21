@@ -331,7 +331,7 @@ public class JobInformation implements Serializable {
             setName(job.name);
         }
         if (job.build != null) {
-            setBuild(job.build);
+            setBuild(job.build.toString());
         }
         if (job.customData != null) {
             if (job.customData.containsKey("FAILURE_MESSAGE")) {
