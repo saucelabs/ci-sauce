@@ -339,8 +339,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
         //ensure that only a single thread attempts to open a connection
         if (sauceRest == null) {
-            sauceRest = new SauceREST(username, apiKey, dataCenter);
-            scEndpoint = sauceRest.getSauceConnectEndpoint();
+            setSauceRest(new SauceREST(username, apiKey, dataCenter));
         }
         String name = getTunnelName(options, username);
         TunnelInformation tunnelInformation = getTunnelInformation(name);
@@ -486,13 +485,12 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     private String activeTunnelID(String username, String tunnelName) {
         try {
             List<String> tunnels = scEndpoint.getTunnelsForAUser();
-            if (tunnels.size() == 0) {
+            if (tunnels.isEmpty()) {
                 //no active tunnels
                 return null;
             }
             //iterate over elements
-            for (int i = 0; i < tunnels.size(); i++) {
-                String tunnelId = tunnels.get(i);
+            for (String tunnelId : tunnels) {
 
                 com.saucelabs.saucerest.model.sauceconnect.TunnelInformation tunnelInformation = scEndpoint.getTunnelInformation(tunnelId);
 

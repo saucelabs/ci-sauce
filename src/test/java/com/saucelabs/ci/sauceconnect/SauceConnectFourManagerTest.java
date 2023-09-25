@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -75,7 +76,7 @@ public class SauceConnectFourManagerTest {
     }
 
     private void testOpenConnectionSuccessfully(boolean cleanUpOnExit) throws IOException {
-	ArrayList<String> empty = new ArrayList<String>();
+	List<String> empty = new ArrayList<String>();
         when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(empty);
         tunnelManager.setCleanUpOnExit(cleanUpOnExit);
         Process process = testOpenConnection("/started_sc.log");
@@ -84,7 +85,7 @@ public class SauceConnectFourManagerTest {
 
     @Test(expected=AbstractSauceTunnelManager.SauceConnectDidNotStartException.class)
     public void openConnectionTest_closes() throws IOException, InterruptedException {
-	ArrayList<String> empty = new ArrayList<String>();
+	List<String> empty = new ArrayList<String>();
         when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(empty);
         when(mockProcess.waitFor(30, TimeUnit.SECONDS)).thenReturn(true);
         testOpenConnection("/started_sc_closes.log");
@@ -93,7 +94,7 @@ public class SauceConnectFourManagerTest {
 
     @Test
     public void testOpenConnectionWithExtraSpacesInArgs() throws IOException {
-	ArrayList<String> empty = new ArrayList<String>();
+	List<String> empty = new ArrayList<String>();
         when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(empty);
         testOpenConnection("/started_sc.log", " username-with-spaces-around ");
     }
@@ -167,7 +168,7 @@ public class SauceConnectFourManagerTest {
 
     @Test
     public void openConnectionTest_existing_tunnel() throws IOException {
-	ArrayList<String> active = new ArrayList<String>();
+	List<String> active = new ArrayList<String>();
 	active.add("8949e55fb5e14fd6bf6230b7a609b494");
 
 	TunnelInformation started = new TunnelInformation();
