@@ -1,10 +1,9 @@
 package com.saucelabs.ci.sauceconnect;
 
+import com.saucelabs.saucerest.DataCenter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-
-import com.saucelabs.saucerest.DataCenter;
 
 /**
  * Interface which defines the behaviour for Sauce Connect Tunnel implementations.

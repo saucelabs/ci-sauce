@@ -7,15 +7,14 @@ package com.saucelabs.ci;
 
 import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.model.platform.Platform;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Handles invoking the Sauce REST API to retrieve the list of valid Browsers.  The list of browser is cached for

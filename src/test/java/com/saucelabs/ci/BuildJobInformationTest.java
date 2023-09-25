@@ -1,14 +1,13 @@
 package com.saucelabs.ci;
 
+import static org.junit.Assert.*;
+
+import java.util.EnumSet;
+import java.util.HashMap;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.EnumSet;
-import java.util.HashMap;
-
-import static org.junit.Assert.*;
 
 public class BuildJobInformationTest {
     private BuildJobInformation job;

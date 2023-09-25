@@ -1,9 +1,8 @@
 package com.saucelabs.sod;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import org.junit.Test;
-
 import java.io.File;
+import org.junit.Test;
 
 /**
  * @author Ross Rowe

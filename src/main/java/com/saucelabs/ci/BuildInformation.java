@@ -1,12 +1,11 @@
 package com.saucelabs.ci;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Stores details about a sauce labs build/test

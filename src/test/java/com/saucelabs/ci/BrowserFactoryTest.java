@@ -1,21 +1,19 @@
 package com.saucelabs.ci;
 
-import com.saucelabs.saucerest.SauceREST;
-import com.saucelabs.saucerest.model.platform.Platform;
-import com.saucelabs.saucerest.model.platform.SupportedPlatforms;
-import org.apache.commons.io.IOUtils;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Collections;
-import java.util.List;
-import java.util.ArrayList;
-
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.model.platform.Platform;
+import com.saucelabs.saucerest.model.platform.SupportedPlatforms;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.junit.Before;
+import org.junit.Test;
 
 public class BrowserFactoryTest {
 

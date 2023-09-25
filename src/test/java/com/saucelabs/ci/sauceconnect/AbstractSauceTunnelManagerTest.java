@@ -1,10 +1,9 @@
 package com.saucelabs.ci.sauceconnect;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 import java.util.concurrent.Semaphore;
-
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * Created by gavinmogan on 2016-07-13.
