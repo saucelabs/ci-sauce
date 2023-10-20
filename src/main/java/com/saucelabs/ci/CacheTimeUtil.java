@@ -10,30 +10,27 @@ import java.util.Date;
  * @author Ross Rowe
  */
 public final class CacheTimeUtil {
-    /**
-     * Class can't be constructed.
-     */
-    private CacheTimeUtil() {
-    }
+  /** Class can't be constructed. */
+  private CacheTimeUtil() {}
 
-    private static Timestamp getMaxTimestampForDuration(Timestamp startTime, long duration) {
-        return new Timestamp(startTime.getTime() + duration);
-    }
+  private static Timestamp getMaxTimestampForDuration(Timestamp startTime, long duration) {
+    return new Timestamp(startTime.getTime() + duration);
+  }
 
-    public static Timestamp getCurrentTimestamp() {
-        Date now = new Date();
-        return new Timestamp(now.getTime());
-    }
+  public static Timestamp getCurrentTimestamp() {
+    Date now = new Date();
+    return new Timestamp(now.getTime());
+  }
 
-    public static boolean pastAcceptableDuration(Timestamp startTime, long duration) {
+  public static boolean pastAcceptableDuration(Timestamp startTime, long duration) {
 
-        // Get the maximum end time
-        Timestamp maxTimestamp = getMaxTimestampForDuration(startTime, duration);
+    // Get the maximum end time
+    Timestamp maxTimestamp = getMaxTimestampForDuration(startTime, duration);
 
-        // Get the time elapsed since creation
-        Timestamp timeElapsed = getCurrentTimestamp();
+    // Get the time elapsed since creation
+    Timestamp timeElapsed = getCurrentTimestamp();
 
-        // If we're after the max we return true
-        return timeElapsed.after(maxTimestamp);
-    }
+    // If we're after the max we return true
+    return timeElapsed.after(maxTimestamp);
+  }
 }
