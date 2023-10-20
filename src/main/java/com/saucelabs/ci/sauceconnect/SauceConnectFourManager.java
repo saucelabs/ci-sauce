@@ -165,7 +165,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
     // find zip file to extract
     try {
       File sauceConnectBinary;
-      if (sauceConnectPath == null || sauceConnectPath.equals("")) {
+      if (sauceConnectPath == null || sauceConnectPath.isEmpty()) {
         File workingDirectory = null;
         if (sauceConnectJar != null && sauceConnectJar.exists()) {
           workingDirectory = sauceConnectJar.getParentFile();

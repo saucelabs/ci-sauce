@@ -596,8 +596,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
         String configName = tunnelInformation.tunnelIdentifier;
         String status = tunnelInformation.status;
-        if (status.equals("running") && (configName.equals("null") && tunnelName.equals(username))
-            || !configName.equals("null") && configName.equals(tunnelName)) {
+        if ("running".equalsIgnoreCase(status)
+                && ("null".equalsIgnoreCase(configName) && tunnelName.equals(username))
+            || !"null".equalsIgnoreCase(configName) && configName.equals(tunnelName)) {
           // we have an active tunnel
           return tunnelId;
         }

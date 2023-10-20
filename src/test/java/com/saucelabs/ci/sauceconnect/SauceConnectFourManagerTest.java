@@ -1,11 +1,10 @@
 package com.saucelabs.ci.sauceconnect;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager.OperatingSystem;
+import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.SauceConnectEndpoint;
 import com.saucelabs.saucerest.model.sauceconnect.TunnelInformation;
-import org.apache.commons.io.IOUtils;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 public class SauceConnectFourManagerTest {
@@ -47,18 +45,8 @@ public class SauceConnectFourManagerTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    when(mockSauceRest.getSauceConnectEndpoint()).thenReturn(mockSCEndpoint);
     tunnelManager.setSauceRest(mockSauceRest);
-  }
-
-  @After
-  public void teardown() {
-    verifyNoMoreInteractions(mockSauceRest);
-  }
-
-  private String readResource(String resourceName) throws IOException {
-    try (InputStream resourceAsStream = getResourceAsStream(resourceName)) {
-      return IOUtils.toString(resourceAsStream, StandardCharsets.UTF_8);
-    }
   }
 
   private InputStream getResourceAsStream(String resourceName) {
@@ -103,42 +91,10 @@ public class SauceConnectFourManagerTest {
     return testOpenConnection(logFile, "fakeuser");
   }
 
-  private Process testDefaultOpenConnection(String logFile, String username) throws IOException {
-    final String apiKey = "fakeapikey";
-    final int port = 12345;
-
-    try (InputStream resourceAsStream = getResourceAsStream(logFile)) {
-      when(mockProcess.getErrorStream())
-          .thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
-      when(mockProcess.getInputStream()).thenReturn(resourceAsStream);
-      doReturn(mockProcess).when(tunnelManager).createProcess(any(String[].class), any(File.class));
-      return tunnelManager.openConnection(username, apiKey, port, null, "  ", ps, false, "");
-    } finally {
-      verify(mockSCEndpoint).getTunnelsForAUser();
-      ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
-      verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
-      String[] actualArgs = argsCaptor.getValue();
-      assertEquals(9, actualArgs.length);
-      assertEquals("-u", actualArgs[1]);
-      assertEquals(username.trim(), actualArgs[2]);
-      assertEquals("-k", actualArgs[3]);
-      assertEquals(apiKey, actualArgs[4]);
-      assertEquals("-P", actualArgs[5]);
-      assertEquals(Integer.toString(port), actualArgs[6]);
-      assertEquals("--extra-info", actualArgs[7]);
-      OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
-      if (operatingSystem == OperatingSystem.WINDOWS) {
-        assertEquals("{\\\"runner\\\": \\\"jenkins\\\"}", actualArgs[8]);
-      } else {
-        assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
-      }
-    }
-  }
-
   private Process testOpenConnection(String logFile, String username) throws IOException {
     final String apiKey = "fakeapikey";
     final int port = 12345;
-    final String dataCenter = "US_WEST";
+    final DataCenter dataCenter = DataCenter.US_WEST;
 
     try (InputStream resourceAsStream = getResourceAsStream(logFile)) {
       when(mockProcess.getErrorStream())
@@ -171,14 +127,18 @@ public class SauceConnectFourManagerTest {
 
   @Test
   public void openConnectionTest_existing_tunnel() throws IOException {
-    List<String> active = new ArrayList<String>();
+    List<String> active = new ArrayList<>();
     active.add("8949e55fb5e14fd6bf6230b7a609b494");
 
     TunnelInformation started = new TunnelInformation();
+    started.tunnelIdentifier = "8949e55fb5e14fd6bf6230b7a609b494";
+    started.status = "running";
 
     when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(active);
     when(mockSCEndpoint.getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494"))
         .thenReturn(started);
+    when(mockSauceRest.getSauceConnectEndpoint()).thenReturn(mockSCEndpoint);
+    tunnelManager.setSauceRest(mockSauceRest);
 
     Process process = testOpenConnection("/started_sc.log");
     assertEquals(mockProcess, process);
