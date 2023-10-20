@@ -3,12 +3,11 @@ package com.saucelabs.ci.sauceconnect;
 import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.SauceException;
+import com.saucelabs.saucerest.api.SauceConnectEndpoint;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.*;
 import java.util.*;
@@ -44,6 +43,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     protected Map<String, TunnelInformation> tunnelInformationMap = new ConcurrentHashMap<>();
 
     private SauceREST sauceRest;
+    private SauceConnectEndpoint scEndpoint;
 
     private AtomicInteger launchAttempts = new AtomicInteger(0);
 
@@ -58,6 +58,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
     public void setSauceRest(SauceREST sauceRest) {
         this.sauceRest = sauceRest;
+        this.scEndpoint = sauceRest.getSauceConnectEndpoint();
     }
 
     /**
@@ -81,11 +82,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                 final Process sauceConnect = tunnelInformation.getProcess();
                 closeSauceConnectProcess(printStream, sauceConnect);
                 String tunnelId = tunnelInformation.getTunnelId();
-                if (tunnelId != null && sauceRest != null) {
+                if (tunnelId != null && scEndpoint != null) {
                     logMessage(printStream, "Stopping Sauce Connect tunnel: " + tunnelId);
                     //forcibly delete tunnel
                     try {
-                        sauceRest.deleteTunnel(tunnelId);
+                        scEndpoint.stopTunnel(tunnelId);
                         logMessage(printStream, "Deleted tunnel");
                     }
                     catch (java.io.IOException|SauceException.UnknownError  e) {
@@ -314,7 +315,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     @Override
     public Process openConnection(String username, String apiKey, String dataCenter, int port, File sauceConnectJar, String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
         return openConnection(username, apiKey, DataCenter.fromString(dataCenter), port, sauceConnectJar, options,
-            printStream, verboseLogging, sauceConnectPath);
+                printStream, verboseLogging, sauceConnectPath);
     }
 
     /**
@@ -334,11 +335,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      */
     @Override
     public Process openConnection(String username, String apiKey, DataCenter dataCenter, int port, File sauceConnectJar,
-        String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
+            String options, PrintStream printStream, Boolean verboseLogging, String sauceConnectPath) throws SauceConnectException {
 
         //ensure that only a single thread attempts to open a connection
         if (sauceRest == null) {
-            sauceRest = new SauceREST(username, apiKey, dataCenter);
+            setSauceRest(new SauceREST(username, apiKey, dataCenter));
         }
         String name = getTunnelName(options, username);
         TunnelInformation tunnelInformation = getTunnelInformation(name);
@@ -483,26 +484,27 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      */
     private String activeTunnelID(String username, String tunnelName) {
         try {
-            JSONArray tunnelArray = new JSONArray(sauceRest.getTunnels());
-            if (tunnelArray.length() == 0) {
+            List<String> tunnels = scEndpoint.getTunnelsForAUser();
+            if (tunnels.isEmpty()) {
                 //no active tunnels
                 return null;
             }
             //iterate over elements
-            for (int i = 0; i < tunnelArray.length(); i++) {
-                String tunnelId = tunnelArray.getString(i);
-                JSONObject tunnelInformation = new JSONObject(sauceRest.getTunnelInformation(tunnelId));
-                String configName = tunnelInformation.getString("tunnel_identifier");
-                String status = tunnelInformation.getString("status");
+            for (String tunnelId : tunnels) {
+
+                com.saucelabs.saucerest.model.sauceconnect.TunnelInformation tunnelInformation = scEndpoint.getTunnelInformation(tunnelId);
+
+                String configName = tunnelInformation.tunnelIdentifier;
+                String status = tunnelInformation.status;
                 if (status.equals("running") &&
                         (configName.equals("null") && tunnelName.equals(username)) ||
                         !configName.equals("null") && configName.equals(tunnelName)) {
-                    //we have an active tunnel
-                    return tunnelId;
-                }
+                            //we have an active tunnel
+                            return tunnelId;
+                        }
 
             }
-        } catch (JSONException e) {
+        } catch (JSONException | IOException e) {
             //log error and return false
             julLogger.log(Level.WARNING, "Exception occurred retrieving tunnel information", e);
         }
@@ -522,7 +524,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
      * @return String array representing the command line args to be used to launch Sauce Connect
      */
     protected abstract String[] generateSauceConnectArgs(String[] args, String username, String apiKey, int port,
-        String options);
+            String options);
 
     protected abstract String[] addExtraInfo(String[] args);
 
