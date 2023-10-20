@@ -10,18 +10,18 @@ import java.io.File;
  */
 public class ExtractFiles {
 
-    private SauceConnectFourManager manager = new SauceConnectFourManager();
+  private SauceConnectFourManager manager = new SauceConnectFourManager();
 
-    @Test
-    public void linux() throws Exception {
+  @Test
+  public void linux() throws Exception {
 
-        File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
-        manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.LINUX);
-    }
+    File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
+    manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.LINUX);
+  }
 
-    @Test
-    public void windows() throws Exception {
-        File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
-        manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.WINDOWS);
-    }
+  @Test
+  public void windows() throws Exception {
+    File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
+    manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.WINDOWS);
+  }
 }

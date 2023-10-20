@@ -7,305 +7,300 @@ import org.junit.Test;
 
 import java.util.HashMap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-/**
- * Created by gavinmogan on 2016-02-10.
- */
+/** Created by gavinmogan on 2016-02-10. */
 public class JobInformationTest {
-    private JobInformation job;
+  private JobInformation job;
 
-    @Before
-    public void setUp() throws Exception {
-        JSONObject obj = new JSONObject(
-            IOUtils.toString(getClass().getResourceAsStream("/job_info.json"), "UTF-8")
-        );
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(obj);
-    }
+  @Before
+  public void setUp() throws Exception {
+    JSONObject obj =
+        new JSONObject(IOUtils.toString(getClass().getResourceAsStream("/job_info.json"), "UTF-8"));
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(obj);
+  }
 
-    @Test
-    public void testHMAC() {
-        assertEquals("hmac", job.getHmac());
-        job.setHmac("newhmac");
-        assertEquals("newhmac", job.getHmac());
-    }
+  @Test
+  public void testHMAC() {
+    assertEquals("hmac", job.getHmac());
+    job.setHmac("newhmac");
+    assertEquals("newhmac", job.getHmac());
+  }
 
-    @Test
-    public void testJobId() {
-        assertEquals("1234", job.getJobId());
-    }
+  @Test
+  public void testJobId() {
+    assertEquals("1234", job.getJobId());
+  }
 
-    @Test
-    public void testStatus() {
-        assertEquals("Passed", job.getStatus());
+  @Test
+  public void testStatus() {
+    assertEquals("Passed", job.getStatus());
 
-        job.clearChanges();
-        assertFalse(job.hasChanges());
-        job.setStatus("gavin");
-        assertEquals("gavin", job.getStatus());
-        assertTrue(job.hasChange("status"));
+    job.clearChanges();
+    assertFalse(job.hasChanges());
+    job.setStatus("gavin");
+    assertEquals("gavin", job.getStatus());
+    assertTrue(job.hasChange("status"));
 
-        job.clearChanges();
-        assertFalse(job.hasChanges());
-        job.setStatus(true);
-        assertEquals("Passed", job.getStatus());
-        job.setStatus(false);
-        assertEquals("Failed", job.getStatus());
-        assertTrue(job.hasChange("status"));
-    }
+    job.clearChanges();
+    assertFalse(job.hasChanges());
+    job.setStatus(true);
+    assertEquals("Passed", job.getStatus());
+    job.setStatus(false);
+    assertEquals("Failed", job.getStatus());
+    assertTrue(job.hasChange("status"));
+  }
 
-    @Test
-    public void testPopulateFromJson() {
-        assertFalse(job.hasJobName());
-        assertNull(job.getName());
+  @Test
+  public void testPopulateFromJson() {
+    assertFalse(job.hasJobName());
+    assertNull(job.getName());
 
-        JSONObject json = new JSONObject();
-        json.put("passed", (String) null);
-        json.put("name", (String) null);
-        json.put("build", (String) null);
-        json.put("os", "Windows 2012 R2");
-        json.put("browser", "");
-        json.put("browser_short_version", "");
-        json.put("video_url", "");
-        json.put("log_url", "");
-        json.put("start_time", 1448576067);
-        json.put("end_time", 1448576078);
+    JSONObject json = new JSONObject();
+    json.put("passed", (String) null);
+    json.put("name", (String) null);
+    json.put("build", (String) null);
+    json.put("os", "Windows 2012 R2");
+    json.put("browser", "");
+    json.put("browser_short_version", "");
+    json.put("video_url", "");
+    json.put("log_url", "");
+    json.put("start_time", 1448576067);
+    json.put("end_time", 1448576078);
 
-        /* Name */
-        json.put("name", (String) null);
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals(null, job.getName());
+    /* Name */
+    json.put("name", (String) null);
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals(null, job.getName());
 
-        json.put("name", "Something");
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals("Something", job.getName());
+    json.put("name", "Something");
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals("Something", job.getName());
 
-        /* Build */
-        json.put("build", (String) null);
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals(null, job.getBuild());
+    /* Build */
+    json.put("build", (String) null);
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals(null, job.getBuild());
 
-        json.put("build", "Something");
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals("Something", job.getBuild());
+    json.put("build", "Something");
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals("Something", job.getBuild());
 
-        /* Passed */
-        json.put("passed", (String) null);
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals(null, job.getStatus());
+    /* Passed */
+    json.put("passed", (String) null);
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals(null, job.getStatus());
 
-        json.put("passed", true);
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals("Passed", job.getStatus());
+    json.put("passed", true);
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals("Passed", job.getStatus());
 
-        json.put("passed", false);
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals("Failed", job.getStatus());
+    json.put("passed", false);
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals("Failed", job.getStatus());
 
-        json.put("start_time", 1448576000);
-        json.put("end_time", 1448576100);
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals(1448576000L, job.getStartTime());
-        assertEquals(1448576100L, job.getEndTime());
-        assertEquals(100, job.getDuration());
+    json.put("start_time", 1448576000);
+    json.put("end_time", 1448576100);
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals(1448576000L, job.getStartTime());
+    assertEquals(1448576100L, job.getEndTime());
+    assertEquals(100, job.getDuration());
 
-        /* handle null end_time */
-        json.put("end_time", (String) null);
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals(0, job.getEndTime());
+    /* handle null end_time */
+    json.put("end_time", (String) null);
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals(0, job.getEndTime());
 
+    JSONObject customData = new JSONObject();
+    customData.put("FAILURE_MESSAGE", "test failure");
+    json.put("custom-data", customData);
+    job = new JobInformation("1234", "hmac");
+    job.populateFromJson(json);
+    assertEquals("test failure", job.getFailureMessage());
+  }
 
-        JSONObject customData = new JSONObject();
-        customData.put("FAILURE_MESSAGE", "test failure");
-        json.put("custom-data",customData);
-        job = new JobInformation("1234", "hmac");
-        job.populateFromJson(json);
-        assertEquals("test failure", job.getFailureMessage());
-    }
+  @Test
+  public void testFailureMessage() {
+    HashMap<String, Object> updates = new HashMap<>();
+    updates.put("failureMessage", "test failure");
 
-    @Test
-    public void testFailureMessage() {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("failureMessage", "test failure");
+    assertNull(job.getFailureMessage());
+    assertFalse(job.hasFailureMessage());
+    assertFalse(job.hasChanges());
+    job.setFailureMessage(null);
+    assertFalse(job.hasFailureMessage());
+    job.setFailureMessage("");
+    assertFalse(job.hasFailureMessage());
+    job.setFailureMessage("null");
+    assertFalse(job.hasFailureMessage());
+    job.setFailureMessage("test failure");
+    assertTrue(job.hasFailureMessage());
+    assertTrue(job.hasChanges());
+    assertEquals(updates, job.getChanges());
+  }
 
-        assertNull(job.getFailureMessage());
-        assertFalse(job.hasFailureMessage());
-        assertFalse(job.hasChanges());
-        job.setFailureMessage(null);
-        assertFalse(job.hasFailureMessage());
-        job.setFailureMessage("");
-        assertFalse(job.hasFailureMessage());
-        job.setFailureMessage("null");
-        assertFalse(job.hasFailureMessage());
-        job.setFailureMessage("test failure");
-        assertTrue(job.hasFailureMessage());
-        assertTrue(job.hasChanges());
-        assertEquals(updates, job.getChanges());
-    }
+  @Test
+  public void testJobName() {
+    HashMap<String, Object> updates = new HashMap<>();
+    updates.put("name", "Gavin's first job");
 
-    @Test
-    public void testJobName() {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("name", "Gavin's first job");
+    assertFalse(job.hasJobName());
+    assertNull(job.getName());
+    assertFalse(job.hasChanges());
+    job.setName(null);
+    assertFalse(job.hasJobName());
+    job.setName("");
+    assertFalse(job.hasJobName());
+    job.setName("null");
+    assertFalse(job.hasJobName());
+    job.setName("Gavin's first job");
+    assertTrue(job.hasJobName());
+    assertTrue(job.hasChanges());
+    assertEquals(updates, job.getChanges());
+  }
 
-        assertFalse(job.hasJobName());
-        assertNull(job.getName());
-        assertFalse(job.hasChanges());
-        job.setName(null);
-        assertFalse(job.hasJobName());
-        job.setName("");
-        assertFalse(job.hasJobName());
-        job.setName("null");
-        assertFalse(job.hasJobName());
-        job.setName("Gavin's first job");
-        assertTrue(job.hasJobName());
-        assertTrue(job.hasChanges());
-        assertEquals(updates, job.getChanges());
-    }
+  @Test
+  public void testBuildName() {
+    HashMap<String, Object> updates = new HashMap<>();
+    updates.put("build", "build-name");
 
-    @Test
-    public void testBuildName() {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("build", "build-name");
+    assertFalse(job.hasBuild());
+    assertNull(job.getBuild());
+    assertFalse(job.hasChanges());
 
-        assertFalse(job.hasBuild());
-        assertNull(job.getBuild());
-        assertFalse(job.hasChanges());
+    job.setBuild(null);
+    assertFalse(job.hasBuild());
+    job.setBuild("");
+    assertFalse(job.hasBuild());
+    job.setBuild("null");
+    assertFalse(job.hasBuild());
 
-        job.setBuild(null);
-        assertFalse(job.hasBuild());
-        job.setBuild("");
-        assertFalse(job.hasBuild());
-        job.setBuild("null");
-        assertFalse(job.hasBuild());
+    job.setBuild("build-name");
+    assertTrue(job.hasChanges());
+    assertTrue(job.hasBuild());
 
-        job.setBuild("build-name");
-        assertTrue(job.hasChanges());
-        assertTrue(job.hasBuild());
+    assertEquals(updates, job.getChanges());
+  }
 
-        assertEquals(updates, job.getChanges());
-    }
+  @Test
+  public void testBrowser() {
+    HashMap<String, Object> updates = new HashMap<>();
+    updates.put("browser", "firefox");
 
-    @Test
-    public void testBrowser() {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("browser", "firefox");
+    assertEquals("iexplore", job.getBrowser());
+    assertFalse(job.hasChanges());
 
-        assertEquals("iexplore", job.getBrowser());
-        assertFalse(job.hasChanges());
+    job.setBrowser("firefox");
+    assertTrue(job.hasChanges());
+    assertEquals("firefox", job.getBrowser());
+    assertTrue(job.hasChange("browser"));
 
-        job.setBrowser("firefox");
-        assertTrue(job.hasChanges());
-        assertEquals("firefox", job.getBrowser());
-        assertTrue(job.hasChange("browser"));
+    assertEquals(updates, job.getChanges());
+  }
 
-        assertEquals(updates, job.getChanges());
-    }
+  @Test
+  public void testVersion() {
+    HashMap<String, Object> updates = new HashMap<>();
+    updates.put("version", "20");
 
-    @Test
-    public void testVersion() {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("version", "20");
+    assertEquals("10", job.getVersion());
+    assertFalse(job.hasChanges());
 
-        assertEquals("10", job.getVersion());
-        assertFalse(job.hasChanges());
+    job.setVersion("20");
+    assertTrue(job.hasChanges());
+    assertEquals("20", job.getVersion());
+    assertTrue(job.hasChange("version"));
 
-        job.setVersion("20");
-        assertTrue(job.hasChanges());
-        assertEquals("20", job.getVersion());
-        assertTrue(job.hasChange("version"));
+    assertEquals(updates, job.getChanges());
+  }
 
-        assertEquals(updates, job.getChanges());
-    }
+  @Test
+  public void testOs() {
+    HashMap<String, Object> updates = new HashMap<>();
+    updates.put("os", "20");
 
-    @Test
-    public void testOs() {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("os", "20");
+    assertEquals("Windows 7", job.getOs());
+    assertFalse(job.hasChanges());
 
-        assertEquals("Windows 7", job.getOs());
-        assertFalse(job.hasChanges());
+    /* Test random os */
+    job.setOs("20");
+    assertTrue(job.hasChanges());
+    assertEquals("20", job.getOs());
+    assertTrue(job.hasChange("os"));
 
-        /* Test random os */
-        job.setOs("20");
-        assertTrue(job.hasChanges());
-        assertEquals("20", job.getOs());
-        assertTrue(job.hasChange("os"));
+    assertEquals(updates, job.getChanges());
 
-        assertEquals(updates, job.getChanges());
+    /* Test mapped os */
+    job.setOs("Windows 2012 R2");
+    assertTrue(job.hasChanges());
+    assertEquals("Windows 8.1", job.getOs());
+    assertTrue(job.hasChange("os"));
 
-        /* Test mapped os */
-        job.setOs("Windows 2012 R2");
-        assertTrue(job.hasChanges());
-        assertEquals("Windows 8.1", job.getOs());
-        assertTrue(job.hasChange("os"));
+    updates.put("os", "Windows 2012 R2");
+    assertEquals(updates, job.getChanges());
+  }
 
-        updates.put("os", "Windows 2012 R2");
-        assertEquals(updates, job.getChanges());
-    }
+  @Test
+  public void testVideoUrl() {
+    HashMap<String, Object> updates = new HashMap<>();
+    updates.put("videoUrl", "20");
 
-    @Test
-    public void testVideoUrl() {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("videoUrl", "20");
+    assertEquals(
+        "https://saucelabs.com/jobs/449f8e8f5940483ea6938ce6cdbea117/video.flv", job.getVideoUrl());
+    assertFalse(job.hasChanges());
 
-        assertEquals(
-            "https://saucelabs.com/jobs/449f8e8f5940483ea6938ce6cdbea117/video.flv",
-            job.getVideoUrl()
-        );
-        assertFalse(job.hasChanges());
+    job.setVideoUrl("20");
+    assertTrue(job.hasChanges());
+    assertEquals("20", job.getVideoUrl());
+    assertTrue(job.hasChange("videoUrl"));
 
-        job.setVideoUrl("20");
-        assertTrue(job.hasChanges());
-        assertEquals("20", job.getVideoUrl());
-        assertTrue(job.hasChange("videoUrl"));
+    assertEquals(updates, job.getChanges());
+  }
 
-        assertEquals(updates, job.getChanges());
-    }
+  @Test
+  public void testLogUrl() {
+    HashMap<String, Object> updates = new HashMap<>();
+    updates.put("logUrl", "20");
 
-    @Test
-    public void testLogUrl() {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("logUrl", "20");
+    assertEquals(
+        "https://saucelabs.com/jobs/449f8e8f5940483ea6938ce6cdbea117/selenium-server.log",
+        job.getLogUrl());
+    assertFalse(job.hasChanges());
 
-        assertEquals(
-            "https://saucelabs.com/jobs/449f8e8f5940483ea6938ce6cdbea117/selenium-server.log",
-            job.getLogUrl()
-        );
-        assertFalse(job.hasChanges());
+    job.setLogUrl("20");
+    assertTrue(job.hasChanges());
+    assertEquals("20", job.getLogUrl());
+    assertTrue(job.hasChange("logUrl"));
 
-        job.setLogUrl("20");
-        assertTrue(job.hasChanges());
-        assertEquals("20", job.getLogUrl());
-        assertTrue(job.hasChange("logUrl"));
+    assertEquals(updates, job.getChanges());
+  }
 
-        assertEquals(updates, job.getChanges());
-    }
+  @Test
+  public void testGetChange() {
+    HashMap<String, Object> updates = new HashMap<>();
+    updates.put("build", "build-name");
+    updates.put("name", "name-name-name");
 
+    assertNull(job.getName());
+    assertFalse(job.hasChanges());
+    job.setBuild("build-name");
+    job.setName("name-name-name");
+    assertTrue(job.hasChanges());
+    assertEquals(updates, job.getChanges());
+  }
 
-    @Test
-    public void testGetChange() {
-        HashMap<String, Object> updates = new HashMap<>();
-        updates.put("build", "build-name");
-        updates.put("name", "name-name-name");
-
-        assertNull(job.getName());
-        assertFalse(job.hasChanges());
-        job.setBuild("build-name");
-        job.setName("name-name-name");
-        assertTrue(job.hasChanges());
-        assertEquals(updates, job.getChanges());
-    }
-
-    /* TODO - figure out how to test equals */
+  /* TODO - figure out how to test equals */
 }
