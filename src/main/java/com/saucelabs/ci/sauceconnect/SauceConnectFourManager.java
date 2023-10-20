@@ -279,7 +279,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager implemen
         AbstractUnArchiver unArchiver;
         if (operatingSystem == OperatingSystem.OSX || operatingSystem == OperatingSystem.WINDOWS) {
             unArchiver = new ZipUnArchiver();
-        } else if (operatingSystem == OperatingSystem.LINUX) {
+        } else if (operatingSystem == OperatingSystem.LINUX || operatingSystem == OperatingSystem.LINUX_ARM64) {
             removeOldTarFile(zipFile);
             unArchiver = new TarGZipUnArchiver();
         } else {
