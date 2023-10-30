@@ -1,52 +1,52 @@
 package com.saucelabs.ci.sauceconnect;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.concurrent.Semaphore;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.junit.jupiter.api.Test;
 
 /** Created by gavinmogan on 2016-07-13. */
-public class AbstractSauceTunnelManagerTest {
+class AbstractSauceTunnelManagerTest {
 
   @Test
-  public void testGetTunnelName() {
+  void testGetTunnelName() {
     assertEquals(
-        "missing parameter",
         "default",
-        AbstractSauceTunnelManager.getTunnelName("basic -c", "default"));
+        AbstractSauceTunnelManager.getTunnelName("basic -c", "default"),
+        "missing parameter");
     assertEquals(
-        "basic -i", "basic", AbstractSauceTunnelManager.getTunnelName("-i basic -c", "default"));
+        "basic", AbstractSauceTunnelManager.getTunnelName("-i basic -c", "default"), "basic -i");
     assertEquals(
-        "basic --tunnel-name",
         "basic",
-        AbstractSauceTunnelManager.getTunnelName("--tunnel-name basic -c", "default"));
+        AbstractSauceTunnelManager.getTunnelName("--tunnel-name basic -c", "default"),
+        "basic --tunnel-name");
     assertEquals(
-        "old --tunnel-identifier",
         "basic",
-        AbstractSauceTunnelManager.getTunnelName("--tunnel-identifier basic -c", "default"));
+        AbstractSauceTunnelManager.getTunnelName("--tunnel-identifier basic -c", "default"),
+        "old --tunnel-identifier");
     assertEquals(
-        "mix of -i and --tunnel-name still returns the last one",
         "third",
         AbstractSauceTunnelManager.getTunnelName(
-            "-i first --tunnel-name second -c -i third", "default"));
+            "-i first --tunnel-name second -c -i third", "default"),
+        "mix of -i and --tunnel-name still returns the last one");
   }
 
   @Test
-  public void testGetLogfile() {
-    assertNull("missing parameter", AbstractSauceTunnelManager.getLogfile("basic -c"));
-    assertEquals("basic -l", "basic", AbstractSauceTunnelManager.getLogfile("-l basic -c"));
+  void testGetLogfile() {
+    assertNull(AbstractSauceTunnelManager.getLogfile("basic -c"), "missing parameter");
+    assertEquals("basic", AbstractSauceTunnelManager.getLogfile("-l basic -c"), "basic -l");
     assertEquals(
-        "basic --logfile", "basic", AbstractSauceTunnelManager.getLogfile("--logfile basic -c"));
+        "basic", AbstractSauceTunnelManager.getLogfile("--logfile basic -c"), "basic --logfile");
     assertEquals(
-        "mix of -l and --logfile still returns the last one",
         "third",
-        AbstractSauceTunnelManager.getLogfile("-l first --logfile second -c -l third"));
+        AbstractSauceTunnelManager.getLogfile("-l first --logfile second -c -l third"),
+        "mix of -l and --logfile still returns the last one");
   }
 
   @Test
-  public void testSystemOutGobbler_ProcessLine() {
+  void testSystemOutGobbler_ProcessLine() {
     Semaphore semaphore = new Semaphore(1);
     SauceConnectFourManager man = new SauceConnectFourManager(true);
     AbstractSauceTunnelManager.SystemOutGobbler sot = man.makeOutputGobbler(null, null, semaphore);

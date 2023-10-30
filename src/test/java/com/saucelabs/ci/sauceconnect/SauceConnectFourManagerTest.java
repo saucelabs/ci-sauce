@@ -5,14 +5,16 @@ import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.SauceConnectEndpoint;
 import com.saucelabs.saucerest.model.sauceconnect.TunnelInformation;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -20,20 +22,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
-import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class SauceConnectFourManagerTest {
-
-  @Rule public TemporaryFolder folder = new TemporaryFolder();
+@ExtendWith(MockitoExtension.class)
+class SauceConnectFourManagerTest {
 
   @Mock private Process mockProcess;
   @Mock private SauceREST mockSauceRest;
@@ -42,9 +44,8 @@ public class SauceConnectFourManagerTest {
 
   private final PrintStream ps = System.out;
 
-  @Before
-  public void setup() {
-    MockitoAnnotations.initMocks(this);
+  @BeforeEach
+  void beforeEach() {
     when(mockSauceRest.getSauceConnectEndpoint()).thenReturn(mockSCEndpoint);
     tunnelManager.setSauceRest(mockSauceRest);
   }
@@ -53,37 +54,27 @@ public class SauceConnectFourManagerTest {
     return getClass().getResourceAsStream(resourceName);
   }
 
-  @Test
-  public void testOpenConnectionSuccessfullyWithoutCleanUpOnExit() throws IOException {
-    testOpenConnectionSuccessfully(false);
-  }
-
-  @Test
-  public void testOpenConnectionSuccessfullyWithCleanUpOnExit() throws IOException {
-    testOpenConnectionSuccessfully(true);
-  }
-
-  private void testOpenConnectionSuccessfully(boolean cleanUpOnExit) throws IOException {
-    List<String> empty = new ArrayList<String>();
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(empty);
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testOpenConnectionSuccessfully(boolean cleanUpOnExit) throws IOException {
+    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of());
     tunnelManager.setCleanUpOnExit(cleanUpOnExit);
     Process process = testOpenConnection("/started_sc.log");
     assertEquals(mockProcess, process);
   }
 
-  @Test(expected = AbstractSauceTunnelManager.SauceConnectDidNotStartException.class)
-  public void openConnectionTest_closes() throws IOException, InterruptedException {
-    List<String> empty = new ArrayList<String>();
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(empty);
+  @Test
+  void openConnectionTest_closes() throws IOException, InterruptedException {
+    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of());
     when(mockProcess.waitFor(30, TimeUnit.SECONDS)).thenReturn(true);
-    testOpenConnection("/started_sc_closes.log");
+    assertThrows(AbstractSauceTunnelManager.SauceConnectDidNotStartException.class, () -> testOpenConnection(
+            "/started_sc_closes.log"));
     verify(mockProcess).destroy();
   }
 
   @Test
-  public void testOpenConnectionWithExtraSpacesInArgs() throws IOException {
-    List<String> empty = new ArrayList<String>();
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(empty);
+  void testOpenConnectionWithExtraSpacesInArgs() throws IOException {
+    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of());
     testOpenConnection("/started_sc.log", " username-with-spaces-around ");
   }
 
@@ -126,41 +117,27 @@ public class SauceConnectFourManagerTest {
   }
 
   @Test
-  public void openConnectionTest_existing_tunnel() throws IOException {
-    List<String> active = new ArrayList<>();
-    active.add("8949e55fb5e14fd6bf6230b7a609b494");
-
+  void openConnectionTest_existing_tunnel() throws IOException {
     TunnelInformation started = new TunnelInformation();
     started.tunnelIdentifier = "8949e55fb5e14fd6bf6230b7a609b494";
     started.status = "running";
 
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(active);
-    when(mockSCEndpoint.getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494"))
-        .thenReturn(started);
-    when(mockSauceRest.getSauceConnectEndpoint()).thenReturn(mockSCEndpoint);
-    tunnelManager.setSauceRest(mockSauceRest);
+    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of(started.tunnelIdentifier));
+    when(mockSCEndpoint.getTunnelInformation(started.tunnelIdentifier)).thenReturn(started);
 
     Process process = testOpenConnection("/started_sc.log");
     assertEquals(mockProcess, process);
 
-    verify(mockSCEndpoint).getTunnelInformation("8949e55fb5e14fd6bf6230b7a609b494");
+    verify(mockSCEndpoint).getTunnelInformation(started.tunnelIdentifier);
     verify(mockSCEndpoint).getTunnelsForAUser();
   }
 
-  @Test
-  public void testExtractZipFileWithoutCleanUpOnExit() throws IOException {
-    testExtractZipFile(false);
-  }
-
-  @Test
-  public void testExtractZipFileWithCleanUpOnExit() throws IOException {
-    testExtractZipFile(true);
-  }
-
-  private void testExtractZipFile(boolean cleanUpOnExit) throws IOException {
-    File linux_destination = folder.newFolder("sauceconnect_linux");
-    File windows_destination = folder.newFolder("sauceconnect_windows");
-    File osx_destination = folder.newFolder("sauceconnect_osx");
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testExtractZipFile(boolean cleanUpOnExit, @TempDir Path folder) throws IOException {
+    File linux_destination = folder.resolve("sauceconnect_linux").toFile();
+    File windows_destination = folder.resolve("sauceconnect_windows").toFile();
+    File osx_destination = folder.resolve("sauceconnect_osx").toFile();
 
     SauceConnectFourManager manager = new SauceConnectFourManager();
     manager.setCleanUpOnExit(cleanUpOnExit);
@@ -179,12 +156,13 @@ public class SauceConnectFourManagerTest {
 
   private void assertSauceConnectFileExists(String message, File destination, OperatingSystem os) {
     assertTrue(
-        message,
-        new File(new File(destination, os.getDirectory(false)), os.getExecutable()).exists());
+        new File(new File(destination, os.getDirectory(false)), os.getExecutable()).exists(),
+        message
+    );
   }
 
   @Test
-  public void testSauceConnectSecretsCoveredWithStars() {
+  void testSauceConnectSecretsCoveredWithStars() {
     SauceConnectFourManager manager = new SauceConnectFourManager();
     String[] args = {"/sauce/connect/binary/path/"};
     args =
@@ -202,7 +180,7 @@ public class SauceConnectFourManagerTest {
   }
 
   @Test
-  public void testSauceConnectSecretsWithSpecialCharactersCoveredWithStars() {
+  void testSauceConnectSecretsWithSpecialCharactersCoveredWithStars() {
     SauceConnectFourManager manager = new SauceConnectFourManager();
     String[] args = {"-a", "web-proxy.domain.com:8080:user:pwd"};
     assertEquals(
