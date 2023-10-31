@@ -1,14 +1,9 @@
 package com.saucelabs.ci.sauceconnect;
 
 import com.saucelabs.saucerest.DataCenter;
-import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.SauceException;
+import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.SauceConnectEndpoint;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.NullOutputStream;
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONException;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -25,6 +20,10 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.NullOutputStream;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
 
 /**
  * Provides common logic for the invocation of Sauce Connect v3 and v4 processes. The class
@@ -42,10 +41,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   /** Should Sauce Connect output be suppressed? */
   protected boolean quietMode;
 
+  protected Map<String, TunnelInformation> tunnelInformationMap = new ConcurrentHashMap<>();
+
   /** Contains all the Sauce Connect {@link Process} instances that have been launched. */
   private Map<String, List<Process>> openedProcesses = new HashMap<>();
-
-  protected Map<String, TunnelInformation> tunnelInformationMap = new ConcurrentHashMap<>();
 
   private SauceREST sauceRest;
   private SauceConnectEndpoint scEndpoint;
@@ -59,6 +58,56 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    */
   public AbstractSauceTunnelManager(boolean quietMode) {
     this.quietMode = quietMode;
+  }
+
+  /**
+   * @param options the command line options used to launch Sauce Connect
+   * @param defaultValue the default value to use for the tunnel name if none specified in the
+   *     options
+   * @return String representing the tunnel name
+   */
+  public static String getTunnelName(String options, String defaultValue) {
+    if (options == null || options.isEmpty()) {
+      return defaultValue;
+    }
+
+    String name = null;
+    String[] split = options.split(" ");
+    for (int i = 0; i < split.length; i++) {
+      String option = split[i];
+      // Handle old tunnel-identifier option and well as new tunnel-name
+      if (option.equals("-i")
+          || option.equals("--tunnel-name")
+          || option.equals("--tunnel-identifier")) {
+        // next option is name
+        name = split[i + 1];
+      }
+    }
+    if (name != null) {
+      return name;
+    }
+
+    return defaultValue;
+  }
+
+  /**
+   * @param options the command line options used to launch Sauce Connect
+   * @return String representing the logfile location
+   */
+  public static String getLogfile(String options) {
+    if (options == null || options.isEmpty()) {
+      return null;
+    }
+    String logFile = null;
+    String[] split = options.split(" ");
+    for (int i = 0; i < split.length; i++) {
+      String option = split[i];
+      if (option.equals("-l") || option.equals("--logfile")) {
+        // next option is logfile
+        logFile = split[i + 1];
+      }
+    }
+    return logFile;
   }
 
   public void setSauceRest(SauceREST sauceRest) {
@@ -182,56 +231,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   }
 
   /**
-   * @param options the command line options used to launch Sauce Connect
-   * @param defaultValue the default value to use for the tunnel name if none specified in the
-   *     options
-   * @return String representing the tunnel name
-   */
-  public static String getTunnelName(String options, String defaultValue) {
-    if (options == null || options.equals("")) {
-      return defaultValue;
-    }
-
-    String name = null;
-    String[] split = options.split(" ");
-    for (int i = 0; i < split.length; i++) {
-      String option = split[i];
-      // Handle old tunnel-identifier option and well as new tunnel-name
-      if (option.equals("-i")
-          || option.equals("--tunnel-name")
-          || option.equals("--tunnel-identifier")) {
-        // next option is name
-        name = split[i + 1];
-      }
-    }
-    if (name != null) {
-      return name;
-    }
-
-    return defaultValue;
-  }
-
-  /**
-   * @param options the command line options used to launch Sauce Connect
-   * @return String representing the logfile location
-   */
-  public static String getLogfile(String options) {
-    if (options == null || options.equals("")) {
-      return null;
-    }
-    String logFile = null;
-    String[] split = options.split(" ");
-    for (int i = 0; i < split.length; i++) {
-      String option = split[i];
-      if (option.equals("-l") || option.equals("--logfile")) {
-        // next option is logfile
-        logFile = split[i + 1];
-      }
-    }
-    return logFile;
-  }
-
-  /**
    * Adds an element to an array
    *
    * @param original the original array
@@ -327,7 +326,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     return openConnection(
         username,
         apiKey,
-        "US_WEST",
+        DataCenter.US_WEST,
         port,
         sauceConnectJar,
         options,
@@ -563,10 +562,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         "OutputGobbler", inputStream, semaphore, printStream, getSauceStartedMessage());
   }
 
-  /**
-   * @param name
-   * @return
-   */
   private TunnelInformation getTunnelInformation(String name) {
     if (name == null) {
       return null;
@@ -635,6 +630,30 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   }
 
   public abstract File getSauceConnectLogFile(String options);
+
+  /**
+   * @return Text which indicates that Sauce Connect has started
+   */
+  protected abstract String getSauceStartedMessage();
+
+  /** Base exception class which is thrown if an error occurs launching Sauce Connect. */
+  public static class SauceConnectException extends IOException {
+
+    public SauceConnectException(String message) {
+      super(message);
+    }
+
+    public SauceConnectException(Exception cause) {
+      super(cause);
+    }
+  }
+
+  /** Exception which is thrown when Sauce Connect does not start within the timeout period. */
+  public static class SauceConnectDidNotStartException extends SauceConnectException {
+    public SauceConnectDidNotStartException(String message) {
+      super(message);
+    }
+  }
 
   /** Handles receiving and processing the output of an external process. */
   protected abstract class StreamGobbler extends Thread {
@@ -746,35 +765,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
   }
 
-  /**
-   * @return Text which indicates that Sauce Connect has started
-   */
-  protected abstract String getSauceStartedMessage();
-
   /** Handles processing Sauce Connect output sent to stderr. */
   public class SystemErrorGobbler extends StreamGobbler {
 
     public SystemErrorGobbler(String name, InputStream is, PrintStream printStream) {
       super(name, is, printStream);
-    }
-  }
-
-  /** Base exception class which is thrown if an error occurs launching Sauce Connect. */
-  public static class SauceConnectException extends IOException {
-
-    public SauceConnectException(String message) {
-      super(message);
-    }
-
-    public SauceConnectException(Exception cause) {
-      super(cause);
-    }
-  }
-
-  /** Exception which is thrown when Sauce Connect does not start within the timeout period. */
-  public static class SauceConnectDidNotStartException extends SauceConnectException {
-    public SauceConnectDidNotStartException(String message) {
-      super(message);
     }
   }
 }
