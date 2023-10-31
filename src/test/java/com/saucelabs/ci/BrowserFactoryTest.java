@@ -1,33 +1,31 @@
 package com.saucelabs.ci;
 
 import com.saucelabs.saucerest.SauceREST;
+import com.saucelabs.saucerest.api.PlatformEndpoint;
 import com.saucelabs.saucerest.model.platform.Platform;
 import com.saucelabs.saucerest.model.platform.SupportedPlatforms;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class BrowserFactoryTest {
-
-  private static final Charset UTF_8 = Charset.forName("UTF-8");
+class BrowserFactoryTest {
 
   private BrowserFactory browserFactory;
 
-  @Before
-  public void setUp() throws Exception {
+  @BeforeEach
+  void beforeEach() throws Exception {
 
     // Mock appium response
-    List<Platform> appiumPlatforms = new ArrayList<Platform>();
+    List<Platform> appiumPlatforms = new ArrayList<>();
 
     Platform kindle =
         new Platform(
@@ -80,8 +78,7 @@ public class BrowserFactoryTest {
     webdriverPlatforms.add(linux);
 
     SauceREST sauceREST = mock(SauceREST.class);
-    com.saucelabs.saucerest.api.PlatformEndpoint mockPlatform =
-        mock(com.saucelabs.saucerest.api.PlatformEndpoint.class);
+    PlatformEndpoint mockPlatform = mock(PlatformEndpoint.class);
 
     when(sauceREST.getPlatformEndpoint()).thenReturn(mockPlatform);
 
@@ -95,93 +92,91 @@ public class BrowserFactoryTest {
   }
 
   @Test
-  public void testGetAppiumBrowsers() throws IOException {
+  void testGetAppiumBrowsers() throws IOException {
     List<Browser> browsers = this.browserFactory.getAppiumBrowsers();
     assertEquals(2, browsers.size());
 
-    int elm = 0;
-    assertEquals("Amazon_Kindle_Fire_Emulatorlandscapeandroid2_3_7_", browsers.get(elm).getKey());
-    assertEquals("android", browsers.get(elm).getOs());
-    assertEquals("android", browsers.get(elm).getBrowserName());
-    assertEquals("2.3", browsers.get(elm).getVersion());
-    assertEquals("Amazon Kindle Fire Emulator 2.3 (landscape)", browsers.get(elm).getName());
-    assertEquals("2.3.7.", browsers.get(elm).getLongVersion());
-    assertEquals("Amazon Kindle Fire Emulator", browsers.get(elm).getLongName());
-    assertEquals("Amazon Kindle Fire Emulator", browsers.get(elm).getDevice());
-    assertEquals(null, browsers.get(elm).getDeviceType());
-    assertEquals("landscape", browsers.get(elm).getDeviceOrientation());
+    Browser browser1 = browsers.get(0);
+    assertEquals("Amazon_Kindle_Fire_Emulatorlandscapeandroid2_3_7_", browser1.getKey());
+    assertEquals("android", browser1.getOs());
+    assertEquals("android", browser1.getBrowserName());
+    assertEquals("2.3", browser1.getVersion());
+    assertEquals("Amazon Kindle Fire Emulator 2.3 (landscape)", browser1.getName());
+    assertEquals("2.3.7.", browser1.getLongVersion());
+    assertEquals("Amazon Kindle Fire Emulator", browser1.getLongName());
+    assertEquals("Amazon Kindle Fire Emulator", browser1.getDevice());
+    assertNull(browser1.getDeviceType());
+    assertEquals("landscape", browser1.getDeviceOrientation());
 
-    elm = 1;
-    assertEquals("Amazon_Kindle_Fire_Emulatorportraitandroid2_3_7_", browsers.get(elm).getKey());
-    assertEquals("android", browsers.get(elm).getOs());
-    assertEquals("android", browsers.get(elm).getBrowserName());
-    assertEquals("2.3", browsers.get(elm).getVersion());
-    assertEquals("Amazon Kindle Fire Emulator 2.3 (portrait)", browsers.get(elm).getName());
-    assertEquals("2.3.7.", browsers.get(elm).getLongVersion());
-    assertEquals("Amazon Kindle Fire Emulator", browsers.get(elm).getLongName());
-    assertEquals("Amazon Kindle Fire Emulator", browsers.get(elm).getDevice());
-    assertEquals(null, browsers.get(elm).getDeviceType());
-    assertEquals("portrait", browsers.get(elm).getDeviceOrientation());
+    Browser browser2 = browsers.get(1);
+    assertEquals("Amazon_Kindle_Fire_Emulatorportraitandroid2_3_7_", browser2.getKey());
+    assertEquals("android", browser2.getOs());
+    assertEquals("android", browser2.getBrowserName());
+    assertEquals("2.3", browser2.getVersion());
+    assertEquals("Amazon Kindle Fire Emulator 2.3 (portrait)", browser2.getName());
+    assertEquals("2.3.7.", browser2.getLongVersion());
+    assertEquals("Amazon Kindle Fire Emulator", browser2.getLongName());
+    assertEquals("Amazon Kindle Fire Emulator", browser2.getDevice());
+    assertNull(browser2.getDeviceType());
+    assertEquals("portrait", browser2.getDeviceOrientation());
   }
 
   @Test
-  public void testGetWebDriverBrowsers() throws IOException {
+  void testGetWebDriverBrowsers() throws IOException {
     List<Browser> browsers = this.browserFactory.getWebDriverBrowsers();
     assertEquals(4, browsers.size());
 
-    int elm = 0;
-    assertEquals(
-        "Amazon_Kindle_Fire_HD_8_9_Emulatorlandscapeandroid4_0_4_", browsers.get(elm).getKey());
-    assertEquals("android", browsers.get(elm).getOs());
-    assertEquals("android", browsers.get(elm).getBrowserName());
-    assertEquals("4.0", browsers.get(elm).getVersion());
-    assertEquals("Amazon Kindle Fire HD 8.9 Emulator 4.0 (landscape)", browsers.get(elm).getName());
-    assertEquals("4.0.4.", browsers.get(elm).getLongVersion());
-    assertEquals("Amazon Kindle Fire HD 8.9 Emulator", browsers.get(elm).getLongName());
-    assertEquals("Amazon Kindle Fire HD 8.9 Emulator", browsers.get(elm).getDevice());
-    assertEquals(null, browsers.get(elm).getDeviceType());
-    assertEquals("landscape", browsers.get(elm).getDeviceOrientation());
+    Browser browser1 = browsers.get(0);
+    assertEquals("Amazon_Kindle_Fire_HD_8_9_Emulatorlandscapeandroid4_0_4_", browser1.getKey());
+    assertEquals("android", browser1.getOs());
+    assertEquals("android", browser1.getBrowserName());
+    assertEquals("4.0", browser1.getVersion());
+    assertEquals("Amazon Kindle Fire HD 8.9 Emulator 4.0 (landscape)", browser1.getName());
+    assertEquals("4.0.4.", browser1.getLongVersion());
+    assertEquals("Amazon Kindle Fire HD 8.9 Emulator", browser1.getLongName());
+    assertEquals("Amazon Kindle Fire HD 8.9 Emulator", browser1.getDevice());
+    assertNull(browser1.getDeviceType());
+    assertEquals("landscape", browser1.getDeviceOrientation());
 
-    elm = 1;
-    assertEquals(
-        "Amazon_Kindle_Fire_HD_8_9_Emulatorportraitandroid4_0_4_", browsers.get(elm).getKey());
-    assertEquals("android", browsers.get(elm).getOs());
-    assertEquals("android", browsers.get(elm).getBrowserName());
-    assertEquals("4.0", browsers.get(elm).getVersion());
-    assertEquals("Amazon Kindle Fire HD 8.9 Emulator 4.0 (portrait)", browsers.get(elm).getName());
-    assertEquals("4.0.4.", browsers.get(elm).getLongVersion());
-    assertEquals("Amazon Kindle Fire HD 8.9 Emulator", browsers.get(elm).getLongName());
-    assertEquals("Amazon Kindle Fire HD 8.9 Emulator", browsers.get(elm).getDevice());
-    assertEquals(null, browsers.get(elm).getDeviceType());
-    assertEquals("portrait", browsers.get(elm).getDeviceOrientation());
+    Browser browser2 = browsers.get(1);
+    assertEquals("Amazon_Kindle_Fire_HD_8_9_Emulatorportraitandroid4_0_4_", browser2.getKey());
+    assertEquals("android", browser2.getOs());
+    assertEquals("android", browser2.getBrowserName());
+    assertEquals("4.0", browser2.getVersion());
+    assertEquals("Amazon Kindle Fire HD 8.9 Emulator 4.0 (portrait)", browser2.getName());
+    assertEquals("4.0.4.", browser2.getLongVersion());
+    assertEquals("Amazon Kindle Fire HD 8.9 Emulator", browser2.getLongName());
+    assertEquals("Amazon Kindle Fire HD 8.9 Emulator", browser2.getDevice());
+    assertNull(browser2.getDeviceType());
+    assertEquals("portrait", browser2.getDeviceOrientation());
 
-    elm = 2;
-    assertEquals("Linuxfirefox4", browsers.get(elm).getKey());
-    assertEquals("Linux", browsers.get(elm).getOs());
-    assertEquals("firefox", browsers.get(elm).getBrowserName());
-    assertEquals("4", browsers.get(elm).getVersion());
-    assertEquals("Linux Firefox 4", browsers.get(elm).getName());
-    assertEquals("4.0.1.", browsers.get(elm).getLongVersion());
-    assertEquals("Firefox", browsers.get(elm).getLongName());
-    assertEquals(null, browsers.get(elm).getDevice());
-    assertEquals(null, browsers.get(elm).getDeviceType());
-    assertEquals(null, browsers.get(elm).getDeviceOrientation());
+    Browser browser3 = browsers.get(2);
+    assertEquals("Linuxfirefox4", browser3.getKey());
+    assertEquals("Linux", browser3.getOs());
+    assertEquals("firefox", browser3.getBrowserName());
+    assertEquals("4", browser3.getVersion());
+    assertEquals("Linux Firefox 4", browser3.getName());
+    assertEquals("4.0.1.", browser3.getLongVersion());
+    assertEquals("Firefox", browser3.getLongName());
+    assertNull(browser3.getDevice());
+    assertNull(browser3.getDeviceType());
+    assertNull(browser3.getDeviceOrientation());
 
-    elm = 3;
-    assertEquals("Linuxfirefoxlatest", browsers.get(elm).getKey());
-    assertEquals("Linux", browsers.get(elm).getOs());
-    assertEquals("firefox", browsers.get(elm).getBrowserName());
-    assertEquals("latest", browsers.get(elm).getVersion());
-    assertEquals("Linux Firefox latest", browsers.get(elm).getName());
-    assertEquals("latest", browsers.get(elm).getLongVersion());
-    assertEquals("Firefox", browsers.get(elm).getLongName());
-    assertEquals(null, browsers.get(elm).getDevice());
-    assertEquals(null, browsers.get(elm).getDeviceType());
-    assertEquals(null, browsers.get(elm).getDeviceOrientation());
+    Browser browser4 = browsers.get(3);
+    assertEquals("Linuxfirefoxlatest", browser4.getKey());
+    assertEquals("Linux", browser4.getOs());
+    assertEquals("firefox", browser4.getBrowserName());
+    assertEquals("latest", browser4.getVersion());
+    assertEquals("Linux Firefox latest", browser4.getName());
+    assertEquals("latest", browser4.getLongVersion());
+    assertEquals("Firefox", browser4.getLongName());
+    assertNull(browser4.getDevice());
+    assertNull(browser4.getDeviceType());
+    assertNull(browser4.getDeviceOrientation());
   }
 
   @Test
-  public void testDuplicateMobileDevice() {
+  void testDuplicateMobileDevice() {
     String obj =
         "{\"deprecated_backend_versions\": [\"1.4.13\"], \"short_version\": \"4.4\", \"long_name\": \"Amazon Kindle Fire HD 8.9 GoogleAPI Emulator\", \"recommended_backend_version\": \"1.5.3\", \"long_version\": \"4.4.\", \"api_name\": \"android\", \"supported_backend_versions\": [\"1.4.16\", \"1.5.1\", \"1.5.2\", \"1.5.3\"], \"device\": \"KindleFireHDGoogleAPI\", \"latest_stable_version\": \"\", \"automation_backend\": \"appium\", \"os\": \"Linux\"}";
 
@@ -191,40 +186,33 @@ public class BrowserFactoryTest {
 
     assertEquals(2, browsers.size());
 
-    int elm = 0;
-    assertEquals(
-        "Amazon_Kindle_Fire_HD_8_9_GoogleAPI_Emulatorlandscapeandroid4_4_",
-        browsers.get(elm).getKey());
-    assertEquals("android", browsers.get(elm).getOs());
-    assertEquals("android", browsers.get(elm).getBrowserName());
-    assertEquals("4.4", browsers.get(elm).getVersion());
-    assertEquals(
-        "Amazon Kindle Fire HD 8.9 GoogleAPI Emulator 4.4 (landscape)",
-        browsers.get(elm).getName());
-    assertEquals("4.4.", browsers.get(elm).getLongVersion());
-    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator", browsers.get(elm).getLongName());
-    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator", browsers.get(elm).getDevice());
-    assertEquals(null, browsers.get(elm).getDeviceType());
-    assertEquals("landscape", browsers.get(elm).getDeviceOrientation());
+    Browser browser1 = browsers.get(0);
+    assertEquals("Amazon_Kindle_Fire_HD_8_9_GoogleAPI_Emulatorlandscapeandroid4_4_", browser1.getKey());
+    assertEquals("android", browser1.getOs());
+    assertEquals("android", browser1.getBrowserName());
+    assertEquals("4.4", browser1.getVersion());
+    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator 4.4 (landscape)", browser1.getName());
+    assertEquals("4.4.", browser1.getLongVersion());
+    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator", browser1.getLongName());
+    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator", browser1.getDevice());
+    assertNull(browser1.getDeviceType());
+    assertEquals("landscape", browser1.getDeviceOrientation());
 
-    elm = 1;
-    assertEquals(
-        "Amazon_Kindle_Fire_HD_8_9_GoogleAPI_Emulatorportraitandroid4_4_",
-        browsers.get(elm).getKey());
-    assertEquals("android", browsers.get(elm).getOs());
-    assertEquals("android", browsers.get(elm).getBrowserName());
-    assertEquals("4.4", browsers.get(elm).getVersion());
-    assertEquals(
-        "Amazon Kindle Fire HD 8.9 GoogleAPI Emulator 4.4 (portrait)", browsers.get(elm).getName());
-    assertEquals("4.4.", browsers.get(elm).getLongVersion());
-    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator", browsers.get(elm).getLongName());
-    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator", browsers.get(elm).getDevice());
-    assertEquals(null, browsers.get(elm).getDeviceType());
-    assertEquals("portrait", browsers.get(elm).getDeviceOrientation());
+    Browser browser2 = browsers.get(1);
+    assertEquals("Amazon_Kindle_Fire_HD_8_9_GoogleAPI_Emulatorportraitandroid4_4_", browser2.getKey());
+    assertEquals("android", browser2.getOs());
+    assertEquals("android", browser2.getBrowserName());
+    assertEquals("4.4", browser2.getVersion());
+    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator 4.4 (portrait)", browser2.getName());
+    assertEquals("4.4.", browser2.getLongVersion());
+    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator", browser2.getLongName());
+    assertEquals("Amazon Kindle Fire HD 8.9 GoogleAPI Emulator", browser2.getDevice());
+    assertNull(browser2.getDeviceType());
+    assertEquals("portrait", browser2.getDeviceOrientation());
   }
 
   @Test
-  public void testDuplicateWebDevice() {
+  void testDuplicateWebDevice() {
     String obj =
         "{\"short_version\": \"4\", \"long_name\": \"Firefox\", \"api_name\": \"firefox\", \"long_version\": \"4.0.1.\", \"latest_stable_version\": \"\", \"automation_backend\": \"webdriver\", \"os\": \"Linux\"}";
     List<Browser> browsers =
@@ -233,28 +221,28 @@ public class BrowserFactoryTest {
 
     assertEquals(2, browsers.size());
 
-    int elm = 0;
-    assertEquals("Linuxfirefox4", browsers.get(elm).getKey());
-    assertEquals("Linux", browsers.get(elm).getOs());
-    assertEquals("firefox", browsers.get(elm).getBrowserName());
-    assertEquals("4", browsers.get(elm).getVersion());
-    assertEquals("Linux Firefox 4", browsers.get(elm).getName());
-    assertEquals("4.0.1.", browsers.get(elm).getLongVersion());
-    assertEquals("Firefox", browsers.get(elm).getLongName());
-    assertNull(browsers.get(elm).getDevice());
-    assertNull(browsers.get(elm).getDeviceType());
-    assertNull(browsers.get(elm).getDeviceOrientation());
+    Browser browser1 = browsers.get(0);
+    assertEquals("Linuxfirefox4", browser1.getKey());
+    assertEquals("Linux", browser1.getOs());
+    assertEquals("firefox", browser1.getBrowserName());
+    assertEquals("4", browser1.getVersion());
+    assertEquals("Linux Firefox 4", browser1.getName());
+    assertEquals("4.0.1.", browser1.getLongVersion());
+    assertEquals("Firefox", browser1.getLongName());
+    assertNull(browser1.getDevice());
+    assertNull(browser1.getDeviceType());
+    assertNull(browser1.getDeviceOrientation());
 
-    elm = 1;
-    assertEquals("Linuxfirefoxlatest", browsers.get(elm).getKey());
-    assertEquals("Linux", browsers.get(elm).getOs());
-    assertEquals("firefox", browsers.get(elm).getBrowserName());
-    assertEquals("latest", browsers.get(elm).getVersion());
-    assertEquals("Linux Firefox latest", browsers.get(elm).getName());
-    assertEquals("latest", browsers.get(elm).getLongVersion());
-    assertEquals("Firefox", browsers.get(elm).getLongName());
-    assertNull(browsers.get(elm).getDevice());
-    assertNull(browsers.get(elm).getDeviceType());
-    assertNull(browsers.get(elm).getDeviceOrientation());
+    Browser browser2 = browsers.get(1);
+    assertEquals("Linuxfirefoxlatest", browser2.getKey());
+    assertEquals("Linux", browser2.getOs());
+    assertEquals("firefox", browser2.getBrowserName());
+    assertEquals("latest", browser2.getVersion());
+    assertEquals("Linux Firefox latest", browser2.getName());
+    assertEquals("latest", browser2.getLongVersion());
+    assertEquals("Firefox", browser2.getLongName());
+    assertNull(browser2.getDevice());
+    assertNull(browser2.getDeviceType());
+    assertNull(browser2.getDeviceOrientation());
   }
 }

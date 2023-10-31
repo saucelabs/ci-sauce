@@ -6,30 +6,30 @@ import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.PlatformEndpoint;
 import com.saucelabs.saucerest.model.platform.Platform;
 import com.saucelabs.saucerest.model.platform.SupportedPlatforms;
-import org.junit.Test;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
  * @author Ross Rowe
  */
-public class BrowserTest {
+class BrowserTest {
   private BrowserFactory browserFactory;
 
-  @Before
-  public void setUp() throws Exception {
+  @BeforeEach
+  void beforeEach() throws Exception {
 
     // Mock appium response
-    List<Platform> appiumPlatforms = new ArrayList<Platform>();
+    List<Platform> appiumPlatforms = new ArrayList<>();
 
     Platform kindle =
         new Platform(
@@ -96,17 +96,17 @@ public class BrowserTest {
   }
 
   @Test
-  public void testNames() {
+  void testNames() {
     Browser browser = new Browser(null, null, null, null, null, null, "Windows 2008");
-    assertEquals("windows 2008 is really windows 7", browser.getName(), "Windows 7");
+    assertEquals(browser.getName(), "Windows 7", "windows 2008 is really windows 7");
     browser = new Browser(null, null, null, null, null, null, "Windows 2003");
-    assertEquals("windows 2003 is really windows xp", browser.getName(), "Windows XP");
+    assertEquals(browser.getName(), "Windows XP", "windows 2003 is really windows xp");
   }
 
   @Test
-  public void browserList() throws Exception {
+  void browserList() {
 
-    List<Platform> appiumPlatforms = new ArrayList<Platform>();
+    List<Platform> appiumPlatforms = new ArrayList<>();
 
     Platform kindle =
         new Platform(
@@ -125,19 +125,19 @@ public class BrowserTest {
     appiumPlatforms.add(kindle);
 
     List<Browser> browsers = browserFactory.getBrowserListFromPlatforms(appiumPlatforms);
-    assertFalse("browsers is empty", browsers.isEmpty());
+    assertFalse(browsers.isEmpty(), "browsers is empty");
   }
 
   @Test
-  public void browserFromSaucelabs() throws IOException {
+  void browserFromSaucelabs() throws IOException {
     List<Browser> browsers = browserFactory.getWebDriverBrowsers();
-    assertFalse("browsers is empty", browsers.isEmpty());
+    assertFalse(browsers.isEmpty(), "browsers is empty");
     browsers = browserFactory.getAppiumBrowsers();
-    assertFalse("browsers is empty", browsers.isEmpty());
+    assertFalse(browsers.isEmpty(), "browsers is empty");
   }
 
   @Test
-  public void copyBrowser() {
+  void copyBrowser() {
     Browser orig =
         new Browser(
             "thisismykey",

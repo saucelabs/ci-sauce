@@ -1,35 +1,38 @@
 package com.saucelabs.ci;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
-
-import static org.junit.Assert.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /** Created by gavinmogan on 2016-02-10. */
-public class BuildInformationTest {
+class BuildInformationTest {
   private BuildInformation build;
-  private JSONObject jobs;
 
-  @Before
-  public void setUp() throws Exception {
+    @BeforeEach
+  void beforeEach() throws Exception {
     JSONObject obj =
         new JSONObject(
-            IOUtils.toString(getClass().getResourceAsStream("/build_info.json"), "UTF-8"));
+            IOUtils.toString(getClass().getResourceAsStream("/build_info.json"), StandardCharsets.UTF_8));
     build = new BuildInformation("1234");
     build.populateFromJson(obj);
   }
 
   @Test
-  public void testBuildId() {
+  void testBuildId() {
     assertEquals("1234", build.getBuildId());
   }
 
   @Test
-  public void testStatus() {
+  void testStatus() {
     assertEquals("failed", build.getStatus());
 
     build.clearChanges();
@@ -50,10 +53,10 @@ public class BuildInformationTest {
   }
 
   @Test
-  public void testPopulateFromJson() {
+  void testPopulateFromJson() {
     assertEquals("test-name", build.getName());
 
-    jobs = new JSONObject();
+    JSONObject jobs = new JSONObject();
     jobs.put("finished", 7);
     jobs.put("passed", 5);
     jobs.put("failed", 2);
@@ -70,7 +73,7 @@ public class BuildInformationTest {
     json.put("name", (String) null);
     build = new BuildInformation("1234");
     build.populateFromJson(json);
-    assertEquals(null, build.getName());
+    assertNull(build.getName());
 
     json.put("name", "Something");
     build = new BuildInformation("1234");
@@ -81,7 +84,7 @@ public class BuildInformationTest {
     json.put("status", (String) null);
     build = new BuildInformation("1234");
     build.populateFromJson(json);
-    assertEquals(null, build.getStatus());
+    assertNull(build.getStatus());
 
     json.put("status", "success");
     build = new BuildInformation("1234");
@@ -127,10 +130,7 @@ public class BuildInformationTest {
   }
 
   @Test
-  public void testBuildName() {
-    HashMap<String, Object> updates = new HashMap<>();
-    updates.put("name", "Gavin's first build");
-
+  void testBuildName() {
     assertEquals("test-name", build.getName());
     assertFalse(build.hasChanges());
     build.setName(null);
@@ -142,19 +142,16 @@ public class BuildInformationTest {
     build.setName("Gavin's first build");
     assertTrue(build.hasBuildName());
     assertTrue(build.hasChanges());
-    assertEquals(updates, build.getChanges());
+    assertEquals(Map.of("name", "Gavin's first build"), build.getChanges());
   }
 
   @Test
-  public void testGetChange() {
-    HashMap<String, Object> updates = new HashMap<>();
-    updates.put("name", "name-name-name");
-
+  void testGetChange() {
     assertEquals("test-name", build.getName());
     assertFalse(build.hasChanges());
     build.setName("name-name-name");
     assertTrue(build.hasChanges());
-    assertEquals(updates, build.getChanges());
+    assertEquals(Map.of("name", "name-name-name"), build.getChanges());
   }
 
   /* TODO - figure out how to test equals */

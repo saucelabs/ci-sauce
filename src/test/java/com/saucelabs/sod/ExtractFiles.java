@@ -1,26 +1,26 @@
 package com.saucelabs.sod;
 
 import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 
 /**
  * @author Ross Rowe
  */
-public class ExtractFiles {
+class ExtractFiles {
 
   private SauceConnectFourManager manager = new SauceConnectFourManager();
 
   @Test
-  public void linux() throws Exception {
+  void linux() throws Exception {
 
     File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
     manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.LINUX);
   }
 
   @Test
-  public void windows() throws Exception {
+  void windows() throws Exception {
     File workingDirectory = new File(System.getProperty("java.io.tmpdir"));
     manager.extractZipFile(workingDirectory, SauceConnectFourManager.OperatingSystem.WINDOWS);
   }
