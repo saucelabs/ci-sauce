@@ -7,12 +7,12 @@ import com.saucelabs.saucerest.model.platform.Platform;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Handles invoking the Sauce REST API to retrieve the list of valid Browsers. The list of browser
@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  */
 public class BrowserFactory {
 
-  private static final Logger logger = Logger.getLogger(BrowserFactory.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(BrowserFactory.class);
 
   public static final int ONE_HOUR_IN_MILLIS = 1000 * 60 * 60;
 
@@ -50,7 +50,7 @@ public class BrowserFactory {
       initializeWebDriverBrowsers();
       initializeAppiumBrowsers();
     } catch (JSONException | IOException e) {
-      logger.log(Level.WARNING, "Error retrieving browsers, attempting to continue", e);
+      LOGGER.warn("Error retrieving browsers, attempting to continue", e);
     }
   }
 

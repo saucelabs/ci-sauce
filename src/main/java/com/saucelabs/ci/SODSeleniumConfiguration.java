@@ -5,11 +5,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author <a href="http://www.sysbliss.com">Jonathan Doklovic</a>
@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  */
 @Deprecated
 public class SODSeleniumConfiguration {
-  private static final Logger logger = Logger.getLogger(SODSeleniumConfiguration.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(SODSeleniumConfiguration.class);
 
   private String username;
   private String accessKey;
@@ -157,7 +157,7 @@ public class SODSeleniumConfiguration {
         this.userExtensions.add(ext);
       } catch (JSONException e) {
         // just print and ignore
-        logger.log(Level.WARNING, "Error parsing JSON string", e);
+        LOGGER.warn("Error parsing JSON string", e);
       }
     }
   }
@@ -168,7 +168,7 @@ public class SODSeleniumConfiguration {
         setUserExtensions(new JSONArray(jsonString));
       } catch (JSONException e) {
         // just print and ignore
-        logger.log(Level.WARNING, "Error parsing JSON string", e);
+        LOGGER.warn("Error parsing JSON string", e);
       }
     }
   }
