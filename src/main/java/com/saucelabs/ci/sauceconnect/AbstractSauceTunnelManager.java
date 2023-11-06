@@ -19,11 +19,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides common logic for the invocation of Sauce Connect v3 and v4 processes. The class
@@ -34,9 +35,7 @@ import org.json.JSONException;
  */
 public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
-  /** Logger instance. */
-  protected static final java.util.logging.Logger julLogger =
-      java.util.logging.Logger.getLogger(AbstractSauceTunnelManager.class.getName());
+  protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractSauceTunnelManager.class);
 
   /** Should Sauce Connect output be suppressed? */
   protected boolean quietMode;
@@ -227,7 +226,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     if (printStream != null) {
       printStream.println(message);
     }
-    julLogger.log(Level.INFO, message);
+    LOGGER.info(message);
   }
 
   /**
@@ -533,7 +532,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         }
       } catch (InterruptedException e) {
         // continue;
-        julLogger.log(Level.WARNING, "Exception occurred during invocation of Sauce Connect", e);
+        LOGGER.warn("Exception occurred during invocation of Sauce Connect", e);
       }
 
       incrementProcessCountForUser(tunnelInformation, printStream);
@@ -600,7 +599,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
     } catch (JSONException | IOException e) {
       // log error and return false
-      julLogger.log(Level.WARNING, "Exception occurred retrieving tunnel information", e);
+      LOGGER.warn("Exception occurred retrieving tunnel information", e);
     }
     return null;
   }
@@ -693,7 +692,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         if (printStream != null) {
           printStream.println(line);
         }
-        julLogger.info(line);
+        LOGGER.info(line);
       }
     }
   }

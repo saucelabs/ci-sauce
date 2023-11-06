@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
 
 import java.net.URL;
 
@@ -204,12 +203,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
       args = generateSauceConnectArgs(args, username, apiKey, port, options);
       args = addExtraInfo(args);
 
-      julLogger.log(
-          Level.INFO,
-          "Launching Sauce Connect "
-              + getCurrentVersion()
-              + " "
-              + hideSauceConnectCommandlineSecrets(args));
+      LOGGER.info("Launching Sauce Connect {} {}", getCurrentVersion(), hideSauceConnectCommandlineSecrets(args));
       return createProcess(args, sauceConnectBinary.getParentFile());
     } catch (IOException e) {
       throw new SauceConnectException(e);
