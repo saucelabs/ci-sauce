@@ -1,17 +1,22 @@
 package com.saucelabs.ci.sauceconnect;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveException;
+import org.apache.commons.compress.archivers.ArchiveInputStream;
+import org.apache.commons.compress.archivers.ArchiveStreamFactory;
+import org.apache.commons.compress.compressors.CompressorException;
+import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.io.IOUtils;
-import org.codehaus.plexus.archiver.AbstractUnArchiver;
-import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver;
-import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,26 +39,32 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
 
   /** Represents the operating system-specific Sauce Connect binary. */
   public enum OperatingSystem {
-    OSX("osx", "zip", UNIX_TEMP_DIR),
-    WINDOWS("win32", "zip", WINDOWS_TEMP_DIR, "sc.exe"),
-    LINUX("linux", "tar.gz", UNIX_TEMP_DIR),
-    LINUX_ARM64("linux-arm64", "tar.gz", UNIX_TEMP_DIR);
+    OSX("osx", "zip", null, UNIX_TEMP_DIR),
+    WINDOWS("win32", "zip", null, WINDOWS_TEMP_DIR, "sc.exe"),
+    LINUX("linux", "tar", "gz", UNIX_TEMP_DIR),
+    LINUX_ARM64("linux-arm64", "tar", "gz", UNIX_TEMP_DIR);
 
     private final String directoryEnding;
     private final String archiveExtension;
+    private final String archiveFormat;
+    private final String compressionAlgorithm;
     private final String executable;
     private final String tempDirectory;
 
     OperatingSystem(
-        String directoryEnding, String archiveExtension, String tempDirectory, String executable) {
+        String directoryEnding, String archiveFormat, String compressionAlgorithm, String tempDirectory,
+        String executable) {
       this.directoryEnding = directoryEnding;
-      this.archiveExtension = archiveExtension;
+      this.archiveExtension = compressionAlgorithm == null ? archiveFormat : archiveFormat + "." + compressionAlgorithm;
+      this.archiveFormat = archiveFormat;
+      this.compressionAlgorithm = compressionAlgorithm;
       this.executable = "bin" + File.separatorChar + executable;
       this.tempDirectory = tempDirectory;
     }
 
-    OperatingSystem(String directoryEnding, String archiveExtension, String tempDirectory) {
-      this(directoryEnding, archiveExtension, tempDirectory, "sc");
+    OperatingSystem(String directoryEnding, String archiveFormat, String compressionAlgorithm,
+        String tempDirectory) {
+      this(directoryEnding, archiveFormat, compressionAlgorithm, tempDirectory, "sc");
     }
 
     public static OperatingSystem getOperatingSystem() {
@@ -284,26 +295,15 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
    * @return the directory containing the extracted files
    * @throws IOException thrown if an error occurs extracting the files
    */
-  public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem)
-      throws IOException {
-    File zipFile =
-        extractFile(workingDirectory, operatingSystem.getFileName(useLatestSauceConnect));
-    if (cleanUpOnExit) {
-      zipFile.deleteOnExit();
-    }
-    AbstractUnArchiver unArchiver;
-    if (operatingSystem == OperatingSystem.OSX || operatingSystem == OperatingSystem.WINDOWS) {
-      unArchiver = new ZipUnArchiver();
-    } else if (operatingSystem == OperatingSystem.LINUX
-        || operatingSystem == OperatingSystem.LINUX_ARM64) {
-      removeOldTarFile(zipFile);
-      unArchiver = new TarGZipUnArchiver();
-    } else {
-      throw new RuntimeException("Unknown operating system: " + operatingSystem.name());
-    }
-    unArchiver.setSourceFile(zipFile);
-    unArchiver.setDestDirectory(workingDirectory);
-    unArchiver.extract();
+  public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
+    String archiveFileName = operatingSystem.getFileName(useLatestSauceConnect);
+
+    InputStream archiveInputStream = useLatestSauceConnect ?
+      new URL("https://saucelabs.com/downloads/" + archiveFileName).openStream() :
+      getClass().getClassLoader().getResourceAsStream(archiveFileName);
+    extract(archiveInputStream, workingDirectory.toPath(), operatingSystem.archiveFormat,
+      operatingSystem.compressionAlgorithm);
+
     File unzipDir = getUnzipDir(workingDirectory, operatingSystem);
     if (cleanUpOnExit) {
       unzipDir.deleteOnExit();
@@ -311,37 +311,29 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
     return unzipDir;
   }
 
+  private static void extract(InputStream archiveInputStream, Path workingDirectory, String archiveFormat,
+    String compressionAlgorithm) throws IOException {
+      try (InputStream is = archiveInputStream;
+        InputStream bis = new BufferedInputStream(is);
+        InputStream cis = compressionAlgorithm == null ? bis :
+            CompressorStreamFactory.getSingleton().createCompressorInputStream(compressionAlgorithm, bis);
+        ArchiveInputStream ais = ArchiveStreamFactory.DEFAULT.createArchiveInputStream(archiveFormat, cis)) {
+          ArchiveEntry archiveEntry;
+          while ((archiveEntry = ais.getNextEntry()) != null) {
+            Path path = workingDirectory.resolve(archiveEntry.getName());
+            if (archiveEntry.isDirectory()) {
+              Files.createDirectories(path);
+            } else {
+              Files.copy(ais, path);
+            }
+          }
+      } catch (ArchiveException | CompressorException e) {
+        throw new IOException(e);
+      }
+  }
+
   private File getUnzipDir(File workingDirectory, OperatingSystem operatingSystem) {
     return new File(workingDirectory, operatingSystem.getDirectory(useLatestSauceConnect));
-  }
-
-  private void removeOldTarFile(File zipFile) throws SauceConnectException {
-    File tarFile = new File(zipFile.getParentFile(), zipFile.getName().replaceAll(".gz", ""));
-    removeFileIfExists(tarFile, "Unable to delete old tar");
-  }
-
-  /**
-   * @param workingDirectory the destination directory
-   * @param fileName the name of the file to extract
-   * @return the directory containing the extracted files
-   * @throws IOException thrown if an error occurs extracting the files
-   */
-  private File extractFile(File workingDirectory, String fileName) throws IOException {
-    File destination = new File(workingDirectory, fileName);
-    removeFileIfExists(destination, "Unable to delete old zip");
-    InputStream inputStream =
-        useLatestSauceConnect
-            ? new URL("https://saucelabs.com/downloads/" + fileName).openStream()
-            : getClass().getClassLoader().getResourceAsStream(fileName);
-    FileUtils.copyInputStreamToFile(inputStream, destination);
-    return destination;
-  }
-
-  private static void removeFileIfExists(File file, String exceptionMessage)
-      throws SauceConnectException {
-    if (file.exists() && !file.delete()) {
-      throw new SauceConnectException(exceptionMessage);
-    }
   }
 
   /** {@inheritDoc} */
