@@ -19,8 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.slf4j.Logger;
@@ -166,29 +164,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
   private void closeSauceConnectProcess(PrintStream printStream, final Process sauceConnect) {
     logMessage(printStream, "Flushing Sauce Connect Input Stream");
-    new Thread(
-            new Runnable() {
-              public void run() {
-                try {
-                  IOUtils.copy(sauceConnect.getInputStream(), NullOutputStream.INSTANCE);
-                } catch (IOException e) {
-                  // ignore
-                }
-              }
-            })
-        .start();
+    new Thread(() -> flushInputStream(sauceConnect.getInputStream())).start();
     logMessage(printStream, "Flushing Sauce Connect Error Stream");
-    new Thread(
-            new Runnable() {
-              public void run() {
-                try {
-                  IOUtils.copy(sauceConnect.getErrorStream(), NullOutputStream.INSTANCE);
-                } catch (IOException e) {
-                  // ignore
-                }
-              }
-            })
-        .start();
+    new Thread(() -> flushInputStream(sauceConnect.getErrorStream())).start();
     logMessage(printStream, "Closing Sauce Connect process");
     sauceConnect.destroy();
     try {
@@ -199,6 +177,14 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+    }
+  }
+
+  private static void flushInputStream(InputStream inputStream) {
+    try {
+        inputStream.skip(inputStream.available());
+    } catch (IOException e) {
+        // ignore
     }
   }
 
