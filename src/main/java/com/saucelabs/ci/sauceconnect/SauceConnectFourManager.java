@@ -6,7 +6,6 @@ import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
-import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
@@ -14,7 +13,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
@@ -254,10 +256,11 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
 
   public static String getLatestSauceConnectVersion() {
     try {
-      URL url = new URL("https://saucelabs.com/versions.json");
-      String versionsJson = IOUtils.toString(url, StandardCharsets.UTF_8);
+      URI url = URI.create("https://saucelabs.com/versions.json");
+      HttpRequest request = HttpRequest.newBuilder(url).build();
+      String versionsJson = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
       return new JSONObject(versionsJson).getJSONObject("Sauce Connect").getString("version");
-    } catch (IOException e) {
+    } catch (IOException | InterruptedException e) {
       return null;
     }
   }

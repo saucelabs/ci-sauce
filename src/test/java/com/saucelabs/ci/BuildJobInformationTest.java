@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,7 @@ class BuildJobInformationTest {
   void beforeEach() throws Exception {
     JSONObject obj =
         new JSONObject(
-            IOUtils.toString(getClass().getResourceAsStream("/build_job.json"), StandardCharsets.UTF_8));
+            new String(getClass().getResourceAsStream("/build_job.json").readAllBytes(), StandardCharsets.UTF_8));
     job = new BuildJobInformation(obj);
   }
 
@@ -28,7 +27,7 @@ class BuildJobInformationTest {
   void testBuildJobInformation_ConstructorFromJSON() throws Exception {
     JSONObject obj =
         new JSONObject(
-            IOUtils.toString(getClass().getResourceAsStream("/build_job.json"), StandardCharsets.UTF_8));
+            new String(getClass().getResourceAsStream("/build_job.json").readAllBytes(), StandardCharsets.UTF_8));
     job = new BuildJobInformation(obj);
 
     assertEquals(1641976754, job.getCreationTime());

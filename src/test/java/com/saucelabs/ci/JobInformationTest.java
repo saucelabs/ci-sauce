@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,8 @@ public class JobInformationTest {
   @BeforeEach
   void beforeEach() throws Exception {
     JSONObject obj =
-        new JSONObject(IOUtils.toString(getClass().getResourceAsStream("/job_info.json"), StandardCharsets.UTF_8));
+        new JSONObject(
+            new String(getClass().getResourceAsStream("/job_info.json").readAllBytes(), StandardCharsets.UTF_8));
     job = new JobInformation("1234", "hmac");
     job.populateFromJson(obj);
   }

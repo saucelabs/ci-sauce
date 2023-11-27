@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +20,7 @@ class BuildInformationTest {
   void beforeEach() throws Exception {
     JSONObject obj =
         new JSONObject(
-            IOUtils.toString(getClass().getResourceAsStream("/build_info.json"), StandardCharsets.UTF_8));
+            new String(getClass().getResourceAsStream("/build_info.json").readAllBytes(), StandardCharsets.UTF_8));
     build = new BuildInformation("1234");
     build.populateFromJson(obj);
   }
