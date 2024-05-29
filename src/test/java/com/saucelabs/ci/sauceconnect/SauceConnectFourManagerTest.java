@@ -57,7 +57,7 @@ class SauceConnectFourManagerTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void testOpenConnectionSuccessfully(boolean cleanUpOnExit) throws IOException {
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of());
+    when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
     tunnelManager.setCleanUpOnExit(cleanUpOnExit);
     Process process = testOpenConnection("/started_sc.log");
     assertEquals(mockProcess, process);
@@ -65,7 +65,7 @@ class SauceConnectFourManagerTest {
 
   @Test
   void openConnectionTest_closes() throws IOException, InterruptedException {
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of());
+    when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
     when(mockProcess.waitFor(30, TimeUnit.SECONDS)).thenReturn(true);
     assertThrows(AbstractSauceTunnelManager.SauceConnectDidNotStartException.class, () -> testOpenConnection(
             "/started_sc_closes.log"));
@@ -74,7 +74,7 @@ class SauceConnectFourManagerTest {
 
   @Test
   void testOpenConnectionWithExtraSpacesInArgs() throws IOException {
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of());
+    when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
     testOpenConnection("/started_sc.log", " username-with-spaces-around ");
   }
 
@@ -95,7 +95,7 @@ class SauceConnectFourManagerTest {
       return tunnelManager.openConnection(
           username, apiKey, dataCenter, port, null, "  ", ps, false, "");
     } finally {
-      verify(mockSCEndpoint).getTunnelsForAUser();
+      verify(mockSCEndpoint).getTunnelsInformationForAUser();
       ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
       verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
       String[] actualArgs = argsCaptor.getValue();
@@ -122,14 +122,12 @@ class SauceConnectFourManagerTest {
     started.tunnelIdentifier = "8949e55fb5e14fd6bf6230b7a609b494";
     started.status = "running";
 
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of(started.tunnelIdentifier));
-    when(mockSCEndpoint.getTunnelInformation(started.tunnelIdentifier)).thenReturn(started);
+    when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of(started));
 
     Process process = testOpenConnection("/started_sc.log");
     assertEquals(mockProcess, process);
 
-    verify(mockSCEndpoint).getTunnelInformation(started.tunnelIdentifier);
-    verify(mockSCEndpoint).getTunnelsForAUser();
+    verify(mockSCEndpoint).getTunnelsInformationForAUser();
   }
 
   @ParameterizedTest

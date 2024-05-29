@@ -563,24 +563,17 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    */
   private String activeTunnelID(String username, String tunnelName) {
     try {
-      List<String> tunnels = scEndpoint.getTunnelsForAUser();
-      if (tunnels.isEmpty()) {
-        // no active tunnels
-        return null;
-      }
-      // iterate over elements
-      for (String tunnelId : tunnels) {
+      List<com.saucelabs.saucerest.model.sauceconnect.TunnelInformation> tunnelsInformation =
+        scEndpoint.getTunnelsInformationForAUser();
 
-        com.saucelabs.saucerest.model.sauceconnect.TunnelInformation tunnelInformation =
-            scEndpoint.getTunnelInformation(tunnelId);
-
+      for (com.saucelabs.saucerest.model.sauceconnect.TunnelInformation tunnelInformation : tunnelsInformation) {
         String configName = tunnelInformation.tunnelIdentifier;
         String status = tunnelInformation.status;
         if ("running".equalsIgnoreCase(status)
                 && ("null".equalsIgnoreCase(configName) && tunnelName.equals(username))
             || !"null".equalsIgnoreCase(configName) && configName.equals(tunnelName)) {
           // we have an active tunnel
-          return tunnelId;
+          return tunnelInformation.id;
         }
       }
     } catch (JSONException | IOException e) {
