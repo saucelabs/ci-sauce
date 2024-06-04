@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,6 +35,8 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
   protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractSauceTunnelManager.class);
+  private static final Duration READINESS_CHECK_TIMEOUT = Duration.ofSeconds(15);
+  private static final Duration READINESS_CHECK_POLLING_INTERVAL = Duration.ofSeconds(3);
 
   /** Should Sauce Connect output be suppressed? */
   protected boolean quietMode;
@@ -498,8 +501,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
           } else {
             // everything okay, continue the build
-            if (outputGobbler.getTunnelId() != null) {
-              tunnelInformation.setTunnelId(outputGobbler.getTunnelId());
+            String provisionedTunnelId = outputGobbler.getTunnelId();
+            if (provisionedTunnelId != null) {
+              tunnelInformation.setTunnelId(provisionedTunnelId);
+              waitForReadiness(provisionedTunnelId);
             }
             logMessage(
                 printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + name);
@@ -537,7 +542,34 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
   }
 
-  public SystemErrorGobbler makeErrorGobbler(PrintStream printStream, InputStream errorStream) {
+  private void waitForReadiness(String tunnelId) {
+    long pollingIntervalMillis = READINESS_CHECK_POLLING_INTERVAL.toMillis();
+    long endTime = System.currentTimeMillis() + READINESS_CHECK_TIMEOUT.toMillis();
+    try {
+      do {
+        long iterationStartTime = System.currentTimeMillis();
+        Boolean isReady = scEndpoint.getTunnelInformation(tunnelId).isReady;
+        if (Boolean.TRUE.equals(isReady)) {
+            LOGGER.info("Tunnel with ID {} is ready for use", tunnelId);
+            return;
+        }
+        LOGGER.info("Waiting for readiness of tunnel with ID {}", tunnelId);
+        long iterationEndTime = System.currentTimeMillis();
+
+        long iterationPollingTimeout = pollingIntervalMillis - (iterationEndTime - iterationStartTime);
+        if (iterationPollingTimeout > 0) {
+            TimeUnit.MILLISECONDS.sleep(iterationPollingTimeout);
+        }
+      }
+      while (System.currentTimeMillis() <= endTime);
+      LOGGER.warn("Wait for readiness of tunnel with ID {} is timed out", tunnelId);
+    }
+    catch (IOException | InterruptedException e) {
+      LOGGER.warn("Unable to check readiness of tunnel with ID {}", tunnelId, e);
+    }
+  }
+
+    public SystemErrorGobbler makeErrorGobbler(PrintStream printStream, InputStream errorStream) {
     return new SystemErrorGobbler("ErrorGobbler", errorStream, printStream);
   }
 

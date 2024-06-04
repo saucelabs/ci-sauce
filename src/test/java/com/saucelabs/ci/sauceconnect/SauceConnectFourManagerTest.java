@@ -37,6 +37,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SauceConnectFourManagerTest {
 
+  private static final String STARTED_SC_LOG = "/started_sc.log";
+  private static final String STARTED_TUNNEL_ID = "a3ccd3985ed04e7ba0fefc7fa401e9c8";
+
   @Mock private Process mockProcess;
   @Mock private SauceREST mockSauceRest;
   @Mock private SauceConnectEndpoint mockSCEndpoint;
@@ -58,8 +61,11 @@ class SauceConnectFourManagerTest {
   @ValueSource(booleans = {true, false})
   void testOpenConnectionSuccessfully(boolean cleanUpOnExit) throws IOException {
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
+    TunnelInformation readyTunnel = new TunnelInformation();
+    readyTunnel.isReady = true;
+    when(mockSCEndpoint.getTunnelInformation(STARTED_TUNNEL_ID)).thenReturn(readyTunnel);
     tunnelManager.setCleanUpOnExit(cleanUpOnExit);
-    Process process = testOpenConnection("/started_sc.log");
+    Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);
   }
 
@@ -75,7 +81,13 @@ class SauceConnectFourManagerTest {
   @Test
   void testOpenConnectionWithExtraSpacesInArgs() throws IOException {
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
-    testOpenConnection("/started_sc.log", " username-with-spaces-around ");
+    TunnelInformation notReadyTunnel = new TunnelInformation();
+    notReadyTunnel.isReady = false;
+    TunnelInformation readyTunnel = new TunnelInformation();
+    readyTunnel.isReady = true;
+    when(mockSCEndpoint.getTunnelInformation(STARTED_TUNNEL_ID)).thenReturn(notReadyTunnel,
+          readyTunnel);
+    testOpenConnection(STARTED_SC_LOG, " username-with-spaces-around ");
   }
 
   private Process testOpenConnection(String logFile) throws IOException {
@@ -121,10 +133,12 @@ class SauceConnectFourManagerTest {
     TunnelInformation started = new TunnelInformation();
     started.tunnelIdentifier = "8949e55fb5e14fd6bf6230b7a609b494";
     started.status = "running";
+    started.isReady = true;
 
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of(started));
+    when(mockSCEndpoint.getTunnelInformation(STARTED_TUNNEL_ID)).thenReturn(started);
 
-    Process process = testOpenConnection("/started_sc.log");
+    Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);
 
     verify(mockSCEndpoint).getTunnelsInformationForAUser();
