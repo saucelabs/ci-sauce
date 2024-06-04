@@ -39,6 +39,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
   /** Remove all created files and directories on exit */
   private boolean cleanUpOnExit;
 
+  /** System which runs SauceConnect, this info is added to '--extra-info' argument */
+  private final String runner;
+
   /** Represents the operating system-specific Sauce Connect binary. */
   public enum OperatingSystem {
     OSX("osx", "zip", null, UNIX_TEMP_DIR),
@@ -141,12 +144,32 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
   }
 
   /**
+   * Constructs a new instance with quiet mode disabled.
+   *
+   * @param runner System which runs SauceConnect, this info is added to '--extra-info' argument
+   */
+  public SauceConnectFourManager(String runner) {
+    this(false, runner);
+  }
+
+  /**
    * Constructs a new instance.
    *
    * @param quietMode indicates whether Sauce Connect output should be suppressed
    */
   public SauceConnectFourManager(boolean quietMode) {
+    this(quietMode, "jenkins");
+  }
+
+  /**
+   * Constructs a new instance.
+   *
+   * @param quietMode indicates whether Sauce Connect output should be suppressed
+   * @param runner System which runs SauceConnect, this info is added to '--extra-info' argument
+   */
+  public SauceConnectFourManager(boolean quietMode, String runner) {
     super(quietMode);
+    this.runner = runner;
   }
 
   /**
@@ -285,9 +308,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
     String[] result;
     OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
     if (operatingSystem == OperatingSystem.WINDOWS) {
-      result = joinArgs(args, "--extra-info", "{\\\"runner\\\": \\\"jenkins\\\"}");
+      result = joinArgs(args, "--extra-info", "{\\\"runner\\\": \\\"" + runner + "\\\"}");
     } else {
-      result = joinArgs(args, "--extra-info", "{\"runner\": \"jenkins\"}");
+      result = joinArgs(args, "--extra-info", "{\"runner\": \"" + runner + "\"}");
     }
     return result;
   }

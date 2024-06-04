@@ -43,7 +43,7 @@ class SauceConnectFourManagerTest {
   @Mock private Process mockProcess;
   @Mock private SauceREST mockSauceRest;
   @Mock private SauceConnectEndpoint mockSCEndpoint;
-  @Spy private final SauceConnectFourManager tunnelManager = new SauceConnectFourManager(false);
+  @Spy private final SauceConnectFourManager tunnelManager = new SauceConnectFourManager();
 
   private final PrintStream ps = System.out;
 
