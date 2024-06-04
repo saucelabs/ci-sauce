@@ -37,10 +37,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SauceConnectFourManagerTest {
 
+  private static final String STARTED_SC_LOG = "/started_sc.log";
+  private static final String STARTED_TUNNEL_ID = "a3ccd3985ed04e7ba0fefc7fa401e9c8";
+
   @Mock private Process mockProcess;
   @Mock private SauceREST mockSauceRest;
   @Mock private SauceConnectEndpoint mockSCEndpoint;
-  @Spy private final SauceConnectFourManager tunnelManager = new SauceConnectFourManager(false);
+  @Spy private final SauceConnectFourManager tunnelManager = new SauceConnectFourManager();
 
   private final PrintStream ps = System.out;
 
@@ -57,15 +60,18 @@ class SauceConnectFourManagerTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void testOpenConnectionSuccessfully(boolean cleanUpOnExit) throws IOException {
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of());
+    when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
+    TunnelInformation readyTunnel = new TunnelInformation();
+    readyTunnel.isReady = true;
+    when(mockSCEndpoint.getTunnelInformation(STARTED_TUNNEL_ID)).thenReturn(readyTunnel);
     tunnelManager.setCleanUpOnExit(cleanUpOnExit);
-    Process process = testOpenConnection("/started_sc.log");
+    Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);
   }
 
   @Test
   void openConnectionTest_closes() throws IOException, InterruptedException {
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of());
+    when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
     when(mockProcess.waitFor(30, TimeUnit.SECONDS)).thenReturn(true);
     assertThrows(AbstractSauceTunnelManager.SauceConnectDidNotStartException.class, () -> testOpenConnection(
             "/started_sc_closes.log"));
@@ -74,8 +80,14 @@ class SauceConnectFourManagerTest {
 
   @Test
   void testOpenConnectionWithExtraSpacesInArgs() throws IOException {
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of());
-    testOpenConnection("/started_sc.log", " username-with-spaces-around ");
+    when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
+    TunnelInformation notReadyTunnel = new TunnelInformation();
+    notReadyTunnel.isReady = false;
+    TunnelInformation readyTunnel = new TunnelInformation();
+    readyTunnel.isReady = true;
+    when(mockSCEndpoint.getTunnelInformation(STARTED_TUNNEL_ID)).thenReturn(notReadyTunnel,
+          readyTunnel);
+    testOpenConnection(STARTED_SC_LOG, " username-with-spaces-around ");
   }
 
   private Process testOpenConnection(String logFile) throws IOException {
@@ -95,7 +107,7 @@ class SauceConnectFourManagerTest {
       return tunnelManager.openConnection(
           username, apiKey, dataCenter, port, null, "  ", ps, false, "");
     } finally {
-      verify(mockSCEndpoint).getTunnelsForAUser();
+      verify(mockSCEndpoint).getTunnelsInformationForAUser();
       ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
       verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
       String[] actualArgs = argsCaptor.getValue();
@@ -121,15 +133,15 @@ class SauceConnectFourManagerTest {
     TunnelInformation started = new TunnelInformation();
     started.tunnelIdentifier = "8949e55fb5e14fd6bf6230b7a609b494";
     started.status = "running";
+    started.isReady = true;
 
-    when(mockSCEndpoint.getTunnelsForAUser()).thenReturn(List.of(started.tunnelIdentifier));
-    when(mockSCEndpoint.getTunnelInformation(started.tunnelIdentifier)).thenReturn(started);
+    when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of(started));
+    when(mockSCEndpoint.getTunnelInformation(STARTED_TUNNEL_ID)).thenReturn(started);
 
-    Process process = testOpenConnection("/started_sc.log");
+    Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);
 
-    verify(mockSCEndpoint).getTunnelInformation(started.tunnelIdentifier);
-    verify(mockSCEndpoint).getTunnelsForAUser();
+    verify(mockSCEndpoint).getTunnelsInformationForAUser();
   }
 
   @ParameterizedTest
