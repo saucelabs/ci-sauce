@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -23,6 +24,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.List;
 
@@ -148,32 +150,27 @@ class SauceConnectFourManagerTest {
   }
 
   @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void testExtractZipFile(boolean cleanUpOnExit, @TempDir Path folder) throws IOException {
-    File linux_destination = folder.resolve("sauceconnect_linux").toFile();
-    File windows_destination = folder.resolve("sauceconnect_windows").toFile();
-    File osx_destination = folder.resolve("sauceconnect_osx").toFile();
+  @CsvSource({
+      "true,  LINUX",
+      "true,  WINDOWS",
+      "true,  OSX",
+      "false, LINUX",
+      "false, WINDOWS",
+      "false, OSX"
+  })
+  void testExtractZipFile(boolean cleanUpOnExit, OperatingSystem operatingSystem,
+      @TempDir Path folder) throws IOException {
+    String osName = operatingSystem.name().toLowerCase(Locale.ROOT);
+    File destination = folder.resolve("sauceconnect_" + osName).toFile();
 
     SauceConnectFourManager manager = new SauceConnectFourManager();
     manager.setCleanUpOnExit(cleanUpOnExit);
+    manager.extractZipFile(destination, operatingSystem);
 
-    manager.extractZipFile(linux_destination, OperatingSystem.LINUX);
-    assertSauceConnectFileExists(
-        "Linux executable exists", linux_destination, OperatingSystem.LINUX);
-
-    manager.extractZipFile(windows_destination, OperatingSystem.WINDOWS);
-    assertSauceConnectFileExists(
-        "windows executable exists", windows_destination, OperatingSystem.WINDOWS);
-
-    manager.extractZipFile(osx_destination, OperatingSystem.OSX);
-    assertSauceConnectFileExists("osx executable exists", osx_destination, OperatingSystem.OSX);
-  }
-
-  private void assertSauceConnectFileExists(String message, File destination, OperatingSystem os) {
-    assertTrue(
-        new File(new File(destination, os.getDirectory(false)), os.getExecutable()).exists(),
-        message
-    );
+    File expectedBinaryPath = new File(destination, operatingSystem.getDirectory(false));
+    File expectedBinaryFile = new File(expectedBinaryPath, operatingSystem.getExecutable());
+    assertTrue(expectedBinaryFile.exists(), () -> osName + " binary exists at " + expectedBinaryFile);
+    assertTrue(expectedBinaryFile.canExecute(), () -> osName + " binary " + expectedBinaryFile + " is executable");
   }
 
   @Test
