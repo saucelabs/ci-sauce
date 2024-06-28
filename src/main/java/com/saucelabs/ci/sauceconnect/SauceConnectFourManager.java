@@ -6,6 +6,9 @@ import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+import org.apache.commons.lang3.concurrent.LazyInitializer;
+import org.apache.commons.lang3.concurrent.LazyInitializer.Builder;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
@@ -133,7 +136,9 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
       "Sauce Connect is up, you may start your tests";
 
   public static final String CURRENT_SC_VERSION = "4.9.1";
-  public static final String LATEST_SC_VERSION = getLatestSauceConnectVersion();
+  public static final LazyInitializer<String> LATEST_SC_VERSION = new Builder<LazyInitializer<String>, String>()
+      .setInitializer(SauceConnectFourManager::getLatestSauceConnectVersion)
+      .get();
 
   private static final String SAUCE_CONNECT = "sc-";
   public static final String SAUCE_CONNECT_4 = SAUCE_CONNECT + CURRENT_SC_VERSION;
@@ -379,9 +384,18 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
   }
 
   private static String getVersion(boolean useLatestSauceConnect) {
-    return useLatestSauceConnect && LATEST_SC_VERSION != null
-        ? LATEST_SC_VERSION
-        : CURRENT_SC_VERSION;
+    if (useLatestSauceConnect) {
+      try {
+        String latestVersion = LATEST_SC_VERSION.get();
+        if (latestVersion != null) {
+          return latestVersion;
+        }
+      }
+      catch (ConcurrentException e) {
+        // Never happens
+      }
+    }
+    return CURRENT_SC_VERSION;
   }
 
   /**

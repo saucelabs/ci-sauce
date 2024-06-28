@@ -13,7 +13,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,6 +24,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Locale;
@@ -35,8 +40,11 @@ import static org.hamcrest.Matchers.lessThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -211,5 +219,29 @@ class SauceConnectFourManagerTest {
 
     args = new String[] {"-w", "super-user:passwd"};
     assertEquals("[-w, super-user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+  }
+
+  @Test
+  void shouldInitLatestVersionLazilyAndOnce() throws IOException, InterruptedException {
+    try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
+      HttpClient httpClient = mock();
+      HttpResponse<String> httpResponse = mock();
+      String version = "4.99.99";
+      when(httpResponse.body()).thenReturn("{\"Sauce Connect\": {\"version\": \"" + version + "\"}}");
+      when(httpClient.send(any(), argThat((ArgumentMatcher<BodyHandler<String>>) argument -> true))).thenReturn(
+          httpResponse);
+      httpClientStaticMock.when(HttpClient::newHttpClient).thenReturn(httpClient);
+
+      SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager();
+      sauceConnectFourManager.setUseLatestSauceConnect(true);
+
+      String currentVersion = sauceConnectFourManager.getCurrentVersion();
+      assertEquals(version, currentVersion);
+      httpClientStaticMock.verify(HttpClient::newHttpClient);
+
+      currentVersion = sauceConnectFourManager.getCurrentVersion();
+      assertEquals(version, currentVersion);
+      httpClientStaticMock.verifyNoMoreInteractions();
+    }
   }
 }
