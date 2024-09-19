@@ -23,10 +23,6 @@ class AbstractSauceTunnelManagerTest {
         AbstractSauceTunnelManager.getTunnelName("--tunnel-name basic -c", "default"),
         "basic --tunnel-name");
     assertEquals(
-        "basic",
-        AbstractSauceTunnelManager.getTunnelName("--tunnel-identifier basic -c", "default"),
-        "old --tunnel-identifier");
-    assertEquals(
         "third",
         AbstractSauceTunnelManager.getTunnelName(
             "-i first --tunnel-name second -c -i third", "default"),
@@ -50,11 +46,9 @@ class AbstractSauceTunnelManagerTest {
     Semaphore semaphore = new Semaphore(1);
     SauceConnectManager man = new SauceConnectManager(true);
     AbstractSauceTunnelManager.SystemOutGobbler sot = man.makeOutputGobbler(null, null, semaphore);
-    sot.processLine("Provisioned tunnel:tunnelId1");
+    sot.processLine("sauce connect running id=tunnelId1");
     assertEquals(sot.getTunnelId(), "tunnelId1");
-    sot.processLine("Provisioned tunnel:    tunnelId2    ");
-    assertEquals(sot.getTunnelId(), "tunnelId2");
-    sot.processLine("Provisioned tunnel:    tunnelId2    ");
+    sot.processLine("sauce connect running id=tunnelId2    ");
     assertEquals(sot.getTunnelId(), "tunnelId2");
   }
 }
