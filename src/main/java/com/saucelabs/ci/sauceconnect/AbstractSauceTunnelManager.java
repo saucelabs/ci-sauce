@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Provides common logic for the invocation of Sauce Connect v3 and v4 processes. The class
+ * Provides common logic for the invocation of Sauce Connect processes. The class
  * maintains a cache of {@link Process } instances mapped against the corresponding Sauce user which
  * invoked Sauce Connect.
  *
@@ -76,10 +76,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     String[] split = options.split(" ");
     for (int i = 0; i < split.length; i++) {
       String option = split[i];
-      // Handle old tunnel-identifier option and well as new tunnel-name
       if (option.equals("-i")
-          || option.equals("--tunnel-name")
-          || option.equals("--tunnel-identifier")) {
+          || option.equals("--tunnel-name")) {
         // next option is name
         name = split[i + 1];
       }
@@ -543,40 +541,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
             // ensure that Sauce Connect process is closed
             closeSauceConnectProcess(printStream, process);
             throw new SauceConnectDidNotStartException(message);
-          } else if (outputGobbler.isCantLockPidfile()) {
-            logMessage(
-                printStream,
-                "Sauce Connect can't lock pidfile, attempting to close open Sauce Connect processes");
-            // close any open Sauce Connect processes
-            for (Process openedProcess : openedProcesses) {
-              openedProcess.destroy();
-            }
-
-            // Sauce Connect failed to start, possibly because although process has been killed by
-            // the plugin, it still remains active for a few seconds
-            if (launchAttempts.get() < 3) {
-              // wait for a few seconds to let the process finish closing
-              Thread.sleep(5000);
-              // increment launch attempts variable
-              launchAttempts.incrementAndGet();
-
-              // call openConnection again to see if the process has closed
-              return openConnection(
-                  username,
-                  apiKey,
-                  dataCenter,
-                  port,
-                  sauceConnectJar,
-                  options,
-                  printStream,
-                  verboseLogging,
-                  sauceConnectPath);
-            } else {
-              // we've tried relaunching Sauce Connect 3 times
-              throw new SauceConnectDidNotStartException(
-                  "Unable to start Sauce Connect, please see the Sauce Connect log");
-            }
-
           } else {
             // everything okay, continue the build
             String provisionedTunnelId = outputGobbler.getTunnelId();
@@ -701,12 +665,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param args the initial Sauce Connect command line args
    * @param username name of the user which launched Sauce Connect
    * @param apiKey the access key for the Sauce user
-   * @param port the port that Sauce Connect should be launched on
    * @param options command line args specified by the user
    * @return String array representing the command line args to be used to launch Sauce Connect
    */
   protected abstract String[] generateSauceConnectArgs(
-      String[] args, String username, String apiKey, int port, String options);
+      String[] args, String username, String apiKey, String options);
 
   protected abstract String[] addExtraInfo(String[] args);
 
@@ -806,7 +769,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
     private String tunnelId;
     private boolean failed;
-    private boolean cantLockPidfile;
 
     public SystemOutGobbler(
         String name,
@@ -831,22 +793,14 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     protected void processLine(String line) {
       super.processLine(line);
 
-      if (StringUtils.containsIgnoreCase(line, "can't lock pidfile")) {
-        // this message is generated from Sauce Connect when the pidfile can't be locked, indicating
-        // that SC is still running
-        cantLockPidfile = true;
+      System.out.println(line);
+      if (StringUtils.containsIgnoreCase(line, "sauce connect running id=")) {
+        tunnelId = StringUtils.substringAfter(line, "sauce connect running id=").trim();
       }
-
-      if (StringUtils.containsIgnoreCase(line, "Tunnel ID:")) {
-        tunnelId = StringUtils.substringAfter(line, "Tunnel ID: ").trim();
-      }
-      if (StringUtils.containsIgnoreCase(line, "Provisioned tunnel:")) {
-        tunnelId = StringUtils.substringAfter(line, "Provisioned tunnel:").trim();
-      }
-      if (StringUtils.containsIgnoreCase(line, "Goodbye")) {
+      if (StringUtils.containsIgnoreCase(line, "fatal error exiting")) {
         failed = true;
       }
-      if (StringUtils.containsIgnoreCase(line, startedMessage) || failed || cantLockPidfile) {
+      if (StringUtils.containsIgnoreCase(line, startedMessage) || failed) {
         // unlock processMonitor
         semaphore.release();
       }
@@ -858,10 +812,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
     public boolean isFailed() {
       return failed;
-    }
-
-    public boolean isCantLockPidfile() {
-      return cantLockPidfile;
     }
   }
 
