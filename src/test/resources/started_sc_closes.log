@@ -1,23 +1,21 @@
-16 Nov 18:05:25 - Sauce Connect 4.3.12, build 1789 45fd5e3
-16 Nov 18:05:25 - *** WARNING: open file limit 256 is too low!
-16 Nov 18:05:25 - *** Sauce Labs recommends setting it to at least 8000.
-16 Nov 18:05:25 - Starting up; pid 29128
-16 Nov 18:05:25 - Command line arguments: /Users/gavinmogan/sc-4.3.12-osx/bin/sc -u halkeye -k ****
-16 Nov 18:05:25 - Using no proxy for connecting to Sauce Labs REST API.
-16 Nov 18:05:25 - Resolving saucelabs.com to 162.222.75.243 took 18 ms.
-16 Nov 18:05:25 - Started scproxy on port 65464.
-16 Nov 18:05:25 - Please wait for 'you may start your tests' to start your tests.
-16 Nov 18:05:25 - Starting secure remote tunnel VM...
-16 Nov 18:05:31 - Secure remote tunnel VM provisioned.
-16 Nov 18:05:31 - Tunnel ID: 6987f1030bf2487192d43a9c28f29cb4
-16 Nov 18:05:31 - Secure remote tunnel VM is now: booting
-16 Nov 18:05:43 - Secure remote tunnel VM is now: running
-16 Nov 18:05:43 - Using no proxy for connecting to tunnel VM.
-16 Nov 18:05:43 - Resolving tunnel hostname to 162.222.76.110 took 16ms.
-16 Nov 18:05:43 - Starting Selenium listener...
-16 Nov 18:05:43 - Establishing secure TLS connection to tunnel...
-16 Nov 18:05:43 - Selenium listener started on port 4445.
-16 Nov 18:06:28 - Cleaning up.
-16 Nov 18:06:28 - Checking domain overlap for my domain sauce-connect.proxy, other tunnel domain sauce-connect.proxy
-16 Nov 18:06:28 - Overlapping domain: sauce-connect.proxy, shutting down tunnel 6987f1030bf2487192d43a9c28f29cb4.
-16 Nov 18:06:32 - Goodbye.
+2024/09/27 22:19:32.150377 [control] [info] sauce connect proxy version=5.1.0
+2024/09/27 22:19:32.164422 [control] [info] configuration
+access-key=xxxxx
+api-address=:9000
+config-file=us-west.yaml
+log-http=proxy:url
+region=us-west
+tunnel-name=foo
+username=user
+2024/09/27 22:19:32.164655 [proxy] [info] no upstream proxy specified
+2024/09/27 22:19:32.164660 [proxy] [info] localhost proxying mode=deny
+2024/09/27 22:19:32.166448 [control] [info] please wait for 'you may start your tests' to start your tests
+2024/09/27 22:19:32.166461 [control] [info] provisioning sauce connect region=us-west name=foo
+2024/09/27 22:19:38.416501 [control] [info] sauce connect running id=0bf5b8e2090d4212ad2cc7c241382489
+2024/09/27 22:19:38.416631 [tunnel] [info] waiting for sauce connect server to be reachable
+2024/09/27 22:19:38.737149 [api] [info] http server listen address=[::]:9000 protocol=http
+2024/09/27 22:19:38.737528 [tunnel] [info] connecting to address=tunnel-74407d.tunnels.us-west-4-i3er.saucelabs.com:443
+2024/09/27 22:19:39.552134 [tunnel] [info] connecting to address=tunnel-74407d.tunnels.us-west-4-i3er.saucelabs.com:443
+2024/09/27 22:19:39.552201 [tunnel] [info] established connection to sauce connect server active=1/2
+2024/09/27 22:19:39.990136 [tunnel] [info] established connection to sauce connect server active=2/2
+2024/09/27 22:46:35.320623 [ERROR] fatal error exiting: api: failed to open listener on address :8080: listen tcp :8080: bind: address already in use

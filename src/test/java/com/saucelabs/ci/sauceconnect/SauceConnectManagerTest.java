@@ -52,7 +52,7 @@ import static org.mockito.Mockito.when;
 class SauceConnectManagerTest {
 
   private static final String STARTED_SC_LOG = "/started_sc.log";
-  private static final String STARTED_TUNNEL_ID = "a3ccd3985ed04e7ba0fefc7fa401e9c8";
+  private static final String STARTED_TUNNEL_ID = "0bf5b8e2090d4212ad2cc7c241382489";
 
   @Mock private Process mockProcess;
   @Mock private SauceREST mockSauceRest;
@@ -124,20 +124,16 @@ class SauceConnectManagerTest {
       ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
       verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
       String[] actualArgs = argsCaptor.getValue();
-      assertEquals(9, actualArgs.length);
-      assertEquals("-u", actualArgs[1]);
-      assertEquals(username.trim(), actualArgs[2]);
-      assertEquals("-k", actualArgs[3]);
-      assertEquals(apiKey, actualArgs[4]);
-      assertEquals("-P", actualArgs[5]);
-      assertThat(Integer.parseInt(actualArgs[6]), allOf(greaterThan(0), lessThan(65536)));
-      assertEquals("--extra-info", actualArgs[7]);
-      OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
-      if (operatingSystem == OperatingSystem.WINDOWS) {
-        assertEquals("{\\\"runner\\\": \\\"jenkins\\\"}", actualArgs[8]);
-      } else {
-        assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
-      }
+      assertEquals(10, actualArgs.length);
+      assertEquals("run", actualArgs[1]);
+      assertEquals("--username", actualArgs[2]);
+      assertEquals(username.trim(), actualArgs[3]);
+      assertEquals("--access-key", actualArgs[4]);
+      assertEquals(apiKey, actualArgs[5]);
+      assertEquals("--api-address", actualArgs[6]);
+      assertThat(Integer.parseInt(actualArgs[7].substring(1)), allOf(greaterThan(0), lessThan(65536)));
+      assertEquals("--metadata", actualArgs[8]);
+      assertEquals("runner=jenkins", actualArgs[9]);
     }
   }
 
@@ -189,36 +185,148 @@ class SauceConnectManagerTest {
         manager.generateSauceConnectArgs(
             args,
             "username",
-            "apiKey-apiKey-apiKey-apiKey-apiKey",
-            1234,
-            "--api-key apiKey-apiKey-apiKey-apiKey-apiKey -w user:pwd --proxy-userpwd user:pwd -a host:8080:user:pwd --auth host:8080:user:pwd -p host:8080 --proxy host:8080 -o pwd --other pwd");
+            "apikey",
+            "--access-key apiKey");
     String result = manager.hideSauceConnectCommandlineSecrets(args);
 
     assertEquals(
-        "[/sauce/connect/binary/path/, -u, username, -k, ****, -P, 1234, --api-key, ****, -w, user:****, --proxy-userpwd, user:****, -a, host:8080:user:****, --auth, host:8080:user:****, -p, host:8080, --proxy, host:8080, -o, pwd, --other, pwd]",
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, --access-key, ****]",
         result);
+
   }
 
   @Test
-  void testSauceConnectSecretsWithSpecialCharactersCoveredWithStars() {
+  void testSauceConnectAuthSecretsCoveredWithStars() {
     SauceConnectManager manager = new SauceConnectManager();
-    String[] args = {"-a", "web-proxy.domain.com:8080:user:pwd"};
+
+    String[] args = {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apikey",
+            "--auth foo:bar@host:8080");
+    String result = manager.hideSauceConnectCommandlineSecrets(args);
+
     assertEquals(
-        "[-a, web-proxy.domain.com:8080:user:****]",
-        manager.hideSauceConnectCommandlineSecrets(args));
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, --auth, ****]",
+        result);
 
-    args = new String[] {"-a", "host:8080:user:passwd%#123"};
-    assertEquals("[-a, host:8080:user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+    args = new String[] {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apikey",
+            "-a foo:bar@host:8080");
+    result = manager.hideSauceConnectCommandlineSecrets(args);
 
-    args = new String[] {"-a", "host:8080:super-user:passwd"};
     assertEquals(
-        "[-a, host:8080:super-user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, -a, ****]",
+        result);
 
-    args = new String[] {"-w", "user:passwd%#123"};
-    assertEquals("[-w, user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+    args = new String[] {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apikey",
+            "-a foo:bar@host:8080 -a user:pwd@host1:1234 --auth root:pass@host2:9999 --auth uucp:pass@host3:8080");
+    result = manager.hideSauceConnectCommandlineSecrets(args);
 
-    args = new String[] {"-w", "super-user:passwd"};
-    assertEquals("[-w, super-user:****]", manager.hideSauceConnectCommandlineSecrets(args));
+    assertEquals(
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, -a, ****, -a, ****, --auth, ****, --auth, ****]",
+        result);
+
+  }
+
+  @Test
+  void testSauceConnectProxySecretsCoveredWithStars() {
+    SauceConnectManager manager = new SauceConnectManager();
+
+    String[] args = {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apikey",
+            "--proxy user:pwd@host:8080");
+    String result = manager.hideSauceConnectCommandlineSecrets(args);
+
+    assertEquals(
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, --proxy, user:****@host:8080]",
+        result);
+
+    args = new String[] {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apikey",
+            "--proxy user@host:8080");
+    result = manager.hideSauceConnectCommandlineSecrets(args);
+
+    assertEquals(
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, --proxy, user@host:8080]",
+        result);
+
+    args = new String[] {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apikey",
+            "-x user@host:8080");
+    result = manager.hideSauceConnectCommandlineSecrets(args);
+
+    assertEquals(
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, -x, user@host:8080]",
+        result);
+
+    args = new String[] {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apikey",
+            "--proxy-sauce user@host:8080");
+    result = manager.hideSauceConnectCommandlineSecrets(args);
+
+    assertEquals(
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, --proxy-sauce, user@host:8080]",
+        result);
+
+  }
+
+  @Test
+  void testSauceConnectAPIBasicAuthSecretsCoveredWithStars() {
+    SauceConnectManager manager = new SauceConnectManager();
+
+    String[] args = {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apiKey",
+            "--api-basic-auth user:pwd");
+    String result = manager.hideSauceConnectCommandlineSecrets(args);
+
+    assertEquals(
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, --api-basic-auth, user:****]",
+        result);
+
+    args = new String[] {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apiKey",
+            "--api-basic-auth user");
+    result = manager.hideSauceConnectCommandlineSecrets(args);
+
+    assertEquals(
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, --api-basic-auth, user]",
+        result);
   }
 
   @Test
@@ -226,7 +334,7 @@ class SauceConnectManagerTest {
     try (MockedStatic<HttpClient> httpClientStaticMock = mockStatic(HttpClient.class)) {
       HttpClient httpClient = mock();
       HttpResponse<String> httpResponse = mock();
-      String version = "4.99.99";
+      String version = "5.99.99";
       when(httpResponse.body()).thenReturn("{\"Sauce Connect\": {\"version\": \"" + version + "\"}}");
       when(httpClient.send(any(), argThat((ArgumentMatcher<BodyHandler<String>>) argument -> true))).thenReturn(
           httpResponse);

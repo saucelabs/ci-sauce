@@ -36,7 +36,7 @@ class ExtractFiles {
   void shouldExtractSauceConnectExecutable(OperatingSystem os, String executableFileName, @TempDir Path tempDir)
       throws IOException {
     File dir = manager.extractZipFile(tempDir.toFile(), os);
-    File executableFile = dir.toPath().resolve("bin/" + executableFileName).toFile();
+    File executableFile = dir.toPath().resolve(executableFileName).toFile();
     assertTrue(executableFile.exists());
   }
 }
