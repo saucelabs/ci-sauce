@@ -31,11 +31,11 @@ import java.util.List;
 import java.net.URL;
 
 /**
- * Handles launching Sauce Connect v4 (binary executable).
+ * Handles launching Sauce Connect (binary executable).
  *
  * @author Ross Rowe
  */
-public class SauceConnectFourManager extends AbstractSauceTunnelManager
+public class SauceConnectManager extends AbstractSauceTunnelManager
     implements SauceTunnelManager {
   private boolean useLatestSauceConnect = false;
 
@@ -111,7 +111,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
     }
 
     public String getDirectory(boolean useLatestSauceConnect) {
-      return SAUCE_CONNECT + getVersion(useLatestSauceConnect) + '-' + directoryEnding;
+      return SAUCE_CONNECT_PREFIX + getVersion(useLatestSauceConnect) + '-' + directoryEnding;
     }
 
     public String getFileName(boolean useLatestSauceConnect) {
@@ -132,19 +132,19 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
   private static final String WINDOWS_TEMP_DIR = System.getProperty("java.io.tmpdir");
 
   /** Output from Sauce Connect process which indicates that it has been started. */
-  private static final String SAUCE_CONNECT_4_STARTED =
+  private static final String SAUCE_CONNECT_STARTED =
       "Sauce Connect is up, you may start your tests";
 
   public static final String CURRENT_SC_VERSION = "4.9.1";
   public static final LazyInitializer<String> LATEST_SC_VERSION = new Builder<LazyInitializer<String>, String>()
-      .setInitializer(SauceConnectFourManager::getLatestSauceConnectVersion)
+      .setInitializer(SauceConnectManager::getLatestSauceConnectVersion)
       .get();
 
-  private static final String SAUCE_CONNECT = "sc-";
-  public static final String SAUCE_CONNECT_4 = SAUCE_CONNECT + CURRENT_SC_VERSION;
+  private static final String SAUCE_CONNECT_PREFIX = "sc-";
+  public static final String SAUCE_CONNECT = SAUCE_CONNECT_PREFIX + CURRENT_SC_VERSION;
 
   /** Constructs a new instance with quiet mode disabled. */
-  public SauceConnectFourManager() {
+  public SauceConnectManager() {
     this(false);
   }
 
@@ -153,7 +153,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
    *
    * @param runner System which runs SauceConnect, this info is added to '--extra-info' argument
    */
-  public SauceConnectFourManager(String runner) {
+  public SauceConnectManager(String runner) {
     this(false, runner);
   }
 
@@ -162,7 +162,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
    *
    * @param quietMode indicates whether Sauce Connect output should be suppressed
    */
-  public SauceConnectFourManager(boolean quietMode) {
+  public SauceConnectManager(boolean quietMode) {
     this(quietMode, "jenkins");
   }
 
@@ -172,7 +172,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
    * @param quietMode indicates whether Sauce Connect output should be suppressed
    * @param runner System which runs SauceConnect, this info is added to '--extra-info' argument
    */
-  public SauceConnectFourManager(boolean quietMode, String runner) {
+  public SauceConnectManager(boolean quietMode, String runner) {
     super(quietMode);
     this.runner = runner;
   }
@@ -375,7 +375,7 @@ public class SauceConnectFourManager extends AbstractSauceTunnelManager
 
   /** {@inheritDoc} */
   protected String getSauceStartedMessage() {
-    return SAUCE_CONNECT_4_STARTED;
+    return SAUCE_CONNECT_STARTED;
   }
 
   @Override

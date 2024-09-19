@@ -3,8 +3,8 @@ package com.saucelabs.sod;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import com.saucelabs.ci.sauceconnect.SauceConnectFourManager;
-import com.saucelabs.ci.sauceconnect.SauceConnectFourManager.OperatingSystem;
+import com.saucelabs.ci.sauceconnect.SauceConnectManager;
+import com.saucelabs.ci.sauceconnect.SauceConnectManager.OperatingSystem;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -20,7 +20,7 @@ import java.util.stream.Stream;
  */
 class ExtractFiles {
 
-  private final SauceConnectFourManager manager = new SauceConnectFourManager();
+  private final SauceConnectManager manager = new SauceConnectManager();
 
   static Stream<Arguments> operatingSystems() {
     return Stream.of(
