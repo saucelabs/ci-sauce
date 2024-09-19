@@ -48,7 +48,7 @@ class AbstractSauceTunnelManagerTest {
   @Test
   void testSystemOutGobbler_ProcessLine() {
     Semaphore semaphore = new Semaphore(1);
-    SauceConnectFourManager man = new SauceConnectFourManager(true);
+    SauceConnectManager man = new SauceConnectManager(true);
     AbstractSauceTunnelManager.SystemOutGobbler sot = man.makeOutputGobbler(null, null, semaphore);
     sot.processLine("Provisioned tunnel:tunnelId1");
     assertEquals(sot.getTunnelId(), "tunnelId1");
