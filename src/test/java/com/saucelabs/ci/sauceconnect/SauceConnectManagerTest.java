@@ -1,6 +1,6 @@
 package com.saucelabs.ci.sauceconnect;
 
-import com.saucelabs.ci.sauceconnect.SauceConnectFourManager.OperatingSystem;
+import com.saucelabs.ci.sauceconnect.SauceConnectManager.OperatingSystem;
 import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.SauceConnectEndpoint;
@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SauceConnectFourManagerTest {
+class SauceConnectManagerTest {
 
   private static final String STARTED_SC_LOG = "/started_sc.log";
   private static final String STARTED_TUNNEL_ID = "a3ccd3985ed04e7ba0fefc7fa401e9c8";
@@ -57,7 +57,7 @@ class SauceConnectFourManagerTest {
   @Mock private Process mockProcess;
   @Mock private SauceREST mockSauceRest;
   @Mock private SauceConnectEndpoint mockSCEndpoint;
-  @Spy private final SauceConnectFourManager tunnelManager = new SauceConnectFourManager();
+  @Spy private final SauceConnectManager tunnelManager = new SauceConnectManager();
 
   private final PrintStream ps = System.out;
 
@@ -171,7 +171,7 @@ class SauceConnectFourManagerTest {
     String osName = operatingSystem.name().toLowerCase(Locale.ROOT);
     File destination = folder.resolve("sauceconnect_" + osName).toFile();
 
-    SauceConnectFourManager manager = new SauceConnectFourManager();
+    SauceConnectManager manager = new SauceConnectManager();
     manager.setCleanUpOnExit(cleanUpOnExit);
     manager.extractZipFile(destination, operatingSystem);
 
@@ -183,7 +183,7 @@ class SauceConnectFourManagerTest {
 
   @Test
   void testSauceConnectSecretsCoveredWithStars() {
-    SauceConnectFourManager manager = new SauceConnectFourManager();
+    SauceConnectManager manager = new SauceConnectManager();
     String[] args = {"/sauce/connect/binary/path/"};
     args =
         manager.generateSauceConnectArgs(
@@ -201,7 +201,7 @@ class SauceConnectFourManagerTest {
 
   @Test
   void testSauceConnectSecretsWithSpecialCharactersCoveredWithStars() {
-    SauceConnectFourManager manager = new SauceConnectFourManager();
+    SauceConnectManager manager = new SauceConnectManager();
     String[] args = {"-a", "web-proxy.domain.com:8080:user:pwd"};
     assertEquals(
         "[-a, web-proxy.domain.com:8080:user:****]",
@@ -232,14 +232,14 @@ class SauceConnectFourManagerTest {
           httpResponse);
       httpClientStaticMock.when(HttpClient::newHttpClient).thenReturn(httpClient);
 
-      SauceConnectFourManager sauceConnectFourManager = new SauceConnectFourManager();
-      sauceConnectFourManager.setUseLatestSauceConnect(true);
+      SauceConnectManager sauceConnectManager = new SauceConnectManager();
+      sauceConnectManager.setUseLatestSauceConnect(true);
 
-      String currentVersion = sauceConnectFourManager.getCurrentVersion();
+      String currentVersion = sauceConnectManager.getCurrentVersion();
       assertEquals(version, currentVersion);
       httpClientStaticMock.verify(HttpClient::newHttpClient);
 
-      currentVersion = sauceConnectFourManager.getCurrentVersion();
+      currentVersion = sauceConnectManager.getCurrentVersion();
       assertEquals(version, currentVersion);
       httpClientStaticMock.verifyNoMoreInteractions();
     }
