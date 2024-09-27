@@ -42,8 +42,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
   /** Remove all created files and directories on exit */
   private boolean cleanUpOnExit;
 
-  // TODO
-  /** System which runs SauceConnect, this info is added to '--extra-info' argument */
+  /** System which runs SauceConnect, this info is added to '--metadata runner=' argument */
   private final String runner;
 
   /** Represents the operating system-specific Sauce Connect binary. */
@@ -153,11 +152,10 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
     this(false);
   }
 
-  // TODO
   /**
    * Constructs a new instance with quiet mode disabled.
    *
-   * @param runner System which runs SauceConnect, this info is added to '--extra-info' argument
+   * @param runner System which runs SauceConnect, this info is added to '--metadata runner=' argument
    */
   public SauceConnectManager(String runner) {
     this(false, runner, DEFAULT_API_PORT);
@@ -176,7 +174,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
    * Constructs a new instance.
    *
    * @param quietMode indicates whether Sauce Connect output should be suppressed
-   * @param runner System which runs SauceConnect, this info is added to '--extra-info' argument
+   * @param runner System which runs SauceConnect, this info is added to '--metadata runner=' argument
    * @param apiPort Port the Sauce Connect process will listen on
    */
   public SauceConnectManager(boolean quietMode, String runner, int apiPort) {
@@ -325,7 +323,6 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
    */
   protected String[] generateSauceConnectArgs(
       String[] args, String username, String accessKey, String options) {
-    // TODO what else?
     String[] result =
         joinArgs(args, "run", "--username", username.trim(), "--access-key", accessKey.trim(), "--api-address", ":" + String.valueOf(this.apiPort));
     result = addElement(result, options);
@@ -333,8 +330,8 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
   }
 
   protected String[] addExtraInfo(String[] args) {
-    // TODO Add runner info to metadata?
-    return args;
+    String[] result = joinArgs(args, "--metadata", "runner=" + this.runner);
+    return result;
   }
 
   /**

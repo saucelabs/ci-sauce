@@ -124,7 +124,7 @@ class SauceConnectManagerTest {
       ArgumentCaptor<String[]> argsCaptor = ArgumentCaptor.forClass(String[].class);
       verify(tunnelManager).createProcess(argsCaptor.capture(), any(File.class));
       String[] actualArgs = argsCaptor.getValue();
-      assertEquals(8, actualArgs.length);
+      assertEquals(10, actualArgs.length);
       assertEquals("run", actualArgs[1]);
       assertEquals("--username", actualArgs[2]);
       assertEquals(username.trim(), actualArgs[3]);
@@ -132,15 +132,8 @@ class SauceConnectManagerTest {
       assertEquals(apiKey, actualArgs[5]);
       assertEquals("--api-address", actualArgs[6]);
       assertThat(Integer.parseInt(actualArgs[7].substring(1)), allOf(greaterThan(0), lessThan(65536)));
-      /* TODO - handle runner metadata
-      assertEquals("--extra-info", actualArgs[7]);
-      OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
-      if (operatingSystem == OperatingSystem.WINDOWS) {
-        assertEquals("{\\\"runner\\\": \\\"jenkins\\\"}", actualArgs[8]);
-      } else {
-        assertEquals("{\"runner\": \"jenkins\"}", actualArgs[8]);
-      }
-      */
+      assertEquals("--metadata", actualArgs[8]);
+      assertEquals("runner=jenkins", actualArgs[9]);
     }
   }
 
