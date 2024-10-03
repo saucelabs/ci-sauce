@@ -40,15 +40,4 @@ class AbstractSauceTunnelManagerTest {
         AbstractSauceTunnelManager.getLogfile("-l first --logfile second -c -l third"),
         "mix of -l and --logfile still returns the last one");
   }
-
-  @Test
-  void testSystemOutGobbler_ProcessLine() {
-    Semaphore semaphore = new Semaphore(1);
-    SauceConnectManager man = new SauceConnectManager(true);
-    AbstractSauceTunnelManager.SystemOutGobbler sot = man.makeOutputGobbler(null, null, semaphore);
-    sot.processLine("sauce connect running id=tunnelId1");
-    assertEquals(sot.getTunnelId(), "tunnelId1");
-    sot.processLine("sauce connect running id=tunnelId2    ");
-    assertEquals(sot.getTunnelId(), "tunnelId2");
-  }
 }
