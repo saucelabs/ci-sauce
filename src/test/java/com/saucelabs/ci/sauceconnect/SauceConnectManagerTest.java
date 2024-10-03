@@ -1,5 +1,6 @@
 package com.saucelabs.ci.sauceconnect;
 
+import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager.SCMonitor;
 import com.saucelabs.ci.sauceconnect.SauceConnectManager.OperatingSystem;
 import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceREST;
@@ -17,7 +18,10 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Spy;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -25,11 +29,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.List;
 
@@ -57,6 +63,7 @@ class SauceConnectManagerTest {
   @Mock private Process mockProcess;
   @Mock private SauceREST mockSauceRest;
   @Mock private SauceConnectEndpoint mockSCEndpoint;
+  @Mock private HttpClient mockHttpClient;
   @Spy private final SauceConnectManager tunnelManager = new SauceConnectManager();
 
   private final PrintStream ps = System.out;
@@ -77,8 +84,21 @@ class SauceConnectManagerTest {
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
     TunnelInformation readyTunnel = new TunnelInformation();
     readyTunnel.isReady = true;
-    when(mockSCEndpoint.getTunnelInformation(STARTED_TUNNEL_ID)).thenReturn(readyTunnel);
     tunnelManager.setCleanUpOnExit(cleanUpOnExit);
+
+    SCMonitor scMonitor = mock(SCMonitor.class);
+
+    doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+      	      Semaphore sem = (Semaphore) invocation.getArgument(0);
+      	      sem.release();
+      	      return null;
+            }
+    }).when(scMonitor).setSemaphore(any(Semaphore.class));
+
+    tunnelManager.setSCMonitor(scMonitor);
+
     Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);
   }
@@ -87,6 +107,21 @@ class SauceConnectManagerTest {
   void openConnectionTest_closes() throws IOException, InterruptedException {
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
     when(mockProcess.waitFor(30, TimeUnit.SECONDS)).thenReturn(true);
+
+    SCMonitor scMonitor = mock(SCMonitor.class);
+
+    doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+      	      Semaphore sem = (Semaphore) invocation.getArgument(0);
+      	      sem.release();
+      	      return null;
+            }
+    }).when(scMonitor).setSemaphore(any(Semaphore.class));
+
+    when(scMonitor.isFailed()).thenReturn(true);
+
+    tunnelManager.setSCMonitor(scMonitor);
     assertThrows(AbstractSauceTunnelManager.SauceConnectDidNotStartException.class, () -> testOpenConnection(
             "/started_sc_closes.log"));
     verify(mockProcess).destroy();
@@ -99,8 +134,20 @@ class SauceConnectManagerTest {
     notReadyTunnel.isReady = false;
     TunnelInformation readyTunnel = new TunnelInformation();
     readyTunnel.isReady = true;
-    when(mockSCEndpoint.getTunnelInformation(STARTED_TUNNEL_ID)).thenReturn(notReadyTunnel,
-          readyTunnel);
+
+    SCMonitor scMonitor = mock(SCMonitor.class);
+
+    doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+      	      Semaphore sem = (Semaphore) invocation.getArgument(0);
+      	      sem.release();
+      	      return null;
+            }
+    }).when(scMonitor).setSemaphore(any(Semaphore.class));
+
+    tunnelManager.setSCMonitor(scMonitor);
+
     testOpenConnection(STARTED_SC_LOG, " username-with-spaces-around ");
   }
 
@@ -113,9 +160,6 @@ class SauceConnectManagerTest {
     final DataCenter dataCenter = DataCenter.US_WEST;
 
     try (InputStream resourceAsStream = getResourceAsStream(logFile)) {
-      when(mockProcess.getErrorStream())
-          .thenReturn(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)));
-      when(mockProcess.getInputStream()).thenReturn(resourceAsStream);
       doReturn(mockProcess).when(tunnelManager).createProcess(any(String[].class), any(File.class));
       return tunnelManager.openConnection(
           username, apiKey, dataCenter, null, "  ", ps, false, "");
@@ -145,7 +189,19 @@ class SauceConnectManagerTest {
     started.isReady = true;
 
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of(started));
-    when(mockSCEndpoint.getTunnelInformation(STARTED_TUNNEL_ID)).thenReturn(started);
+
+    SCMonitor scMonitor = mock(SCMonitor.class);
+
+    doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+      	      Semaphore sem = (Semaphore) invocation.getArgument(0);
+      	      sem.release();
+      	      return null;
+            }
+    }).when(scMonitor).setSemaphore(any(Semaphore.class));
+
+    tunnelManager.setSCMonitor(scMonitor);
 
     Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);

@@ -131,11 +131,6 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
   private static final String WINDOWS_TEMP_DIR = System.getProperty("java.io.tmpdir");
 
-  /** Output from Sauce Connect process which indicates that it has been started. */
-  // TODO Replace with HTTP readiness check
-  private static final String SAUCE_CONNECT_STARTED =
-      "Sauce Connect is up, you may start your tests";
-
   public static final String CURRENT_SC_VERSION = "5.1.3";
   public static final LazyInitializer<String> LATEST_SC_VERSION = new Builder<LazyInitializer<String>, String>()
       .setInitializer(SauceConnectManager::getLatestSauceConnectVersion)
@@ -387,12 +382,6 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
   private File getUnzipDir(File workingDirectory, OperatingSystem operatingSystem) {
     return new File(workingDirectory, operatingSystem.getDirectory(useLatestSauceConnect));
-  }
-
-  // TODO
-  /** {@inheritDoc} */
-  protected String getSauceStartedMessage() {
-    return SAUCE_CONNECT_STARTED;
   }
 
   protected boolean isConnected() {
