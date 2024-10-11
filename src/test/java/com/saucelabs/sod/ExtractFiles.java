@@ -25,9 +25,10 @@ class ExtractFiles {
   static Stream<Arguments> operatingSystems() {
     return Stream.of(
       arguments(OperatingSystem.OSX, "sc"),
-      arguments(OperatingSystem.LINUX, "sc"),
+      arguments(OperatingSystem.LINUX_AMD64, "sc"),
       arguments(OperatingSystem.LINUX_ARM64, "sc"),
-      arguments(OperatingSystem.WINDOWS, "sc.exe")
+      arguments(OperatingSystem.WINDOWS_AMD64, "sauce-connect.exe"),
+      arguments(OperatingSystem.WINDOWS_ARM64, "sauce-connect.exe")
     );
   }
 
