@@ -211,11 +211,15 @@ class SauceConnectManagerTest {
 
   @ParameterizedTest
   @CsvSource({
-      "true,  LINUX",
-      "true,  WINDOWS",
+      "true,  LINUX_AMD64",
+      "true,  LINUX_ARM64",
+      "true,  WINDOWS_AMD64",
+      "true,  WINDOWS_ARM64",
       "true,  OSX",
-      "false, LINUX",
-      "false, WINDOWS",
+      "false, LINUX_AMD64",
+      "false, LINUX_ARM64",
+      "false, WINDOWS_AMD64",
+      "false, WINDOWS_ARM64",
       "false, OSX"
   })
   void testExtractZipFile(boolean cleanUpOnExit, OperatingSystem operatingSystem,

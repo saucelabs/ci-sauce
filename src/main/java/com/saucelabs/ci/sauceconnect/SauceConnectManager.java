@@ -47,10 +47,11 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
   /** Represents the operating system-specific Sauce Connect binary. */
   public enum OperatingSystem {
-    OSX("darwin.all", "zip", null, UNIX_TEMP_DIR),
-    WINDOWS("windows.x86_64", "zip", null, WINDOWS_TEMP_DIR, "sc.exe"),
-    LINUX("linux.x86_64", "tar", "gz", UNIX_TEMP_DIR),
-    LINUX_ARM64("linux.aarch64", "tar", "gz", UNIX_TEMP_DIR);
+    OSX("darwin.all", "zip", null, UNIX_TEMP_DIR, "darwin"),
+    WINDOWS_AMD64("windows.x86_64", "zip", null, WINDOWS_TEMP_DIR, "windows-amd64", "sauce-connect.exe"),
+    WINDOWS_ARM64("windows.aarch64", "zip", null, WINDOWS_TEMP_DIR, "windows-arm64", "sauce-connect.exe"),
+    LINUX_AMD64("linux.x86_64", "tar", "gz", UNIX_TEMP_DIR, "linux-amd64"),
+    LINUX_ARM64("linux.aarch64", "tar", "gz", UNIX_TEMP_DIR, "linux-arm64");
 
     private final String directoryEnding;
     private final String archiveExtension;
@@ -58,27 +59,34 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
     private final String compressionAlgorithm;
     private final String executable;
     private final String tempDirectory;
+    private final String downloadPlatform;
 
     OperatingSystem(
         String directoryEnding, String archiveFormat, String compressionAlgorithm, String tempDirectory,
-        String executable) {
+        String downloadPlatform, String executable) {
       this.directoryEnding = directoryEnding;
       this.archiveExtension = compressionAlgorithm == null ? archiveFormat : archiveFormat + "." + compressionAlgorithm;
       this.archiveFormat = archiveFormat;
       this.compressionAlgorithm = compressionAlgorithm;
       this.executable = executable;
       this.tempDirectory = tempDirectory;
+      this.downloadPlatform = downloadPlatform;
     }
 
     OperatingSystem(String directoryEnding, String archiveFormat, String compressionAlgorithm,
-        String tempDirectory) {
-      this(directoryEnding, archiveFormat, compressionAlgorithm, tempDirectory, "sc");
+        String tempDirectory, String downloadPlatform) {
+      this(directoryEnding, archiveFormat, compressionAlgorithm, tempDirectory, downloadPlatform, "sc");
     }
 
     public static OperatingSystem getOperatingSystem() {
       String os = System.getProperty("os.name").toLowerCase();
       if (isWindows(os)) {
-        return WINDOWS;
+        String arch = System.getProperty("os.arch").toLowerCase();
+
+        if (isArm(arch)) {
+          return WINDOWS_ARM64;
+        }
+        return WINDOWS_AMD64;
       }
       if (isMac(os)) {
         return OSX;
@@ -89,7 +97,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
         if (isArm(arch)) {
           return LINUX_ARM64;
         }
-        return LINUX;
+        return LINUX_AMD64;
       }
       throw new IllegalStateException("Unsupported OS: " + os);
     }
