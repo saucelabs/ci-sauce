@@ -11,6 +11,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ServerSocket;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.json.JSONObject;
 
 /**
  * Provides common logic for the invocation of Sauce Connect v3 and v4 processes. The class
@@ -49,6 +54,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
   private SauceREST sauceRest;
   private SauceConnectEndpoint scEndpoint;
+  private SCMonitor scMonitor;
 
   private AtomicInteger launchAttempts = new AtomicInteger(0);
 
@@ -76,10 +82,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     String[] split = options.split(" ");
     for (int i = 0; i < split.length; i++) {
       String option = split[i];
-      // Handle old tunnel-identifier option and well as new tunnel-name
       if (option.equals("-i")
-          || option.equals("--tunnel-name")
-          || option.equals("--tunnel-identifier")) {
+          || option.equals("--tunnel-name")) {
         // next option is name
         name = split[i + 1];
       }
@@ -114,6 +118,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   public void setSauceRest(SauceREST sauceRest) {
     this.sauceRest = sauceRest;
     this.scEndpoint = sauceRest.getSauceConnectEndpoint();
+  }
+
+  public void setSCMonitor(SCMonitor scMonitor) {
+    this.scMonitor = scMonitor;
   }
 
   /**
@@ -529,57 +537,28 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       try {
         Semaphore semaphore = new Semaphore(1);
         semaphore.acquire();
-        StreamGobbler errorGobbler = makeErrorGobbler(printStream, process.getErrorStream());
-        errorGobbler.start();
-        SystemOutGobbler outputGobbler =
-            makeOutputGobbler(printStream, process.getInputStream(), semaphore);
-        outputGobbler.start();
+
+        SCMonitor scMonitor;
+        if ( this.scMonitor != null ) {
+          scMonitor = this.scMonitor;
+        } else {
+          scMonitor = new SCMonitor("SCMonitor", port, LOGGER);
+        }
+        
+        scMonitor.setSemaphore(semaphore);
+        scMonitor.start();
 
         boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
         if (sauceConnectStarted) {
-          if (outputGobbler.isFailed()) {
+          if (scMonitor.isFailed()) {
             String message = "Error launching Sauce Connect";
             logMessage(printStream, message);
             // ensure that Sauce Connect process is closed
             closeSauceConnectProcess(printStream, process);
             throw new SauceConnectDidNotStartException(message);
-          } else if (outputGobbler.isCantLockPidfile()) {
-            logMessage(
-                printStream,
-                "Sauce Connect can't lock pidfile, attempting to close open Sauce Connect processes");
-            // close any open Sauce Connect processes
-            for (Process openedProcess : openedProcesses) {
-              openedProcess.destroy();
-            }
-
-            // Sauce Connect failed to start, possibly because although process has been killed by
-            // the plugin, it still remains active for a few seconds
-            if (launchAttempts.get() < 3) {
-              // wait for a few seconds to let the process finish closing
-              Thread.sleep(5000);
-              // increment launch attempts variable
-              launchAttempts.incrementAndGet();
-
-              // call openConnection again to see if the process has closed
-              return openConnection(
-                  username,
-                  apiKey,
-                  dataCenter,
-                  port,
-                  sauceConnectJar,
-                  options,
-                  printStream,
-                  verboseLogging,
-                  sauceConnectPath);
-            } else {
-              // we've tried relaunching Sauce Connect 3 times
-              throw new SauceConnectDidNotStartException(
-                  "Unable to start Sauce Connect, please see the Sauce Connect log");
-            }
-
           } else {
             // everything okay, continue the build
-            String provisionedTunnelId = outputGobbler.getTunnelId();
+            String provisionedTunnelId = scMonitor.getTunnelId();
             if (provisionedTunnelId != null) {
               tunnelInformation.setTunnelId(provisionedTunnelId);
               waitForReadiness(provisionedTunnelId);
@@ -647,16 +626,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
   }
 
-    public SystemErrorGobbler makeErrorGobbler(PrintStream printStream, InputStream errorStream) {
-    return new SystemErrorGobbler("ErrorGobbler", errorStream, printStream);
-  }
-
-  public SystemOutGobbler makeOutputGobbler(
-      PrintStream printStream, InputStream inputStream, Semaphore semaphore) {
-    return new SystemOutGobbler(
-        "OutputGobbler", inputStream, semaphore, printStream, getSauceStartedMessage());
-  }
-
   private TunnelInformation getTunnelInformation(String name) {
     if (name == null) {
       return null;
@@ -701,12 +670,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param args the initial Sauce Connect command line args
    * @param username name of the user which launched Sauce Connect
    * @param apiKey the access key for the Sauce user
-   * @param port the port that Sauce Connect should be launched on
    * @param options command line args specified by the user
    * @return String array representing the command line args to be used to launch Sauce Connect
    */
   protected abstract String[] generateSauceConnectArgs(
-      String[] args, String username, String apiKey, int port, String options);
+      String[] args, String username, String apiKey, String options);
 
   protected abstract String[] addExtraInfo(String[] args);
 
@@ -718,11 +686,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   }
 
   public abstract File getSauceConnectLogFile(String options);
-
-  /**
-   * @return Text which indicates that Sauce Connect has started
-   */
-  protected abstract String getSauceStartedMessage();
 
   /** Base exception class which is thrown if an error occurs launching Sauce Connect. */
   public static class SauceConnectException extends IOException {
@@ -747,49 +710,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
   }
 
-  /** Handles receiving and processing the output of an external process. */
-  protected abstract class StreamGobbler extends Thread {
-    private final PrintStream printStream;
-    private final InputStream is;
-
-    public StreamGobbler(String name, InputStream is, PrintStream printStream) {
-      super(name);
-      this.is = is;
-      this.printStream = printStream;
-    }
-
-    /** Opens a BufferedReader over the input stream, reads and processes each line. */
-    public void run() {
-      try {
-        InputStreamReader isr = new InputStreamReader(is);
-        BufferedReader br = new BufferedReader(isr);
-        String line;
-        while ((line = br.readLine()) != null) {
-          processLine(line);
-        }
-      } catch (IOException ioe) {
-        // ignore stream closed errors
-        if (!(ioe.getMessage().equalsIgnoreCase("stream closed"))) {
-          ioe.printStackTrace();
-        }
-      }
-    }
-
-    /**
-     * Processes a line of output received by the stream gobbler.
-     *
-     * @param line line to process
-     */
-    protected void processLine(String line) {
-      if (!quietMode) {
-        if (printStream != null) {
-          printStream.println(line);
-        }
-        LOGGER.info(line);
-      }
-    }
-  }
-
   private int findFreePort() throws SauceConnectException {
     try (ServerSocket socket = new ServerSocket(0)) {
         return socket.getLocalPort();
@@ -798,78 +718,101 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
   }
 
-  /** Handles processing Sauce Connect output sent to stdout. */
-  public class SystemOutGobbler extends StreamGobbler {
-
-    private final Semaphore semaphore;
-    private final String startedMessage;
+  /** Monitors SC Process via HTTP API */
+  public class SCMonitor extends Thread {
+    private Semaphore semaphore;
+    private final int port;
+    private final Logger LOGGER;
 
     private String tunnelId;
     private boolean failed;
-    private boolean cantLockPidfile;
+    private boolean apiResponse;
 
-    public SystemOutGobbler(
+    private HttpClient client = HttpClient.newHttpClient();
+    private static final int sleepTime = 1000;
+
+    public SCMonitor(
         String name,
-        InputStream is,
-        final Semaphore semaphore,
-        PrintStream printStream,
-        String startedMessage) {
-      super(name, is, printStream);
-      this.semaphore = semaphore;
-      this.startedMessage = startedMessage;
+        final int port,
+        final Logger logger) {
+      super(name);
+      this.port = port;
+      this.LOGGER = logger;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>If the line contains the Sauce Connect started message, then release the semaphone, which
-     * will allow the build to resume.
-     *
-     * @param line Line being processed
-     */
-    @Override
-    protected void processLine(String line) {
-      super.processLine(line);
-
-      if (StringUtils.containsIgnoreCase(line, "can't lock pidfile")) {
-        // this message is generated from Sauce Connect when the pidfile can't be locked, indicating
-        // that SC is still running
-        cantLockPidfile = true;
-      }
-
-      if (StringUtils.containsIgnoreCase(line, "Tunnel ID:")) {
-        tunnelId = StringUtils.substringAfter(line, "Tunnel ID: ").trim();
-      }
-      if (StringUtils.containsIgnoreCase(line, "Provisioned tunnel:")) {
-        tunnelId = StringUtils.substringAfter(line, "Provisioned tunnel:").trim();
-      }
-      if (StringUtils.containsIgnoreCase(line, "Goodbye")) {
-        failed = true;
-      }
-      if (StringUtils.containsIgnoreCase(line, startedMessage) || failed || cantLockPidfile) {
-        // unlock processMonitor
-        semaphore.release();
-      }
+    public void setSemaphore(Semaphore semaphore) {
+      this.semaphore = semaphore;
     }
 
     public String getTunnelId() {
-      return tunnelId;
+      HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(String.format("http://localhost:%d/info", port)))
+                        .GET()
+                        .build();
+      try {
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        String responseBody = response.body();
+        JSONObject jsonObject = new JSONObject(responseBody);
+        if (jsonObject.has("tunnel_id")) {
+          return jsonObject.getString("tunnel_id");
+        }
+      } catch (Exception e) {
+        this.LOGGER.info("Failed to get tunnel id", e);
+        return null;
+      }
+      this.LOGGER.info("Failed to get tunnel id");
+      return null;
     }
 
     public boolean isFailed() {
       return failed;
     }
 
-    public boolean isCantLockPidfile() {
-      return cantLockPidfile;
+    public void run() {
+      while (true) {
+        pollEndpoint();
+        if (this.semaphore.availablePermits() > 0) {
+          return;
+        }
+
+        try {
+          Thread.sleep(sleepTime);
+        } catch ( java.lang.InterruptedException e ) {
+          return;
+        }
+      }
     }
-  }
 
-  /** Handles processing Sauce Connect output sent to stderr. */
-  public class SystemErrorGobbler extends StreamGobbler {
+    private void pollEndpoint() {
+      HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(String.format("http://localhost:%d/status", port)))
+                        .GET()
+                        .build();
 
-    public SystemErrorGobbler(String name, InputStream is, PrintStream printStream) {
-      super(name, is, printStream);
+      try {
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        this.LOGGER.info("Got http response", response.statusCode());
+
+        if (response.statusCode() == 200) {
+          this.apiResponse = true;
+          String responseBody = response.body();
+          JSONObject jsonObject = new JSONObject(responseBody);
+          if (jsonObject.has("status") && "connected".equals(jsonObject.getString("status"))) {
+            this.LOGGER.info("Got connected status");
+            semaphore.release();
+          }
+        }
+      } catch ( Exception e ) {
+        if ( this.apiResponse ) {
+          // We've had a successful API endpoint read, but then it stopped responding, which means the process failed to start
+          this.failed = true;
+          this.LOGGER.warn("API stopped responding", e);
+          semaphore.release();
+        }
+      }
+          
+      this.LOGGER.info("No API response yet");
     }
   }
 }
