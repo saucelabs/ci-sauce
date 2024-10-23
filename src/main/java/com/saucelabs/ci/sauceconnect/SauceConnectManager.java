@@ -264,7 +264,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
   }
 
   public String hideSauceConnectCommandlineSecrets(String[] args) {
-    HashMap<String, String> map = new HashMap<>();
+    var map = new HashMap<String, String>();
     map.put("-k", "^().*");
     map.put("--access-key", "^().*");
     map.put("-a", "^().*");
@@ -274,7 +274,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
     map.put("--proxy", "^(.*:).*(@.*)");
     String regexpForNextElement = null;
 
-    HashMap<String, String> replaceMap = new HashMap<>();
+    var replaceMap = new HashMap<String, String>();
     replaceMap.put("-k", "****");
     replaceMap.put("--access-key", "****");
     replaceMap.put("-a", "****");
@@ -283,7 +283,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
     replaceMap.put("-x", "$1****$2");
     replaceMap.put("--proxy", "$1****$2");
     String replaceForNextElement = null;
-    List<String> hiddenArgs = new ArrayList<>();
+    var hiddenArgs = new ArrayList<String>();
 
     for (String arg : args) {
       if (regexpForNextElement != null) {
