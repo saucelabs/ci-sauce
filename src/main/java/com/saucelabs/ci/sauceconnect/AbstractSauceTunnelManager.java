@@ -785,23 +785,19 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
     private void pollEndpoint() {
       HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(String.format("http://localhost:%d/status", port)))
+                        .uri(URI.create(String.format("http://localhost:%d/readyz", port)))
                         .GET()
                         .build();
 
       try {
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        this.LOGGER.info("Got http response", response.statusCode());
-
         if (response.statusCode() == 200) {
           this.apiResponse = true;
-          String responseBody = response.body();
-          JSONObject jsonObject = new JSONObject(responseBody);
-          if (jsonObject.has("status") && "connected".equals(jsonObject.getString("status"))) {
-            this.LOGGER.info("Got connected status");
-            semaphore.release();
-          }
+          this.LOGGER.info("Got connected status");
+          semaphore.release();
+        } else if (response.statusCode() == 503) {
+          this.apiResponse = true;
         }
       } catch ( Exception e ) {
         if ( this.apiResponse ) {
@@ -812,7 +808,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         }
       }
           
-      this.LOGGER.info("No API response yet");
+      this.LOGGER.trace("No API response yet");
     }
   }
 }
