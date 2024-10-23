@@ -139,7 +139,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
   private static final String WINDOWS_TEMP_DIR = System.getProperty("java.io.tmpdir");
 
-  public static final String CURRENT_SC_VERSION = "5.1.3";
+  public static final String CURRENT_SC_VERSION = "5.2.1";
   public static final LazyInitializer<String> LATEST_SC_VERSION = new Builder<LazyInitializer<String>, String>()
       .setInitializer(SauceConnectManager::getLatestSauceConnectVersion)
       .get();
