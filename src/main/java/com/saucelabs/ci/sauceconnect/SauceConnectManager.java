@@ -139,7 +139,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
   private static final String WINDOWS_TEMP_DIR = System.getProperty("java.io.tmpdir");
 
-  public static final String CURRENT_SC_VERSION = "5.2.1";
+  public static final String CURRENT_SC_VERSION = "5.2.2";
   public static final LazyInitializer<String> LATEST_SC_VERSION = new Builder<LazyInitializer<String>, String>()
       .setInitializer(SauceConnectManager::getLatestSauceConnectVersion)
       .get();
@@ -308,10 +308,30 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
   public static String getLatestSauceConnectVersion() {
     try {
-      URI url = URI.create("https://saucelabs.com/versions.json");
+      OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
+      String os = System.getProperty("os.name").toLowerCase();
+      String arch = System.getProperty("os.arch").toLowerCase();
+
+      String query;
+
+      if (operatingSystem.isArm(arch)) {
+        query = "arch=arm64&";
+      } else {
+        query = "arch=x86_64&";
+      }
+
+      if (operatingSystem.isWindows(os)) {
+        query += "os=windows";
+      } else if (operatingSystem.isMac(os)) {
+        query += "os=macos";
+      } else {
+        query += "os=linux";
+      }
+
+      URI url = URI.create("https://api.us-west-1.saucelabs.com/rest/v1/public/tunnels/sauce-connect/download?" + query);
       HttpRequest request = HttpRequest.newBuilder(url).build();
       String versionsJson = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString()).body();
-      return new JSONObject(versionsJson).getJSONObject("Sauce Connect").getString("version");
+      return new JSONObject(versionsJson).getJSONObject("download").getString("version");
     } catch (IOException | InterruptedException e) {
       return null;
     }
