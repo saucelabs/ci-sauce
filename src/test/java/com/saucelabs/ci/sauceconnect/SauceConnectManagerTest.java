@@ -395,7 +395,7 @@ class SauceConnectManagerTest {
       HttpClient httpClient = mock();
       HttpResponse<String> httpResponse = mock();
       String version = "5.99.99";
-      when(httpResponse.body()).thenReturn("{\"Sauce Connect\": {\"version\": \"" + version + "\"}}");
+      when(httpResponse.body()).thenReturn("{\"download\": {\"version\": \"" + version + "\"}}");
       when(httpClient.send(any(), argThat((ArgumentMatcher<BodyHandler<String>>) argument -> true))).thenReturn(
           httpResponse);
       httpClientStaticMock.when(HttpClient::newHttpClient).thenReturn(httpClient);
