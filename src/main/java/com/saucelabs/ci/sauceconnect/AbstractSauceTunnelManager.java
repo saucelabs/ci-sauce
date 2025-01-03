@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.slf4j.Logger;
@@ -225,6 +226,19 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       printStream.println(message);
     }
     LOGGER.info(message);
+  }
+
+  /**
+   * Logs an error message to the print stream (if not null), and to the logger instance for the class.
+   *
+   * @param printStream the output stream to send log messages
+   * @param message the message to be logged
+   */
+  protected void logErrorMessage(PrintStream printStream, String message) {
+    if (printStream != null) {
+      printStream.println(message);
+    }
+    LOGGER.error(message);
   }
 
   /**
@@ -533,6 +547,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       final Process process =
           prepAndCreateProcess(
               username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath);
+
+      // Print sauceconnect process stdout/stderr
+      new ProcessOutputPrinter(process.getInputStream(), (String x) -> logMessage(printStream, x)).start();
+      new ProcessOutputPrinter(process.getErrorStream(), (String x) -> logErrorMessage(printStream, x)).start();
+
       List<Process> openedProcesses = this.openedProcesses.get(name);
       try {
         Semaphore semaphore = new Semaphore(1);
@@ -544,7 +563,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         } else {
           scMonitor = new SCMonitor("SCMonitor", port, LOGGER);
         }
-        
+
         scMonitor.setSemaphore(semaphore);
         scMonitor.start();
 
@@ -807,8 +826,30 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
           semaphore.release();
         }
       }
-          
+
       this.LOGGER.trace("No API response yet");
+    }
+  }
+
+  public class ProcessOutputPrinter extends Thread {
+    private final InputStream inputStream;
+    private final Consumer<String> printConsumer;
+
+    public ProcessOutputPrinter(InputStream inputStream, Consumer<String> printConsumer) {
+      this.inputStream = inputStream;
+      this.printConsumer = printConsumer;
+    }
+
+    @Override
+    public void run() {
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          printConsumer.accept(line);
+        }
+      } catch (IOException e) {
+        LOGGER.error("Error reading process output", e);
+      }
     }
   }
 }
