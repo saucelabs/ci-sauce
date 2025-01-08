@@ -282,6 +282,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param printStream the output stream to send log messages
    * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and
    *     won't be extracted from the jar file
+   * @param legacy options uses SC4 style CLI
    * @return new ProcessBuilder instance which will launch Sauce Connect
    * @throws SauceConnectException thrown if an error occurs launching the Sauce Connect process
    */
@@ -292,7 +293,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       File sauceConnectJar,
       String options,
       PrintStream printStream,
-      String sauceConnectPath)
+      String sauceConnectPath,
+      boolean legacy)
       throws SauceConnectException;
 
   /**
@@ -546,7 +548,158 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
       final Process process =
           prepAndCreateProcess(
-              username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath);
+              username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath, false);
+
+      // Print sauceconnect process stdout/stderr
+      new ProcessOutputPrinter(process.getInputStream(), (String x) -> logMessage(printStream, x)).start();
+      new ProcessOutputPrinter(process.getErrorStream(), (String x) -> logErrorMessage(printStream, x)).start();
+
+      List<Process> openedProcesses = this.openedProcesses.get(name);
+      try {
+        Semaphore semaphore = new Semaphore(1);
+        semaphore.acquire();
+
+        SCMonitor scMonitor;
+        if ( this.scMonitor != null ) {
+          scMonitor = this.scMonitor;
+        } else {
+          scMonitor = new SCMonitor("SCMonitor", port, LOGGER);
+        }
+
+        scMonitor.setSemaphore(semaphore);
+        scMonitor.start();
+
+        boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
+        if (sauceConnectStarted) {
+          if (scMonitor.isFailed()) {
+            String message = "Error launching Sauce Connect";
+            logMessage(printStream, message);
+            // ensure that Sauce Connect process is closed
+            closeSauceConnectProcess(printStream, process);
+            throw new SauceConnectDidNotStartException(message);
+          } else {
+            // everything okay, continue the build
+            String provisionedTunnelId = scMonitor.getTunnelId();
+            if (provisionedTunnelId != null) {
+              tunnelInformation.setTunnelId(provisionedTunnelId);
+              waitForReadiness(provisionedTunnelId);
+            }
+            logMessage(
+                printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + name);
+          }
+        } else {
+          File sauceConnectLogFile = getSauceConnectLogFile(options);
+          String message =
+              sauceConnectLogFile != null
+                  ? "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log located in "
+                      + sauceConnectLogFile.getAbsoluteFile()
+                  : "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
+          logMessage(printStream, message);
+          // ensure that Sauce Connect process is closed
+          closeSauceConnectProcess(printStream, process);
+          throw new SauceConnectDidNotStartException(message);
+        }
+      } catch (InterruptedException e) {
+        // continue;
+        LOGGER.warn("Exception occurred during invocation of Sauce Connect", e);
+      }
+
+      incrementProcessCountForUser(tunnelInformation, printStream);
+      tunnelInformation.setProcess(process);
+      List<Process> processes = openedProcesses;
+      if (processes == null) {
+        processes = new ArrayList<>();
+        this.openedProcesses.put(name, processes);
+      }
+      processes.add(process);
+      return process;
+    } finally {
+      // release the access lock
+      tunnelInformation.getLock().unlock();
+      launchAttempts.set(0);
+    }
+  }
+
+  /**
+   * Creates a new process to run Sauce Connect.
+   *
+   * @param username the name of the Sauce OnDemand user
+   * @param apiKey the API Key for the Sauce OnDemand user
+   * @param dataCenter the Sauce Labs Data Center
+   * @param port the port which Sauce Connect should be run on
+   * @param sauceConnectJar the Jar file containing Sauce Connect. If null, then we attempt to find
+   *     Sauce Connect from the classpath (only used by SauceConnectTwoManager)
+   * @param options the command line options to pass to Sauce Connect
+   * @param printStream A print stream in which to redirect the output from Sauce Connect to. Can be
+   *     null
+   * @param verboseLogging indicates whether verbose logging should be output
+   * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and
+   *     won't be extracted from the jar file
+   * @param legacy options are in SC4 CLI style
+   * @return a {@link Process} instance which represents the Sauce Connect instance
+   * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
+   */
+  @Override
+  public Process openConnection(
+      String username,
+      String apiKey,
+      DataCenter dataCenter,
+      int port,
+      File sauceConnectJar,
+      String options,
+      PrintStream printStream,
+      Boolean verboseLogging,
+      String sauceConnectPath,
+      boolean legacy)
+      throws SauceConnectException {
+
+    // ensure that only a single thread attempts to open a connection
+    if (sauceRest == null) {
+      setSauceRest(new SauceREST(username, apiKey, dataCenter));
+    }
+    String name = getTunnelName(options, username);
+    TunnelInformation tunnelInformation = getTunnelInformation(name);
+    try {
+
+      tunnelInformation.getLock().lock();
+      if (options == null) {
+        options = "";
+      }
+      if (verboseLogging != null) {
+        this.quietMode = !verboseLogging;
+      }
+
+      // do we have an instance for the tunnel name?
+      String tunnelID = activeTunnelID(username, name);
+      if (tunnelInformation.getProcessCount() == 0) {
+        // if the count is zero, check to see if there are any active tunnels
+
+        if (tunnelID != null) {
+          // if we have an active tunnel, but the process count is zero, we have an orphaned SC
+          // process
+          // instead of deleting the tunnel, log a message
+          logMessage(printStream, "Detected active tunnel: " + tunnelID);
+        }
+      } else {
+
+        // check active tunnels via Sauce REST API
+        if (tunnelID == null) {
+          logMessage(
+              printStream, "Process count non-zero, but no active tunnels found for name: " + name);
+          logMessage(printStream, "Process count reset to zero");
+          // if no active tunnels, we have a mismatch of the tunnel count
+          // reset tunnel count to zero and continue to launch Sauce Connect
+          tunnelInformation.setProcessCount(0);
+        } else {
+          // if we have an active tunnel, increment counter and return
+          logMessage(printStream, "Sauce Connect already running for " + name);
+          incrementProcessCountForUser(tunnelInformation, printStream);
+          return tunnelInformation.getProcess();
+        }
+      }
+      final Process process =
+          prepAndCreateProcess(
+              username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath, legacy);
 
       // Print sauceconnect process stdout/stderr
       new ProcessOutputPrinter(process.getInputStream(), (String x) -> logMessage(printStream, x)).start();
@@ -696,6 +849,23 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       String[] args, String username, String apiKey, String options);
 
   protected abstract String[] addExtraInfo(String[] args);
+
+  /**
+   * Returns the arguments to be used to launch Sauce Connect
+   *
+   * @param args the initial Sauce Connect command line args
+   * @param username name of the user which launched Sauce Connect
+   * @param apiKey the access key for the Sauce user
+   * @param options command line args specified by the user
+   * @return String array representing the command line args to be used to launch Sauce Connect
+   * @deprecated Use {@link #generateSauceConnectArgs(String[], String, String, String)} instead
+   */
+  @Deprecated
+  protected abstract String[] generateSauceConnectArgsLegacy(
+      String[] args, String username, String apiKey, String options);
+
+  @Deprecated
+  protected abstract String[] addExtraInfoLegacy(String[] args);
 
   /**
    * @return the user's home directory
