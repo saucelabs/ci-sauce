@@ -735,23 +735,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   protected abstract String[] addExtraInfo(String[] args);
 
   /**
-   * Returns the arguments to be used to launch Sauce Connect
-   *
-   * @param args the initial Sauce Connect command line args
-   * @param username name of the user which launched Sauce Connect
-   * @param apiKey the access key for the Sauce user
-   * @param options command line args specified by the user
-   * @return String array representing the command line args to be used to launch Sauce Connect
-   * @deprecated Use {@link #generateSauceConnectArgs(String[], String, String, String)} instead
-   */
-  @Deprecated
-  protected abstract String[] generateSauceConnectArgsLegacy(
-      String[] args, String username, String apiKey, String options);
-
-  @Deprecated
-  protected abstract String[] addExtraInfoLegacy(String[] args);
-
-  /**
    * @return the user's home directory
    */
   public String getSauceConnectWorkingDirectory() {
