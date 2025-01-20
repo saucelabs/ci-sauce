@@ -207,7 +207,8 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
       File sauceConnectJar,
       String options,
       PrintStream printStream,
-      String sauceConnectPath)
+      String sauceConnectPath,
+      boolean legacy)
       throws SauceConnectException {
 
     // find zip file to extract
@@ -253,8 +254,13 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
       // although we are setting the working directory, we need to specify the full path to the exe
       String[] args = {sauceConnectBinary.getPath()};
-      args = generateSauceConnectArgs(args, username, accessKey, options);
-      args = addExtraInfo(args);
+      if (legacy) {
+          args = generateSauceConnectArgsLegacy(args, username, accessKey, options);
+          args = addExtraInfoLegacy(args);
+      } else {
+          args = generateSauceConnectArgs(args, username, accessKey, options);
+          args = addExtraInfo(args);
+      }
 
       LOGGER.info("Launching Sauce Connect {} {}", getCurrentVersion(), hideSauceConnectCommandlineSecrets(args));
       return createProcess(args, sauceConnectBinary.getParentFile());
@@ -267,6 +273,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
     var map = new HashMap<String, String>();
     map.put("-k", "^().*");
     map.put("--access-key", "^().*");
+    map.put("--api-key", "^().*"); // Legacy command
     map.put("-a", "^().*");
     map.put("--auth", "^().*");
     map.put("--api-basic-auth", "^([^:]*:).*");
@@ -276,6 +283,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
     var replaceMap = new HashMap<String, String>();
     replaceMap.put("-k", "****");
+    replaceMap.put("--api-key", "****");
     replaceMap.put("--access-key", "****");
     replaceMap.put("-a", "****");
     replaceMap.put("--auth", "****");
@@ -354,6 +362,35 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
   protected String[] addExtraInfo(String[] args) {
     String[] result = joinArgs(args, "--metadata", "runner=" + this.runner);
+    return result;
+  }
+
+  /**
+   * @param args the initial Sauce Connect command line args
+   * @param username name of the user which launched Sauce Connect
+   * @param accessKey the access key for the Sauce user
+   * @param options command line args specified by the user
+   * @return String array representing the command line args to be used to launch Sauce Connect
+   */
+  @Deprecated
+  protected String[] generateSauceConnectArgsLegacy(
+      String[] args, String username, String accessKey, String options) {
+    String[] result;
+
+    result = joinArgs(args, "legacy", "--user", username.trim(), "--api-key", accessKey.trim(), "--status-address", "0.0.0.0:" + String.valueOf(this.apiPort));
+    result = addElement(result, options);
+    return result;
+  }
+
+  @Deprecated
+  protected String[] addExtraInfoLegacy(String[] args) {
+    String[] result;
+    OperatingSystem operatingSystem = OperatingSystem.getOperatingSystem();
+    if (operatingSystem == OperatingSystem.WINDOWS_ARM64 || operatingSystem == OperatingSystem.WINDOWS_AMD64) {
+        result = joinArgs(args, "--extra-info", "{\\\"runner\\\": \\\"" + runner + "\\\"}");
+    } else {
+        result = joinArgs(args, "--extra-info", "{\"runner\": \"" + runner + "\"}");
+    }
     return result;
   }
 

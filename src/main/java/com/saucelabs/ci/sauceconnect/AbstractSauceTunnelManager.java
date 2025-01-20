@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.slf4j.Logger;
@@ -228,6 +229,19 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   }
 
   /**
+   * Logs an error message to the print stream (if not null), and to the logger instance for the class.
+   *
+   * @param printStream the output stream to send log messages
+   * @param message the message to be logged
+   */
+  protected void logErrorMessage(PrintStream printStream, String message) {
+    if (printStream != null) {
+      printStream.println(message);
+    }
+    LOGGER.error(message);
+  }
+
+  /**
    * Adds an element to an array
    *
    * @param original the original array
@@ -268,6 +282,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param printStream the output stream to send log messages
    * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and
    *     won't be extracted from the jar file
+   * @param legacy options uses SC4 style CLI
    * @return new ProcessBuilder instance which will launch Sauce Connect
    * @throws SauceConnectException thrown if an error occurs launching the Sauce Connect process
    */
@@ -278,7 +293,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       File sauceConnectJar,
       String options,
       PrintStream printStream,
-      String sauceConnectPath)
+      String sauceConnectPath,
+      boolean legacy)
       throws SauceConnectException;
 
   /**
@@ -485,6 +501,41 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       Boolean verboseLogging,
       String sauceConnectPath)
       throws SauceConnectException {
+        return openConnection(username, apiKey, dataCenter, port, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath, false);
+  }
+
+  /**
+   * Creates a new process to run Sauce Connect.
+   *
+   * @param username the name of the Sauce OnDemand user
+   * @param apiKey the API Key for the Sauce OnDemand user
+   * @param dataCenter the Sauce Labs Data Center
+   * @param port the port which Sauce Connect should be run on
+   * @param sauceConnectJar the Jar file containing Sauce Connect. If null, then we attempt to find
+   *     Sauce Connect from the classpath (only used by SauceConnectTwoManager)
+   * @param options the command line options to pass to Sauce Connect
+   * @param printStream A print stream in which to redirect the output from Sauce Connect to. Can be
+   *     null
+   * @param verboseLogging indicates whether verbose logging should be output
+   * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and
+   *     won't be extracted from the jar file
+   * @param legacy options are in SC4 CLI style
+   * @return a {@link Process} instance which represents the Sauce Connect instance
+   * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
+   */
+  @Override
+  public Process openConnection(
+      String username,
+      String apiKey,
+      DataCenter dataCenter,
+      int port,
+      File sauceConnectJar,
+      String options,
+      PrintStream printStream,
+      Boolean verboseLogging,
+      String sauceConnectPath,
+      boolean legacy)
+      throws SauceConnectException {
 
     // ensure that only a single thread attempts to open a connection
     if (sauceRest == null) {
@@ -532,7 +583,12 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
       final Process process =
           prepAndCreateProcess(
-              username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath);
+              username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath, legacy);
+
+      // Print sauceconnect process stdout/stderr
+      new ProcessOutputPrinter(process.getInputStream(), (String x) -> logMessage(printStream, x)).start();
+      new ProcessOutputPrinter(process.getErrorStream(), (String x) -> logErrorMessage(printStream, x)).start();
+
       List<Process> openedProcesses = this.openedProcesses.get(name);
       try {
         Semaphore semaphore = new Semaphore(1);
@@ -544,7 +600,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         } else {
           scMonitor = new SCMonitor("SCMonitor", port, LOGGER);
         }
-        
+
         scMonitor.setSemaphore(semaphore);
         scMonitor.start();
 
@@ -807,8 +863,30 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
           semaphore.release();
         }
       }
-          
+
       this.LOGGER.trace("No API response yet");
+    }
+  }
+
+  public class ProcessOutputPrinter extends Thread {
+    private final InputStream inputStream;
+    private final Consumer<String> printConsumer;
+
+    public ProcessOutputPrinter(InputStream inputStream, Consumer<String> printConsumer) {
+      this.inputStream = inputStream;
+      this.printConsumer = printConsumer;
+    }
+
+    @Override
+    public void run() {
+      try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          printConsumer.accept(line);
+        }
+      } catch (IOException e) {
+        LOGGER.error("Error reading process output", e);
+      }
     }
   }
 }
