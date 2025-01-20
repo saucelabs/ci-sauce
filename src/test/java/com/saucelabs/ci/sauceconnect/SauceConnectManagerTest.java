@@ -256,6 +256,25 @@ class SauceConnectManagerTest {
   }
 
   @Test
+  void testSauceConnectLegacySecretsCoveredWithStars() {
+    // FIXME: Remove when SC4 legacy support is removed
+    SauceConnectManager manager = new SauceConnectManager();
+    String[] args = {"/sauce/connect/binary/path/"};
+    args =
+        manager.generateSauceConnectArgs(
+            args,
+            "username",
+            "apikey",
+            "--api-key apiKey");
+    String result = manager.hideSauceConnectCommandlineSecrets(args);
+
+    assertEquals(
+        "[/sauce/connect/binary/path/, run, --username, username, --access-key, ****, --api-address, :9000, --api-key, ****]",
+        result);
+
+  }
+
+  @Test
   void testSauceConnectAuthSecretsCoveredWithStars() {
     SauceConnectManager manager = new SauceConnectManager();
 
