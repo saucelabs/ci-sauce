@@ -261,7 +261,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   /**
    * @param username name of the user which launched Sauce Connect
    * @param apiKey api key corresponding to the user
-   * @param port port which Sauce Connect should be launched on
+   * @param port port which Sauce Connect API should be launched on
    * @param sauceConnectJar File which contains the Sauce Connect executables (typically the CI
    *     plugin Jar file)
    * @param options the command line options used to launch Sauce Connect
@@ -463,7 +463,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param username the name of the Sauce OnDemand user
    * @param apiKey the API Key for the Sauce OnDemand user
    * @param dataCenter the Sauce Labs Data Center
-   * @param port the port which Sauce Connect should be run on
+   * @param apiPort the port which Sauce Connect API should be run on
    * @param sauceConnectJar the Jar file containing Sauce Connect. If null, then we attempt to find
    *     Sauce Connect from the classpath (only used by SauceConnectTwoManager)
    * @param options the command line options to pass to Sauce Connect
@@ -480,14 +480,14 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       String username,
       String apiKey,
       DataCenter dataCenter,
-      int port,
+      int apiPort,
       File sauceConnectJar,
       String options,
       PrintStream printStream,
       Boolean verboseLogging,
       String sauceConnectPath)
       throws SauceConnectException {
-        return openConnection(username, apiKey, dataCenter, port, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath, false);
+        return openConnection(username, apiKey, dataCenter, apiPort, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath, false);
   }
 
   /**
@@ -496,7 +496,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param username the name of the Sauce OnDemand user
    * @param apiKey the API Key for the Sauce OnDemand user
    * @param dataCenter the Sauce Labs Data Center
-   * @param port the port which Sauce Connect should be run on
+   * @param apiPort the port which Sauce Connect should be run on
    * @param sauceConnectJar the Jar file containing Sauce Connect. If null, then we attempt to find
    *     Sauce Connect from the classpath (only used by SauceConnectTwoManager)
    * @param options the command line options to pass to Sauce Connect
@@ -514,7 +514,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       String username,
       String apiKey,
       DataCenter dataCenter,
-      int port,
+      int apiPort,
       File sauceConnectJar,
       String options,
       PrintStream printStream,
@@ -569,7 +569,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
       final Process process =
           prepAndCreateProcess(
-              username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath, legacy);
+              username, apiKey, apiPort, sauceConnectJar, options, printStream, sauceConnectPath, legacy);
 
       // Print sauceconnect process stdout/stderr
       if (!quietMode) {
@@ -580,7 +580,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       List<Process> openedProcesses = this.openedProcesses.get(name);
       SCMonitor scMonitor;
       if (this.scMonitor == null) {
-        scMonitor = new DefaultSCMonitor(port, this.logger);
+        scMonitor = new DefaultSCMonitor(apiPort, this.logger);
       } else {
         scMonitor = this.scMonitor;
       }
