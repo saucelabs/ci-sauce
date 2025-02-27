@@ -32,7 +32,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   private static final Duration READINESS_CHECK_TIMEOUT = Duration.ofSeconds(15);
   private static final Duration READINESS_CHECK_POLLING_INTERVAL = Duration.ofSeconds(3);
 
-  protected Logger logger;
+  protected Logger logger = LoggerFactory.getLogger(AbstractSauceTunnelManager.class);
 
   /** Should Sauce Connect output be suppressed? */
   protected boolean quietMode;
@@ -60,7 +60,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   }
 
   public AbstractSauceTunnelManager(boolean quietMode) {
-    this(quietMode, LoggerFactory.getLogger(AbstractSauceTunnelManager.class));
+    this.quietMode = quietMode;
   }
 
   /**
