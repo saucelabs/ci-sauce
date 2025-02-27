@@ -7,6 +7,10 @@ import java.io.*;
 public class DefaultProcessOutputPrinter implements ProcessOutputPrinter {
     public Runnable getStdoutPrinter(InputStream stdout, PrintStream printStream) {
         return () -> {
+            if (stdout == null || printStream == null) {
+                return;
+            }
+
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(stdout))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -20,6 +24,10 @@ public class DefaultProcessOutputPrinter implements ProcessOutputPrinter {
 
     public Runnable getStderrPrinter(InputStream stderr, PrintStream printStream) {
         return () -> {
+            if (stderr == null || printStream == null) {
+                return;
+            }
+
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(stderr))) {
                 String line;
                 while ((line = reader.readLine()) != null) {

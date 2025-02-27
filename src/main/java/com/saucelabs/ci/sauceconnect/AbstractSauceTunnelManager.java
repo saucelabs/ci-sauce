@@ -193,6 +193,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   }
 
   private static void flushInputStream(InputStream inputStream) {
+    if (inputStream == null) {
+      return;
+    }
+
     try {
         inputStream.skip(inputStream.available());
     } catch (IOException e) {
