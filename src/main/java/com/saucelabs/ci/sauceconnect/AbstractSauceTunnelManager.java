@@ -4,17 +4,12 @@ import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceException;
 import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.SauceConnectEndpoint;
-import java.io.BufferedReader;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.ServerSocket;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,12 +20,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
+
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.json.JSONObject;
 
 /**
  * Provides common logic for the invocation of Sauce Connect processes. The class
@@ -56,6 +50,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   private SauceREST sauceRest;
   private SauceConnectEndpoint scEndpoint;
   private SCMonitor scMonitor;
+  private ProcessOutputPrinter processOutputPrinter = new DefaultProcessOutputPrinter();
 
   private AtomicInteger launchAttempts = new AtomicInteger(0);
 
@@ -123,6 +118,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
   public void setSCMonitor(SCMonitor scMonitor) {
     this.scMonitor = scMonitor;
+  }
+
+  public void setProcessOutputPrinter(ProcessOutputPrinter processOutputPrinter) {
+    this.processOutputPrinter = processOutputPrinter;
   }
 
   /**
@@ -586,8 +585,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
               username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath, legacy);
 
       // Print sauceconnect process stdout/stderr
-      new ProcessOutputPrinter(process.getInputStream(), (String x) -> logMessage(printStream, x)).start();
-      new ProcessOutputPrinter(process.getErrorStream(), (String x) -> logErrorMessage(printStream, x)).start();
+      new Thread(processOutputPrinter.getStdoutPrinter(process.getInputStream(), printStream)).start();
+      new Thread(processOutputPrinter.getStderrPrinter(process.getErrorStream(), printStream)).start();
 
       List<Process> openedProcesses = this.openedProcesses.get(name);
       try {
@@ -771,28 +770,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         return socket.getLocalPort();
     } catch (IOException e) {
         throw new SauceConnectException("Unable to find free port", e);
-    }
-  }
-
-  public class ProcessOutputPrinter extends Thread {
-    private final InputStream inputStream;
-    private final Consumer<String> printConsumer;
-
-    public ProcessOutputPrinter(InputStream inputStream, Consumer<String> printConsumer) {
-      this.inputStream = inputStream;
-      this.printConsumer = printConsumer;
-    }
-
-    @Override
-    public void run() {
-      try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-        String line;
-        while ((line = reader.readLine()) != null) {
-          printConsumer.accept(line);
-        }
-      } catch (IOException e) {
-        LOGGER.error("Error reading process output", e);
-      }
     }
   }
 }
