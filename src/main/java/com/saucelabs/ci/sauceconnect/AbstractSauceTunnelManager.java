@@ -578,48 +578,43 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
 
       List<Process> openedProcesses = this.openedProcesses.get(name);
+      SCMonitor scMonitor;
+      if (this.scMonitor == null) {
+        scMonitor = new DefaultSCMonitor(port, this.logger);
+      } else {
+        scMonitor = this.scMonitor;
+      }
+
       try {
         Semaphore semaphore = new Semaphore(1);
         semaphore.acquire();
-
-        SCMonitor scMonitor;
-        if ( this.scMonitor != null ) {
-          scMonitor = this.scMonitor;
-        } else {
-          scMonitor = new DefaultSCMonitor(port, this.logger);
-        }
-
         scMonitor.setSemaphore(semaphore);
         new Thread(scMonitor).start();
 
         boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
-        if (sauceConnectStarted) {
-          if (scMonitor.isFailed()) {
-            String message = "Error launching Sauce Connect";
-            logMessage(printStream, message);
-            printHealthcheckException(scMonitor, printStream);
-            // ensure that Sauce Connect process is closed
-            closeSauceConnectProcess(printStream, process);
-            throw new SauceConnectDidNotStartException(message);
-          } else {
-            // everything okay, continue the build
-            String provisionedTunnelId = scMonitor.getTunnelId();
-            if (provisionedTunnelId != null) {
-              tunnelInformation.setTunnelId(provisionedTunnelId);
-              waitForReadiness(provisionedTunnelId);
-            }
-            logMessage(
-                printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + name);
+        if (sauceConnectStarted && !scMonitor.isFailed()) {
+          // everything okay, continue the build
+          String provisionedTunnelId = scMonitor.getTunnelId();
+          if (provisionedTunnelId != null) {
+            tunnelInformation.setTunnelId(provisionedTunnelId);
+            waitForReadiness(provisionedTunnelId);
           }
+          logMessage(printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + name);
         } else {
+          String message = scMonitor.isFailed()
+            ? "Error launching Sauce Connect."
+            : "Time out while waiting for Sauce Connect to start.";
+
           File sauceConnectLogFile = getSauceConnectLogFile(options);
-          String message =
-              sauceConnectLogFile != null
-                  ? "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log located in "
-                      + sauceConnectLogFile.getAbsoluteFile()
-                  : "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
+          if (sauceConnectLogFile == null) {
+            message += " Please check the Sauce Connect log";
+          } else {
+            message += " Please check the Sauce Connect log located in " + sauceConnectLogFile.getAbsoluteFile();
+          }
+
           logMessage(printStream, message);
           printHealthcheckException(scMonitor, printStream);
+
           // ensure that Sauce Connect process is closed
           closeSauceConnectProcess(printStream, process);
           throw new SauceConnectDidNotStartException(message);
