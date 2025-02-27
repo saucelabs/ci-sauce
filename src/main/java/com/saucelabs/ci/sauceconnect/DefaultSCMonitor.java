@@ -13,7 +13,7 @@ import java.util.concurrent.Semaphore;
 public class DefaultSCMonitor implements SCMonitor {
     private Semaphore semaphore;
     private final int port;
-    private final Logger LOGGER;
+    private final Logger logger;
 
     private boolean failed;
     private boolean apiResponse;
@@ -23,7 +23,7 @@ public class DefaultSCMonitor implements SCMonitor {
 
     public DefaultSCMonitor(final int port, final Logger logger) {
         this.port = port;
-        this.LOGGER = logger;
+        this.logger = logger;
     }
 
     public void setSemaphore(Semaphore semaphore) {
@@ -43,10 +43,10 @@ public class DefaultSCMonitor implements SCMonitor {
                 return jsonObject.getString("tunnel_id");
             }
         } catch (Exception e) {
-            this.LOGGER.info("Failed to get tunnel id", e);
+            this.logger.info("Failed to get tunnel id", e);
             return null;
         }
-        this.LOGGER.info("Failed to get tunnel id");
+        this.logger.info("Failed to get tunnel id");
         return null;
     }
 
@@ -80,7 +80,7 @@ public class DefaultSCMonitor implements SCMonitor {
 
             if (response.statusCode() == 200) {
                 this.apiResponse = true;
-                this.LOGGER.info("Got connected status");
+                this.logger.info("Got connected status");
                 semaphore.release();
             } else if (response.statusCode() == 503) {
                 this.apiResponse = true;
@@ -89,11 +89,11 @@ public class DefaultSCMonitor implements SCMonitor {
             if ( this.apiResponse ) {
                 // We've had a successful API endpoint read, but then it stopped responding, which means the process failed to start
                 this.failed = true;
-                this.LOGGER.warn("API stopped responding", e);
+                this.logger.warn("API stopped responding", e);
                 semaphore.release();
             }
         }
 
-        this.LOGGER.trace("No API response yet");
+        this.logger.trace("No API response yet");
     }
 }
