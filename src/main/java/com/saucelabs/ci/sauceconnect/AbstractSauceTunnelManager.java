@@ -597,11 +597,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         if ( this.scMonitor != null ) {
           scMonitor = this.scMonitor;
         } else {
-          scMonitor = new SCMonitor("SCMonitor", port, LOGGER);
+          scMonitor = new DefaultSCMonitor(port, LOGGER);
         }
 
         scMonitor.setSemaphore(semaphore);
-        scMonitor.start();
+        new Thread(scMonitor).start();
 
         boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
         if (sauceConnectStarted) {

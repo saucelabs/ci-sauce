@@ -82,7 +82,7 @@ class SauceConnectManagerTest {
     readyTunnel.isReady = true;
     tunnelManager.setCleanUpOnExit(cleanUpOnExit);
 
-    SCMonitor scMonitor = mock(SCMonitor.class);
+    DefaultSCMonitor scMonitor = mock(DefaultSCMonitor.class);
 
     doAnswer(new Answer<Void>() {
             @Override
@@ -104,7 +104,7 @@ class SauceConnectManagerTest {
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
     when(mockProcess.waitFor(30, TimeUnit.SECONDS)).thenReturn(true);
 
-    SCMonitor scMonitor = mock(SCMonitor.class);
+    DefaultSCMonitor scMonitor = mock(DefaultSCMonitor.class);
 
     doAnswer(new Answer<Void>() {
             @Override
@@ -131,7 +131,7 @@ class SauceConnectManagerTest {
     TunnelInformation readyTunnel = new TunnelInformation();
     readyTunnel.isReady = true;
 
-    SCMonitor scMonitor = mock(SCMonitor.class);
+    DefaultSCMonitor scMonitor = mock(DefaultSCMonitor.class);
 
     doAnswer(new Answer<Void>() {
             @Override
@@ -186,7 +186,7 @@ class SauceConnectManagerTest {
 
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of(started));
 
-    SCMonitor scMonitor = mock(SCMonitor.class);
+    DefaultSCMonitor scMonitor = mock(DefaultSCMonitor.class);
 
     doAnswer(new Answer<Void>() {
             @Override
