@@ -255,7 +255,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
           args = addExtraInfo(args);
       }
 
-      LOGGER.info("Launching Sauce Connect {} {}", getCurrentVersion(), hideSauceConnectCommandlineSecrets(args));
+      this.logger.info("Launching Sauce Connect {} {}", getCurrentVersion(), hideSauceConnectCommandlineSecrets(args));
       return createProcess(args, sauceConnectBinary.getParentFile());
     } catch (IOException e) {
       throw new SauceConnectException(e);
@@ -410,7 +410,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
     File sauceConnectBinary = new File(unzipDir, operatingSystem.getExecutable());
     if (!sauceConnectBinary.canExecute() && !sauceConnectBinary.setExecutable(true)) {
-      LOGGER.warn("Unable to set the execute permission for SauceConnect binary file located at {}",
+      this.logger.warn("Unable to set the execute permission for SauceConnect binary file located at {}",
           sauceConnectBinary);
     }
     return unzipDir;

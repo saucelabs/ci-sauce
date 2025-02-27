@@ -34,10 +34,10 @@ import org.slf4j.LoggerFactory;
  * @author Ross Rowe
  */
 public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
-
-  protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractSauceTunnelManager.class);
   private static final Duration READINESS_CHECK_TIMEOUT = Duration.ofSeconds(15);
   private static final Duration READINESS_CHECK_POLLING_INTERVAL = Duration.ofSeconds(3);
+
+  protected Logger logger;
 
   /** Should Sauce Connect output be suppressed? */
   protected boolean quietMode;
@@ -59,8 +59,13 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    *
    * @param quietMode indicates whether Sauce Connect output should be suppressed
    */
-  public AbstractSauceTunnelManager(boolean quietMode) {
+  public AbstractSauceTunnelManager(boolean quietMode, Logger logger) {
     this.quietMode = quietMode;
+    this.logger = logger;
+  }
+
+  public AbstractSauceTunnelManager(boolean quietMode) {
+    this(quietMode, LoggerFactory.getLogger(AbstractSauceTunnelManager.class));
   }
 
   /**
@@ -224,7 +229,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     if (printStream != null) {
       printStream.println(message);
     }
-    LOGGER.info(message);
+    this.logger.info(message);
   }
 
   /**
@@ -237,7 +242,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     if (printStream != null) {
       printStream.println(message);
     }
-    LOGGER.error(message);
+    this.logger.error(message);
   }
 
   /**
@@ -599,7 +604,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         if ( this.scMonitor != null ) {
           scMonitor = this.scMonitor;
         } else {
-          scMonitor = new DefaultSCMonitor(port, LOGGER);
+          scMonitor = new DefaultSCMonitor(port, this.logger);
         }
 
         scMonitor.setSemaphore(semaphore);
@@ -637,7 +642,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         }
       } catch (InterruptedException e) {
         // continue;
-        LOGGER.warn("Exception occurred during invocation of Sauce Connect", e);
+        this.logger.warn("Exception occurred during invocation of Sauce Connect", e);
       }
 
       incrementProcessCountForUser(tunnelInformation, printStream);
@@ -664,10 +669,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         long iterationStartTime = System.currentTimeMillis();
         Boolean isReady = scEndpoint.getTunnelInformation(tunnelId).isReady;
         if (Boolean.TRUE.equals(isReady)) {
-            LOGGER.info("Tunnel with ID {} is ready for use", tunnelId);
+            this.logger.info("Tunnel with ID {} is ready for use", tunnelId);
             return;
         }
-        LOGGER.info("Waiting for readiness of tunnel with ID {}", tunnelId);
+        this.logger.info("Waiting for readiness of tunnel with ID {}", tunnelId);
         long iterationEndTime = System.currentTimeMillis();
 
         long iterationPollingTimeout = pollingIntervalMillis - (iterationEndTime - iterationStartTime);
@@ -676,10 +681,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         }
       }
       while (System.currentTimeMillis() <= endTime);
-      LOGGER.warn("Wait for readiness of tunnel with ID {} is timed out", tunnelId);
+      this.logger.warn("Wait for readiness of tunnel with ID {} is timed out", tunnelId);
     }
     catch (IOException | InterruptedException e) {
-      LOGGER.warn("Unable to check readiness of tunnel with ID {}", tunnelId, e);
+      this.logger.warn("Unable to check readiness of tunnel with ID {}", tunnelId, e);
     }
   }
 
@@ -714,7 +719,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
     } catch (JSONException | IOException e) {
       // log error and return false
-      LOGGER.warn("Exception occurred retrieving tunnel information", e);
+      this.logger.warn("Exception occurred retrieving tunnel information", e);
     }
     return null;
   }
