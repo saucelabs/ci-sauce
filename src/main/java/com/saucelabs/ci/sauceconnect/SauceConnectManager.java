@@ -176,7 +176,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
   public SauceConnectManager(boolean quietMode, String runner, int apiPort) {
     super(quietMode);
     this.runner = runner;
-    this.apiPort = DEFAULT_API_PORT;
+    this.apiPort = apiPort;
   }
 
   /**
