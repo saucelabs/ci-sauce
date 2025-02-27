@@ -21,6 +21,8 @@ public class DefaultSCMonitor implements SCMonitor {
     private HttpClient client = HttpClient.newHttpClient();
     private static final int sleepTime = 1000;
 
+    private Exception lastHealtcheckException;
+
     public DefaultSCMonitor(final int port, final Logger logger) {
         this.port = port;
         this.logger = logger;
@@ -52,6 +54,10 @@ public class DefaultSCMonitor implements SCMonitor {
 
     public boolean isFailed() {
         return failed;
+    }
+
+    public Exception getLastHealtcheckException() {
+        return lastHealtcheckException;
     }
 
     public void run() {
@@ -86,6 +92,7 @@ public class DefaultSCMonitor implements SCMonitor {
                 this.apiResponse = true;
             }
         } catch ( Exception e ) {
+            this.lastHealtcheckException = e;
             if ( this.apiResponse ) {
                 // We've had a successful API endpoint read, but then it stopped responding, which means the process failed to start
                 this.failed = true;

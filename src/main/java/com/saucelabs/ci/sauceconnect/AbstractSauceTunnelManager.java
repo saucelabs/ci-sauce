@@ -4,6 +4,10 @@ import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceException;
 import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.SauceConnectEndpoint;
+import org.apache.commons.lang3.StringUtils;
+import org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,20 +15,11 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.lang3.StringUtils;
-import org.json.JSONException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Provides common logic for the invocation of Sauce Connect processes. The class
@@ -230,19 +225,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       printStream.println(message);
     }
     this.logger.info(message);
-  }
-
-  /**
-   * Logs an error message to the print stream (if not null), and to the logger instance for the class.
-   *
-   * @param printStream the output stream to send log messages
-   * @param message the message to be logged
-   */
-  protected void logErrorMessage(PrintStream printStream, String message) {
-    if (printStream != null) {
-      printStream.println(message);
-    }
-    this.logger.error(message);
   }
 
   /**
@@ -615,6 +597,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
           if (scMonitor.isFailed()) {
             String message = "Error launching Sauce Connect";
             logMessage(printStream, message);
+            printHealthcheckException(scMonitor, printStream);
             // ensure that Sauce Connect process is closed
             closeSauceConnectProcess(printStream, process);
             throw new SauceConnectDidNotStartException(message);
@@ -636,6 +619,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
                       + sauceConnectLogFile.getAbsoluteFile()
                   : "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
           logMessage(printStream, message);
+          printHealthcheckException(scMonitor, printStream);
           // ensure that Sauce Connect process is closed
           closeSauceConnectProcess(printStream, process);
           throw new SauceConnectDidNotStartException(message);
@@ -659,6 +643,13 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       tunnelInformation.getLock().unlock();
       launchAttempts.set(0);
     }
+  }
+
+  private void printHealthcheckException(SCMonitor scMonitor, PrintStream printStream) {
+      Exception healthcheckException = scMonitor.getLastHealtcheckException();
+      if (healthcheckException != null) {
+          logMessage(printStream, "Healthcheck exception: " + healthcheckException.getMessage());
+      }
   }
 
   private void waitForReadiness(String tunnelId) {
