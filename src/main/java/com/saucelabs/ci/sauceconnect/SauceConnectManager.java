@@ -11,24 +11,17 @@ import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.commons.lang3.concurrent.LazyInitializer.Builder;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-
-import java.net.URL;
 
 /**
  * Handles launching Sauce Connect (binary executable).
@@ -183,7 +176,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
   public SauceConnectManager(boolean quietMode, String runner, int apiPort) {
     super(quietMode);
     this.runner = runner;
-    this.apiPort = DEFAULT_API_PORT;
+    this.apiPort = apiPort;
   }
 
   /**
@@ -262,7 +255,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
           args = addExtraInfo(args);
       }
 
-      LOGGER.info("Launching Sauce Connect {} {}", getCurrentVersion(), hideSauceConnectCommandlineSecrets(args));
+      this.logger.info("Launching Sauce Connect {} {}", getCurrentVersion(), hideSauceConnectCommandlineSecrets(args));
       return createProcess(args, sauceConnectBinary.getParentFile());
     } catch (IOException e) {
       throw new SauceConnectException(e);
@@ -417,7 +410,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
     File sauceConnectBinary = new File(unzipDir, operatingSystem.getExecutable());
     if (!sauceConnectBinary.canExecute() && !sauceConnectBinary.setExecutable(true)) {
-      LOGGER.warn("Unable to set the execute permission for SauceConnect binary file located at {}",
+      this.logger.warn("Unable to set the execute permission for SauceConnect binary file located at {}",
           sauceConnectBinary);
     }
     return unzipDir;
