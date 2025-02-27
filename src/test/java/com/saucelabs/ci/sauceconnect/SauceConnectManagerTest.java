@@ -1,6 +1,5 @@
 package com.saucelabs.ci.sauceconnect;
 
-import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager.SCMonitor;
 import com.saucelabs.ci.sauceconnect.SauceConnectManager.OperatingSystem;
 import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceREST;
@@ -23,16 +22,13 @@ import org.mockito.stubbing.Answer;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
