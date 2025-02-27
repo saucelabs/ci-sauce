@@ -585,8 +585,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
               username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath, legacy);
 
       // Print sauceconnect process stdout/stderr
-      new Thread(processOutputPrinter.getStdoutPrinter(process.getInputStream(), printStream)).start();
-      new Thread(processOutputPrinter.getStderrPrinter(process.getErrorStream(), printStream)).start();
+      if (!quietMode) {
+        new Thread(processOutputPrinter.getStdoutPrinter(process.getInputStream(), printStream)).start();
+        new Thread(processOutputPrinter.getStderrPrinter(process.getErrorStream(), printStream)).start();
+      }
 
       List<Process> openedProcesses = this.openedProcesses.get(name);
       try {
