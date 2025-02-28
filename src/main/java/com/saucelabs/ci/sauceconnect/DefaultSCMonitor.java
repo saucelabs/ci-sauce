@@ -92,21 +92,23 @@ public class DefaultSCMonitor implements SCMonitor {
             this.apiResponse = true;
 
             if (response.statusCode() == 200) {
-                this.logger.info("Got connected status");
-                semaphore.release();
-            } else {
-                this.lastHealtcheckException = new Exception("Invalid API response code: " + response.statusCode());
+                this.logger.info("Health check got connected status");
+                this.semaphore.release();
+                return;
             }
+
+            this.lastHealtcheckException = new Exception("Invalid API response code: " + response.statusCode());
         } catch ( Exception e ) {
             this.lastHealtcheckException = e;
             if ( this.apiResponse ) {
                 // We've had a successful API endpoint read, but then it stopped responding, which means the process failed to start
                 this.failed = true;
-                this.logger.warn("API stopped responding", e);
-                semaphore.release();
+                this.logger.warn("Health check API stopped responding", e);
+                this.semaphore.release();
+                return;
             }
         }
 
-        this.logger.trace("No API response yet");
+        this.logger.trace("Waiting for sauceconnect to be ready err={}", this.lastHealtcheckException.toString());
     }
 }
