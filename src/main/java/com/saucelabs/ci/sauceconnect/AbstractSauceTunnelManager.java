@@ -44,7 +44,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
   private SauceREST sauceRest;
   private SauceConnectEndpoint scEndpoint;
-  private SCMonitor scMonitor;
+  private SCMonitorFactory scMonitorFactory = new DefaultSCMonitor.Factory();
   private ProcessOutputPrinter processOutputPrinter = new DefaultProcessOutputPrinter();
 
   private AtomicInteger launchAttempts = new AtomicInteger(0);
@@ -116,8 +116,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     this.scEndpoint = sauceRest.getSauceConnectEndpoint();
   }
 
-  public void setSCMonitor(SCMonitor scMonitor) {
-    this.scMonitor = scMonitor;
+  public void setSCMonitorFactory(SCMonitorFactory scMonitorFactory) {
+    this.scMonitorFactory = scMonitorFactory;
   }
 
   public void setProcessOutputPrinter(ProcessOutputPrinter processOutputPrinter) {
@@ -582,12 +582,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
 
       List<Process> openedProcesses = this.openedProcesses.get(name);
-      SCMonitor scMonitor;
-      if (this.scMonitor == null) {
-        scMonitor = new DefaultSCMonitor(apiPort, this.logger);
-      } else {
-        scMonitor = this.scMonitor;
-      }
+      SCMonitor scMonitor = scMonitorFactory.create(apiPort, this.logger);
 
       try {
         Semaphore semaphore = new Semaphore(1);

@@ -20,6 +20,8 @@ import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+
 import static org.mockito.Mockito.*;
 
 import java.io.File;
@@ -93,7 +95,7 @@ class SauceConnectManagerTest {
             }
     }).when(scMonitor).setSemaphore(any(Semaphore.class));
 
-    tunnelManager.setSCMonitor(scMonitor);
+    tunnelManager.setSCMonitorFactory(new DummySCMonitorFactory(scMonitor));
 
     Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);
@@ -117,7 +119,7 @@ class SauceConnectManagerTest {
 
     when(scMonitor.isFailed()).thenReturn(true);
 
-    tunnelManager.setSCMonitor(scMonitor);
+    tunnelManager.setSCMonitorFactory(new DummySCMonitorFactory(scMonitor));
     assertThrows(AbstractSauceTunnelManager.SauceConnectDidNotStartException.class, () -> testOpenConnection(
             "/started_sc_closes.log"));
     verify(mockProcess).destroy();
@@ -142,7 +144,7 @@ class SauceConnectManagerTest {
             }
     }).when(scMonitor).setSemaphore(any(Semaphore.class));
 
-    tunnelManager.setSCMonitor(scMonitor);
+    tunnelManager.setSCMonitorFactory(new DummySCMonitorFactory(scMonitor));
 
     testOpenConnection(STARTED_SC_LOG, " username-with-spaces-around ");
   }
@@ -197,7 +199,7 @@ class SauceConnectManagerTest {
             }
     }).when(scMonitor).setSemaphore(any(Semaphore.class));
 
-    tunnelManager.setSCMonitor(scMonitor);
+    tunnelManager.setSCMonitorFactory(new DummySCMonitorFactory(scMonitor));
 
     Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);
@@ -425,6 +427,18 @@ class SauceConnectManagerTest {
       currentVersion = sauceConnectManager.getCurrentVersion();
       assertEquals(version, currentVersion);
       httpClientStaticMock.verifyNoMoreInteractions();
+    }
+  }
+
+  static class DummySCMonitorFactory implements SCMonitorFactory {
+    public SCMonitor scMonitor;
+
+    public DummySCMonitorFactory(SCMonitor scMonitor) {
+      this.scMonitor = scMonitor;
+    }
+
+    public SCMonitor create(int port, Logger logger) {
+      return scMonitor;
     }
   }
 }

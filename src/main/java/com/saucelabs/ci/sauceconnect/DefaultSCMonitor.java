@@ -11,6 +11,12 @@ import java.util.concurrent.Semaphore;
 
 /** Monitors SC Process via HTTP API */
 public class DefaultSCMonitor implements SCMonitor {
+    public static class Factory implements SCMonitorFactory {
+        public SCMonitor create(int port, Logger logger) {
+            return new DefaultSCMonitor(port, logger);
+        }
+    }
+
     private Semaphore semaphore;
     private final int port;
     private final Logger logger;
