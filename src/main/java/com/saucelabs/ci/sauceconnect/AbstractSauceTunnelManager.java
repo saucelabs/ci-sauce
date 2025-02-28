@@ -29,8 +29,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Ross Rowe
  */
 public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
+  private static final Duration HEALTHCHECK_TIMEOUT = Duration.ofMinutes(3);
   private static final Duration READINESS_CHECK_TIMEOUT = Duration.ofSeconds(15);
   private static final Duration READINESS_CHECK_POLLING_INTERVAL = Duration.ofSeconds(3);
+  private static final Duration GRACEFUL_SHUTDOWN_TIMEOUT = Duration.ofSeconds(30);
 
   /** Should Sauce Connect output be suppressed? */
   protected boolean quietMode;
@@ -176,10 +178,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     logger.info("Closing Sauce Connect process");
     sauceConnect.destroy();
     try {
-      if (sauceConnect.waitFor(30, TimeUnit.SECONDS)) {
+      if (sauceConnect.waitFor(GRACEFUL_SHUTDOWN_TIMEOUT.toSeconds(), TimeUnit.SECONDS)) {
         logger.info("Sauce Connect process has exited");
       } else {
-        logger.warn("Sauce Connect process has not exited during 30 seconds");
+        logger.warn("Sauce Connect process has not exited during {} seconds", GRACEFUL_SHUTDOWN_TIMEOUT.getSeconds());
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -618,7 +620,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         scMonitor.setSemaphore(semaphore);
         new Thread(scMonitor).start();
 
-        boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
+        boolean sauceConnectStarted = semaphore.tryAcquire(HEALTHCHECK_TIMEOUT.getSeconds(), TimeUnit.SECONDS);
         if (sauceConnectStarted && !scMonitor.isFailed()) {
           // everything okay, continue the build
           String provisionedTunnelId = scMonitor.getTunnelId();
@@ -667,13 +669,6 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       tunnelInformation.getLock().unlock();
       launchAttempts.set(0);
     }
-  }
-
-  private void printHealthcheckException(SCMonitor scMonitor, Logger logger) {
-      Exception healthcheckException = scMonitor.getLastHealtcheckException();
-      if (healthcheckException != null) {
-          logger.error("SauceConnect healthcheck failed", healthcheckException);
-      }
   }
 
   private void waitForReadiness(String tunnelId, Logger logger) {
