@@ -448,6 +448,33 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param username the name of the Sauce OnDemand user
    * @param apiKey the API Key for the Sauce OnDemand user
    * @param dataCenter the Sauce Labs Data Center
+   * @param options the command line options to pass to Sauce Connect
+   * @param logger used for logging
+   * @param printStream A print stream in which to redirect the output from Sauce Connect to. Can be
+   *     null
+   * @param verboseLogging indicates whether verbose logging should be output
+   * @return a {@link Process} instance which represents the Sauce Connect instance
+   * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
+   */
+  @Override
+  public Process openConnection(
+    String username,
+    String apiKey,
+    DataCenter dataCenter,
+    String options,
+    Logger logger,
+    PrintStream printStream,
+    Boolean verboseLogging)
+    throws IOException {
+      return openConnection(username, apiKey, dataCenter, findFreePort(), null, options, logger, printStream, verboseLogging, null, false);
+  }
+
+  /**
+   * Creates a new process to run Sauce Connect.
+   *
+   * @param username the name of the Sauce OnDemand user
+   * @param apiKey the API Key for the Sauce OnDemand user
+   * @param dataCenter the Sauce Labs Data Center
    * @param apiPort the port which Sauce Connect API should be run on
    * @param sauceConnectJar the Jar file containing Sauce Connect. If null, then we attempt to find
    *     Sauce Connect from the classpath (only used by SauceConnectTwoManager)

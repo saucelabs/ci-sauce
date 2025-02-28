@@ -141,6 +141,30 @@ public interface SauceTunnelManager {
       throws IOException;
 
   /**
+   * Creates a new process to run Sauce Connect on a randomly allocated port along with custom logger.
+   *
+   * @param username the name of the Sauce OnDemand user
+   * @param apiKey the API Key for the Sauce OnDemand user
+   * @param dataCenter the Sauce Labs Data Center
+   * @param options the command line options to pass to Sauce Connect
+   * @param logger used for logging
+   * @param printStream A print stream in which to redirect the output from Sauce Connect to. Can be
+   *     null
+   * @param verboseLogging indicates whether verbose logging should be output
+   * @return a {@link Process} instance which represents the Sauce Connect instance
+   * @throws IOException thrown if an error occurs launching Sauce Connect
+   */
+  Process openConnection(
+      String username,
+      String apiKey,
+      DataCenter dataCenter,
+      String options,
+      Logger logger,
+      PrintStream printStream,
+      Boolean verboseLogging)
+      throws IOException;
+
+  /**
    * Creates a new process to run Sauce Connect.
    *
    * @param username the name of the Sauce OnDemand user
