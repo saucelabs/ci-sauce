@@ -128,6 +128,17 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    */
   public void closeTunnelsForPlan(String userName, String options, PrintStream printStream) {
     Logger logger = createLogger(printStream);
+    closeTunnelsForPlan(userName, options, logger);
+  }
+
+  /**
+   * Closes the Sauce Connect process
+   *
+   * @param userName name of the user which launched Sauce Connect
+   * @param options the command line options used to launch Sauce Connect
+   * @param logger used for logging
+   */
+  public void closeTunnelsForPlan(String userName, String options, Logger logger) {
     String tunnelName = getTunnelName(options, userName);
     TunnelInformation tunnelInformation = getTunnelInformation(tunnelName);
     if (tunnelInformation == null) {

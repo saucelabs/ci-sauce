@@ -25,6 +25,15 @@ public interface SauceTunnelManager {
   void closeTunnelsForPlan(String username, String options, PrintStream printStream);
 
   /**
+   * Closes the Sauce Connect process
+   *
+   * @param username name of the user which launched Sauce Connect
+   * @param options the command line options used to launch Sauce Connect
+   * @param logger used for logging
+   */
+  void closeTunnelsForPlan(String username, String options, Logger logger);
+
+  /**
    * Creates a new process to run Sauce Connect on a randomly allocated port in the US Data Center.
    *
    * @param username the name of the Sauce OnDemand user
