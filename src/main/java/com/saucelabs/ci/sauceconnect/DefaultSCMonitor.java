@@ -83,13 +83,13 @@ public class DefaultSCMonitor implements SCMonitor {
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            this.apiResponse = true;
 
             if (response.statusCode() == 200) {
-                this.apiResponse = true;
                 this.logger.info("Got connected status");
                 semaphore.release();
-            } else if (response.statusCode() == 503) {
-                this.apiResponse = true;
+            } else {
+                this.lastHealtcheckException = new Exception("Invalid API response code: " + response.statusCode());
             }
         } catch ( Exception e ) {
             this.lastHealtcheckException = e;

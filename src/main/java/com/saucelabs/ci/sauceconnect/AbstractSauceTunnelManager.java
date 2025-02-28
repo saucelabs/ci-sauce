@@ -606,14 +606,14 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
           logMessage(printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + name);
         } else {
           String message = scMonitor.isFailed()
-            ? "Error launching Sauce Connect."
-            : "Time out while waiting for Sauce Connect to start.";
+            ? "Error launching Sauce Connect"
+            : "Time out while waiting for Sauce Connect to start";
 
           File sauceConnectLogFile = getSauceConnectLogFile(options);
           if (sauceConnectLogFile == null) {
-            message += " Please check the Sauce Connect log";
+            message += ", please check the Sauce Connect log";
           } else {
-            message += " Please check the Sauce Connect log located in " + sauceConnectLogFile.getAbsoluteFile();
+            message += ", please check the Sauce Connect log located in " + sauceConnectLogFile.getAbsoluteFile();
           }
 
           logMessage(printStream, message);
@@ -621,7 +621,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
           // ensure that Sauce Connect process is closed
           closeSauceConnectProcess(printStream, process);
-          throw new SauceConnectDidNotStartException(message);
+          throw new SauceConnectDidNotStartException(message, scMonitor.getLastHealtcheckException());
         }
       } catch (InterruptedException e) {
         // continue;
@@ -647,7 +647,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   private void printHealthcheckException(SCMonitor scMonitor, PrintStream printStream) {
       Exception healthcheckException = scMonitor.getLastHealtcheckException();
       if (healthcheckException != null) {
-          logMessage(printStream, "Healthcheck exception: " + healthcheckException.getMessage());
+          logMessage(printStream, "Healthcheck exception: " + healthcheckException);
       }
   }
 
@@ -759,6 +759,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   public static class SauceConnectDidNotStartException extends SauceConnectException {
     public SauceConnectDidNotStartException(String message) {
       super(message);
+    }
+    public SauceConnectDidNotStartException(String message, Throwable cause) {
+      super(message, cause);
     }
   }
 
