@@ -628,6 +628,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
           }
           logger.info("Sauce Connect now launched version={} name={}", getCurrentVersion(), name);
         } else {
+          // stop sc monitor
+          scMonitor.markAsFailed();
+
           String message = scMonitor.isFailed()
             ? "Error launching Sauce Connect"
             : "Time out while waiting for Sauce Connect to start";

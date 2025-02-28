@@ -62,16 +62,17 @@ public class DefaultSCMonitor implements SCMonitor {
         return failed;
     }
 
+    public void markAsFailed() {
+        failed = true;
+    }
+
     public Exception getLastHealtcheckException() {
         return lastHealtcheckException;
     }
 
     public void run() {
-        while (true) {
+        while (this.semaphore.availablePermits() == 0 && !this.failed) {
             pollEndpoint();
-            if (this.semaphore.availablePermits() > 0) {
-                return;
-            }
 
             try {
                 Thread.sleep(sleepTime);
