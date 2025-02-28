@@ -227,7 +227,7 @@ class SauceConnectManagerTest {
 
     SauceConnectManager manager = new SauceConnectManager();
     manager.setCleanUpOnExit(cleanUpOnExit);
-    manager.extractZipFile(destination, operatingSystem);
+    manager.extractZipFile(destination, operatingSystem, mock(Logger.class));
 
     File expectedBinaryPath = new File(destination, operatingSystem.getDirectory(false));
     File expectedBinaryFile = new File(expectedBinaryPath, operatingSystem.getExecutable());

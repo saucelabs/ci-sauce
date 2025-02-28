@@ -2,13 +2,16 @@ package com.saucelabs.sod;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
+import static org.mockito.Mockito.mock;
 
+import com.saucelabs.ci.sauceconnect.DefaultSCMonitor;
 import com.saucelabs.ci.sauceconnect.SauceConnectManager;
 import com.saucelabs.ci.sauceconnect.SauceConnectManager.OperatingSystem;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +39,7 @@ class ExtractFiles {
   @MethodSource("operatingSystems")
   void shouldExtractSauceConnectExecutable(OperatingSystem os, String executableFileName, @TempDir Path tempDir)
       throws IOException {
-    File dir = manager.extractZipFile(tempDir.toFile(), os);
+    File dir = manager.extractZipFile(tempDir.toFile(), os, mock(Logger.class));
     File executableFile = dir.toPath().resolve(executableFileName).toFile();
     assertTrue(executableFile.exists());
   }
