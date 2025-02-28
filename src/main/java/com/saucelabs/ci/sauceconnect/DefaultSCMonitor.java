@@ -39,10 +39,11 @@ public class DefaultSCMonitor implements SCMonitor {
     }
 
     public String getTunnelId() {
-        HttpRequest request = HttpRequest.newBuilder()
+      HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(String.format("http://localhost:%d/info", port)))
             .GET()
             .build();
+
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             String responseBody = response.body();
@@ -83,10 +84,13 @@ public class DefaultSCMonitor implements SCMonitor {
     }
 
     protected void pollEndpoint() {
+        URI uri = URI.create(String.format("http://localhost:%d/readyz", port));
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(String.format("http://localhost:%d/readyz", port)))
+            .uri(uri)
             .GET()
             .build();
+
+        this.logger.trace("Polling health check endpoint uri={}", uri);
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
