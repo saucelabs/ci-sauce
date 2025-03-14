@@ -4,33 +4,22 @@ import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceException;
 import com.saucelabs.saucerest.SauceREST;
 import com.saucelabs.saucerest.api.SauceConnectEndpoint;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.net.ServerSocket;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.json.JSONObject;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.net.ServerSocket;
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Provides common logic for the invocation of Sauce Connect processes. The class
@@ -40,10 +29,10 @@ import org.json.JSONObject;
  * @author Ross Rowe
  */
 public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
-
-  protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractSauceTunnelManager.class);
+  private static final Duration HEALTHCHECK_TIMEOUT = Duration.ofMinutes(3);
   private static final Duration READINESS_CHECK_TIMEOUT = Duration.ofSeconds(15);
   private static final Duration READINESS_CHECK_POLLING_INTERVAL = Duration.ofSeconds(3);
+  private static final Duration GRACEFUL_SHUTDOWN_TIMEOUT = Duration.ofSeconds(30);
 
   /** Should Sauce Connect output be suppressed? */
   protected boolean quietMode;
@@ -55,7 +44,8 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
 
   private SauceREST sauceRest;
   private SauceConnectEndpoint scEndpoint;
-  private SCMonitor scMonitor;
+  private SCMonitorFactory scMonitorFactory = new DefaultSCMonitor.Factory();
+  private ProcessOutputPrinter processOutputPrinter = new DefaultProcessOutputPrinter();
 
   private AtomicInteger launchAttempts = new AtomicInteger(0);
 
@@ -121,8 +111,12 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     this.scEndpoint = sauceRest.getSauceConnectEndpoint();
   }
 
-  public void setSCMonitor(SCMonitor scMonitor) {
-    this.scMonitor = scMonitor;
+  public void setSCMonitorFactory(SCMonitorFactory scMonitorFactory) {
+    this.scMonitorFactory = scMonitorFactory;
+  }
+
+  public void setProcessOutputPrinter(ProcessOutputPrinter processOutputPrinter) {
+    this.processOutputPrinter = processOutputPrinter;
   }
 
   /**
@@ -133,6 +127,18 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param printStream the output stream to send log messages
    */
   public void closeTunnelsForPlan(String userName, String options, PrintStream printStream) {
+    Logger logger = createLogger(printStream);
+    closeTunnelsForPlan(userName, options, logger);
+  }
+
+  /**
+   * Closes the Sauce Connect process
+   *
+   * @param userName name of the user which launched Sauce Connect
+   * @param options the command line options used to launch Sauce Connect
+   * @param logger used for logging
+   */
+  public void closeTunnelsForPlan(String userName, String options, Logger logger) {
     String tunnelName = getTunnelName(options, userName);
     TunnelInformation tunnelInformation = getTunnelInformation(tunnelName);
     if (tunnelInformation == null) {
@@ -140,24 +146,24 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
     try {
       tunnelInformation.getLock().lock();
-      int count = decrementProcessCountForUser(tunnelInformation, printStream);
+      int count = decrementProcessCountForUser(tunnelInformation, logger);
       if (count == 0) {
         // we can now close the process
         final Process sauceConnect = tunnelInformation.getProcess();
-        closeSauceConnectProcess(printStream, sauceConnect);
+        closeSauceConnectProcess(logger, sauceConnect);
         String tunnelId = tunnelInformation.getTunnelId();
         if (tunnelId != null && scEndpoint != null) {
-          logMessage(printStream, "Stopping Sauce Connect tunnel: " + tunnelId);
+          logger.info("Stopping Sauce Connect tunnel: {}", tunnelId);
           // forcibly delete tunnel
           try {
             scEndpoint.stopTunnel(tunnelId);
-            logMessage(printStream, "Deleted tunnel");
+            logger.info("Deleted tunnel");
           } catch (java.io.IOException | SauceException.UnknownError e) {
-            logMessage(printStream, "Error during tunnel removal: " + e);
+            logger.error("Error during tunnel removal", e);
           } catch (SauceException.NotFound e) {
             // Tunnel has already been cleaned up, no need to do anything
           } catch (NullPointerException e) {
-            logMessage(printStream, "Error connecting to REST API: " + e);
+            logger.error("Error connecting to REST API", e);
           }
         }
         tunnelInformationMap.remove(tunnelName);
@@ -165,9 +171,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         if (processes != null) {
           processes.remove(sauceConnect);
         }
-        logMessage(printStream, "Sauce Connect stopped for: " + tunnelName);
+        logger.info("Sauce Connect stopped for: {}", tunnelName);
       } else {
-        logMessage(printStream, "Jobs still running, not closing Sauce Connect");
+        logger.info("Jobs still running, not closing Sauce Connect");
       }
 
     } finally {
@@ -175,18 +181,18 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
   }
 
-  private void closeSauceConnectProcess(PrintStream printStream, final Process sauceConnect) {
-    logMessage(printStream, "Flushing Sauce Connect Input Stream");
+  private void closeSauceConnectProcess(Logger logger, final Process sauceConnect) {
+    logger.info("Flushing Sauce Connect Input Stream");
     new Thread(() -> flushInputStream(sauceConnect.getInputStream())).start();
-    logMessage(printStream, "Flushing Sauce Connect Error Stream");
+    logger.info("Flushing Sauce Connect Error Stream");
     new Thread(() -> flushInputStream(sauceConnect.getErrorStream())).start();
-    logMessage(printStream, "Closing Sauce Connect process");
+    logger.info("Closing Sauce Connect process");
     sauceConnect.destroy();
     try {
-      if (sauceConnect.waitFor(30, TimeUnit.SECONDS)) {
-        logMessage(printStream, "Sauce Connect process has exited");
+      if (sauceConnect.waitFor(GRACEFUL_SHUTDOWN_TIMEOUT.toSeconds(), TimeUnit.SECONDS)) {
+        logger.info("Sauce Connect process has exited");
       } else {
-        logMessage(printStream, "Sauce Connect process has not exited during 30 seconds");
+        logger.warn("Sauce Connect process has not exited during {} seconds", GRACEFUL_SHUTDOWN_TIMEOUT.getSeconds());
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
@@ -194,6 +200,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
   }
 
   private static void flushInputStream(InputStream inputStream) {
+    if (inputStream == null) {
+      return;
+    }
+
     try {
         inputStream.skip(inputStream.available());
     } catch (IOException e) {
@@ -205,40 +215,14 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * Reduces the count of active Sauce Connect processes for the user by 1.
    *
    * @param tunnelInfo the tunnel
-   * @param printStream the output stream to send log messages
+   * @param logger used for logging
    * @return current count of active Sauce Connect processes for the user
    */
-  private int decrementProcessCountForUser(TunnelInformation tunnelInfo, PrintStream printStream) {
+  private int decrementProcessCountForUser(TunnelInformation tunnelInfo, Logger logger) {
     int count = tunnelInfo.getProcessCount() - 1;
     tunnelInfo.setProcessCount(count);
-    logMessage(printStream, "Decremented process count for " + tunnelInfo + ", now " + count);
+    logger.info("Decremented process count tunnel={} count={}", tunnelInfo, count);
     return count;
-  }
-
-  /**
-   * Logs a message to the print stream (if not null), and to the logger instance for the class.
-   *
-   * @param printStream the output stream to send log messages
-   * @param message the message to be logged
-   */
-  protected void logMessage(PrintStream printStream, String message) {
-    if (printStream != null) {
-      printStream.println(message);
-    }
-    LOGGER.info(message);
-  }
-
-  /**
-   * Logs an error message to the print stream (if not null), and to the logger instance for the class.
-   *
-   * @param printStream the output stream to send log messages
-   * @param message the message to be logged
-   */
-  protected void logErrorMessage(PrintStream printStream, String message) {
-    if (printStream != null) {
-      printStream.println(message);
-    }
-    LOGGER.error(message);
   }
 
   /**
@@ -264,22 +248,22 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * Increases the number of Sauce Connect invocations for the user by 1.
    *
    * @param name the tunnel name
-   * @param printStream the output stream to send log messages
+   * @param logger used for logging
    */
-  protected void incrementProcessCountForUser(TunnelInformation name, PrintStream printStream) {
+  protected void incrementProcessCountForUser(TunnelInformation name, Logger logger) {
     int processCount = name.getProcessCount() + 1;
     name.setProcessCount(processCount);
-    logMessage(printStream, "Incremented process count for " + name + ", now " + processCount);
+    logger.info("Incremented process count name={} count={}", name, processCount);
   }
 
   /**
    * @param username name of the user which launched Sauce Connect
    * @param apiKey api key corresponding to the user
-   * @param port port which Sauce Connect should be launched on
+   * @param port port which Sauce Connect API should be launched on
    * @param sauceConnectJar File which contains the Sauce Connect executables (typically the CI
    *     plugin Jar file)
    * @param options the command line options used to launch Sauce Connect
-   * @param printStream the output stream to send log messages
+   * @param logger used for logging
    * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and
    *     won't be extracted from the jar file
    * @param legacy options uses SC4 style CLI
@@ -292,7 +276,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       int port,
       File sauceConnectJar,
       String options,
-      PrintStream printStream,
+      Logger logger,
       String sauceConnectPath,
       boolean legacy)
       throws SauceConnectException;
@@ -477,7 +461,34 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param username the name of the Sauce OnDemand user
    * @param apiKey the API Key for the Sauce OnDemand user
    * @param dataCenter the Sauce Labs Data Center
-   * @param port the port which Sauce Connect should be run on
+   * @param options the command line options to pass to Sauce Connect
+   * @param logger used for logging
+   * @param printStream A print stream in which to redirect the output from Sauce Connect to. Can be
+   *     null
+   * @param verboseLogging indicates whether verbose logging should be output
+   * @return a {@link Process} instance which represents the Sauce Connect instance
+   * @throws SauceConnectException thrown if an error occurs launching Sauce Connect
+   */
+  @Override
+  public Process openConnection(
+    String username,
+    String apiKey,
+    DataCenter dataCenter,
+    String options,
+    Logger logger,
+    PrintStream printStream,
+    Boolean verboseLogging)
+    throws IOException {
+      return openConnection(username, apiKey, dataCenter, findFreePort(), null, options, logger, printStream, verboseLogging, null, false);
+  }
+
+  /**
+   * Creates a new process to run Sauce Connect.
+   *
+   * @param username the name of the Sauce OnDemand user
+   * @param apiKey the API Key for the Sauce OnDemand user
+   * @param dataCenter the Sauce Labs Data Center
+   * @param apiPort the port which Sauce Connect API should be run on
    * @param sauceConnectJar the Jar file containing Sauce Connect. If null, then we attempt to find
    *     Sauce Connect from the classpath (only used by SauceConnectTwoManager)
    * @param options the command line options to pass to Sauce Connect
@@ -494,14 +505,30 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       String username,
       String apiKey,
       DataCenter dataCenter,
-      int port,
+      int apiPort,
       File sauceConnectJar,
       String options,
       PrintStream printStream,
       Boolean verboseLogging,
       String sauceConnectPath)
       throws SauceConnectException {
-        return openConnection(username, apiKey, dataCenter, port, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath, false);
+        return openConnection(username, apiKey, dataCenter, apiPort, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath, false);
+  }
+
+  @Override
+  public Process openConnection(
+      String username,
+      String apiKey,
+      DataCenter dataCenter,
+      int apiPort,
+      File sauceConnectJar,
+      String options,
+      PrintStream printStream,
+      Boolean verboseLogging,
+      String sauceConnectPath,
+      boolean legacy)
+      throws SauceConnectException {
+        return openConnection(username, apiKey, dataCenter, apiPort, sauceConnectJar, options, null, printStream, verboseLogging, sauceConnectPath, false);
   }
 
   /**
@@ -510,10 +537,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param username the name of the Sauce OnDemand user
    * @param apiKey the API Key for the Sauce OnDemand user
    * @param dataCenter the Sauce Labs Data Center
-   * @param port the port which Sauce Connect should be run on
+   * @param apiPort the port which Sauce Connect should be run on
    * @param sauceConnectJar the Jar file containing Sauce Connect. If null, then we attempt to find
    *     Sauce Connect from the classpath (only used by SauceConnectTwoManager)
    * @param options the command line options to pass to Sauce Connect
+   * @param logger used for logging
    * @param printStream A print stream in which to redirect the output from Sauce Connect to. Can be
    *     null
    * @param verboseLogging indicates whether verbose logging should be output
@@ -528,14 +556,19 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       String username,
       String apiKey,
       DataCenter dataCenter,
-      int port,
+      int apiPort,
       File sauceConnectJar,
       String options,
+      Logger logger,
       PrintStream printStream,
       Boolean verboseLogging,
       String sauceConnectPath,
       boolean legacy)
       throws SauceConnectException {
+
+    if (logger == null) {
+      logger = createLogger(printStream);
+    }
 
     // ensure that only a single thread attempts to open a connection
     if (sauceRest == null) {
@@ -554,7 +587,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
 
       // do we have an instance for the tunnel name?
-      String tunnelID = activeTunnelID(username, name);
+      String tunnelID = activeTunnelID(username, name, logger);
       if (tunnelInformation.getProcessCount() == 0) {
         // if the count is zero, check to see if there are any active tunnels
 
@@ -562,84 +595,78 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
           // if we have an active tunnel, but the process count is zero, we have an orphaned SC
           // process
           // instead of deleting the tunnel, log a message
-          logMessage(printStream, "Detected active tunnel: " + tunnelID);
+          logger.info("Detected active tunnel: {}", tunnelID);
         }
       } else {
 
         // check active tunnels via Sauce REST API
         if (tunnelID == null) {
-          logMessage(
-              printStream, "Process count non-zero, but no active tunnels found for name: " + name);
-          logMessage(printStream, "Process count reset to zero");
+          logger.info("Process count non-zero, but no active tunnels found for name: {}", name);
+          logger.info("Process count reset to zero");
           // if no active tunnels, we have a mismatch of the tunnel count
           // reset tunnel count to zero and continue to launch Sauce Connect
           tunnelInformation.setProcessCount(0);
         } else {
           // if we have an active tunnel, increment counter and return
-          logMessage(printStream, "Sauce Connect already running for " + name);
-          incrementProcessCountForUser(tunnelInformation, printStream);
+          logger.info("Sauce Connect already running for: {}", name);
+          incrementProcessCountForUser(tunnelInformation, logger);
           return tunnelInformation.getProcess();
         }
       }
       final Process process =
-          prepAndCreateProcess(
-              username, apiKey, port, sauceConnectJar, options, printStream, sauceConnectPath, legacy);
+        prepAndCreateProcess(username, apiKey, apiPort, sauceConnectJar, options, logger, sauceConnectPath, legacy);
 
       // Print sauceconnect process stdout/stderr
-      new ProcessOutputPrinter(process.getInputStream(), (String x) -> logMessage(printStream, x)).start();
-      new ProcessOutputPrinter(process.getErrorStream(), (String x) -> logErrorMessage(printStream, x)).start();
+      if (!quietMode) {
+        new Thread(processOutputPrinter.getStdoutPrinter(process.getInputStream(), printStream)).start();
+        new Thread(processOutputPrinter.getStderrPrinter(process.getErrorStream(), printStream)).start();
+      }
 
       List<Process> openedProcesses = this.openedProcesses.get(name);
+      SCMonitor scMonitor = scMonitorFactory.create(apiPort, logger);
+
       try {
         Semaphore semaphore = new Semaphore(1);
         semaphore.acquire();
-
-        SCMonitor scMonitor;
-        if ( this.scMonitor != null ) {
-          scMonitor = this.scMonitor;
-        } else {
-          scMonitor = new SCMonitor("SCMonitor", port, LOGGER);
-        }
-
         scMonitor.setSemaphore(semaphore);
-        scMonitor.start();
+        new Thread(scMonitor).start();
 
-        boolean sauceConnectStarted = semaphore.tryAcquire(3, TimeUnit.MINUTES);
-        if (sauceConnectStarted) {
-          if (scMonitor.isFailed()) {
-            String message = "Error launching Sauce Connect";
-            logMessage(printStream, message);
-            // ensure that Sauce Connect process is closed
-            closeSauceConnectProcess(printStream, process);
-            throw new SauceConnectDidNotStartException(message);
-          } else {
-            // everything okay, continue the build
-            String provisionedTunnelId = scMonitor.getTunnelId();
-            if (provisionedTunnelId != null) {
-              tunnelInformation.setTunnelId(provisionedTunnelId);
-              waitForReadiness(provisionedTunnelId);
-            }
-            logMessage(
-                printStream, "Sauce Connect " + getCurrentVersion() + " now launched for: " + name);
+        boolean sauceConnectStarted = semaphore.tryAcquire(HEALTHCHECK_TIMEOUT.getSeconds(), TimeUnit.SECONDS);
+        if (sauceConnectStarted && !scMonitor.isFailed()) {
+          // everything okay, continue the build
+          String provisionedTunnelId = scMonitor.getTunnelId();
+          if (provisionedTunnelId != null) {
+            tunnelInformation.setTunnelId(provisionedTunnelId);
+            waitForReadiness(provisionedTunnelId, logger);
           }
+          logger.info("Sauce Connect now launched version={} name={}", getCurrentVersion(), name);
         } else {
+          // stop sc monitor
+          scMonitor.markAsFailed();
+
+          String message = scMonitor.isFailed()
+            ? "Error launching Sauce Connect"
+            : "Time out while waiting for Sauce Connect to start";
+
           File sauceConnectLogFile = getSauceConnectLogFile(options);
-          String message =
-              sauceConnectLogFile != null
-                  ? "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log located in "
-                      + sauceConnectLogFile.getAbsoluteFile()
-                  : "Time out while waiting for Sauce Connect to start, please check the Sauce Connect log";
-          logMessage(printStream, message);
+          if (sauceConnectLogFile == null) {
+            message += ", please check the Sauce Connect log";
+          } else {
+            message += ", please check the Sauce Connect log located in " + sauceConnectLogFile.getAbsoluteFile();
+          }
+
+          logger.error(message, scMonitor.getLastHealtcheckException());
+
           // ensure that Sauce Connect process is closed
-          closeSauceConnectProcess(printStream, process);
-          throw new SauceConnectDidNotStartException(message);
+          closeSauceConnectProcess(logger, process);
+          throw new SauceConnectDidNotStartException(message, scMonitor.getLastHealtcheckException());
         }
       } catch (InterruptedException e) {
         // continue;
-        LOGGER.warn("Exception occurred during invocation of Sauce Connect", e);
+        logger.warn("Exception occurred during invocation of Sauce Connect", e);
       }
 
-      incrementProcessCountForUser(tunnelInformation, printStream);
+      incrementProcessCountForUser(tunnelInformation, logger);
       tunnelInformation.setProcess(process);
       List<Process> processes = openedProcesses;
       if (processes == null) {
@@ -655,7 +682,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
   }
 
-  private void waitForReadiness(String tunnelId) {
+  private void waitForReadiness(String tunnelId, Logger logger) {
     long pollingIntervalMillis = READINESS_CHECK_POLLING_INTERVAL.toMillis();
     long endTime = System.currentTimeMillis() + READINESS_CHECK_TIMEOUT.toMillis();
     try {
@@ -663,10 +690,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         long iterationStartTime = System.currentTimeMillis();
         Boolean isReady = scEndpoint.getTunnelInformation(tunnelId).isReady;
         if (Boolean.TRUE.equals(isReady)) {
-            LOGGER.info("Tunnel with ID {} is ready for use", tunnelId);
+            logger.info("Tunnel with ID {} is ready for use", tunnelId);
             return;
         }
-        LOGGER.info("Waiting for readiness of tunnel with ID {}", tunnelId);
+        logger.info("Waiting for readiness of tunnel with ID {}", tunnelId);
         long iterationEndTime = System.currentTimeMillis();
 
         long iterationPollingTimeout = pollingIntervalMillis - (iterationEndTime - iterationStartTime);
@@ -675,10 +702,10 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         }
       }
       while (System.currentTimeMillis() <= endTime);
-      LOGGER.warn("Wait for readiness of tunnel with ID {} is timed out", tunnelId);
+      logger.warn("Wait for readiness of tunnel with ID {} is timed out", tunnelId);
     }
     catch (IOException | InterruptedException e) {
-      LOGGER.warn("Unable to check readiness of tunnel with ID {}", tunnelId, e);
+      logger.warn("Unable to check readiness of tunnel with ID {}", tunnelId, e);
     }
   }
 
@@ -696,7 +723,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
    * @param tunnelName tunnel name, can be the same as the username
    * @return String the internal Sauce tunnel id
    */
-  private String activeTunnelID(String username, String tunnelName) {
+  private String activeTunnelID(String username, String tunnelName, Logger logger) {
     try {
       List<com.saucelabs.saucerest.model.sauceconnect.TunnelInformation> tunnelsInformation =
         scEndpoint.getTunnelsInformationForAUser();
@@ -713,7 +740,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       }
     } catch (JSONException | IOException e) {
       // log error and return false
-      LOGGER.warn("Exception occurred retrieving tunnel information", e);
+      logger.warn("Exception occurred retrieving tunnel information", e);
     }
     return null;
   }
@@ -764,6 +791,9 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     public SauceConnectDidNotStartException(String message) {
       super(message);
     }
+    public SauceConnectDidNotStartException(String message, Throwable cause) {
+      super(message, cause);
+    }
   }
 
   private int findFreePort() throws SauceConnectException {
@@ -774,119 +804,11 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
     }
   }
 
-  /** Monitors SC Process via HTTP API */
-  public class SCMonitor extends Thread {
-    private Semaphore semaphore;
-    private final int port;
-    private final Logger LOGGER;
-
-    private String tunnelId;
-    private boolean failed;
-    private boolean apiResponse;
-
-    private HttpClient client = HttpClient.newHttpClient();
-    private static final int sleepTime = 1000;
-
-    public SCMonitor(
-        String name,
-        final int port,
-        final Logger logger) {
-      super(name);
-      this.port = port;
-      this.LOGGER = logger;
+  private Logger createLogger(PrintStream printStream) {
+    if (printStream == null) {
+      return LoggerFactory.getLogger(AbstractSauceTunnelManager.class);
     }
 
-    public void setSemaphore(Semaphore semaphore) {
-      this.semaphore = semaphore;
-    }
-
-    public String getTunnelId() {
-      HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(String.format("http://localhost:%d/info", port)))
-                        .GET()
-                        .build();
-      try {
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        String responseBody = response.body();
-        JSONObject jsonObject = new JSONObject(responseBody);
-        if (jsonObject.has("tunnel_id")) {
-          return jsonObject.getString("tunnel_id");
-        }
-      } catch (Exception e) {
-        this.LOGGER.info("Failed to get tunnel id", e);
-        return null;
-      }
-      this.LOGGER.info("Failed to get tunnel id");
-      return null;
-    }
-
-    public boolean isFailed() {
-      return failed;
-    }
-
-    public void run() {
-      while (true) {
-        pollEndpoint();
-        if (this.semaphore.availablePermits() > 0) {
-          return;
-        }
-
-        try {
-          Thread.sleep(sleepTime);
-        } catch ( java.lang.InterruptedException e ) {
-          return;
-        }
-      }
-    }
-
-    private void pollEndpoint() {
-      HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(String.format("http://localhost:%d/readyz", port)))
-                        .GET()
-                        .build();
-
-      try {
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        if (response.statusCode() == 200) {
-          this.apiResponse = true;
-          this.LOGGER.info("Got connected status");
-          semaphore.release();
-        } else if (response.statusCode() == 503) {
-          this.apiResponse = true;
-        }
-      } catch ( Exception e ) {
-        if ( this.apiResponse ) {
-          // We've had a successful API endpoint read, but then it stopped responding, which means the process failed to start
-          this.failed = true;
-          this.LOGGER.warn("API stopped responding", e);
-          semaphore.release();
-        }
-      }
-
-      this.LOGGER.trace("No API response yet");
-    }
-  }
-
-  public class ProcessOutputPrinter extends Thread {
-    private final InputStream inputStream;
-    private final Consumer<String> printConsumer;
-
-    public ProcessOutputPrinter(InputStream inputStream, Consumer<String> printConsumer) {
-      this.inputStream = inputStream;
-      this.printConsumer = printConsumer;
-    }
-
-    @Override
-    public void run() {
-      try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-        String line;
-        while ((line = reader.readLine()) != null) {
-          printConsumer.accept(line);
-        }
-      } catch (IOException e) {
-        LOGGER.error("Error reading process output", e);
-      }
-    }
+    return new LoggerUsingPrintStream(printStream);
   }
 }

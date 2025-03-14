@@ -10,33 +10,26 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.commons.lang3.concurrent.LazyInitializer.Builder;
 import org.json.JSONObject;
+import org.slf4j.Logger;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
-
-import java.net.URL;
 
 /**
  * Handles launching Sauce Connect (binary executable).
  *
  * @author Ross Rowe
  */
-public class SauceConnectManager extends AbstractSauceTunnelManager
-    implements SauceTunnelManager {
+public class SauceConnectManager extends AbstractSauceTunnelManager implements SauceTunnelManager {
   private boolean useLatestSauceConnect = false;
 
   /** Remove all created files and directories on exit */
@@ -183,7 +176,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
   public SauceConnectManager(boolean quietMode, String runner, int apiPort) {
     super(quietMode);
     this.runner = runner;
-    this.apiPort = DEFAULT_API_PORT;
+    this.apiPort = apiPort;
   }
 
   /**
@@ -192,7 +185,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
    * @param sauceConnectJar File which contains the Sauce Connect executables (typically the CI
    *     plugin Jar file)
    * @param options the command line options used to launch Sauce Connect
-   * @param printStream the output stream to send log messages
+   * @param logger used for logging
    * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and
    *     won't be extracted from the jar file
    * @return new ProcessBuilder instance which will launch Sauce Connect
@@ -206,7 +199,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
       int apiPort,
       File sauceConnectJar,
       String options,
-      PrintStream printStream,
+      Logger logger,
       String sauceConnectPath,
       boolean legacy)
       throws SauceConnectException {
@@ -234,11 +227,11 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
         if (!sauceConnectBinary.exists()) {
           synchronized (this) {
             if (!sauceConnectBinary.exists()) {
-              extractZipFile(workingDirectory, operatingSystem);
+              extractZipFile(workingDirectory, operatingSystem, logger);
             }
           }
         } else {
-          logMessage(printStream, sauceConnectBinary + " already exists, so not extracting");
+          logger.info("File {} already exists, so not extracting", sauceConnectBinary);
         }
       } else {
         sauceConnectBinary = new File(sauceConnectPath);
@@ -262,7 +255,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
           args = addExtraInfo(args);
       }
 
-      LOGGER.info("Launching Sauce Connect {} {}", getCurrentVersion(), hideSauceConnectCommandlineSecrets(args));
+      logger.info("Launching Sauce Connect {} {}", getCurrentVersion(), hideSauceConnectCommandlineSecrets(args));
       return createProcess(args, sauceConnectBinary.getParentFile());
     } catch (IOException e) {
       throw new SauceConnectException(e);
@@ -400,7 +393,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
    * @return the directory containing the extracted files
    * @throws IOException thrown if an error occurs extracting the files
    */
-  public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem) throws IOException {
+  public File extractZipFile(File workingDirectory, OperatingSystem operatingSystem, Logger logger) throws IOException {
     String archiveFileName = operatingSystem.getFileName(useLatestSauceConnect);
     File unzipDir = getUnzipDir(workingDirectory, operatingSystem);
     unzipDir.mkdirs();
@@ -417,8 +410,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager
 
     File sauceConnectBinary = new File(unzipDir, operatingSystem.getExecutable());
     if (!sauceConnectBinary.canExecute() && !sauceConnectBinary.setExecutable(true)) {
-      LOGGER.warn("Unable to set the execute permission for SauceConnect binary file located at {}",
-          sauceConnectBinary);
+      logger.warn("Unable to set the execute permission for SauceConnect binary file located at {}", sauceConnectBinary);
     }
     return unzipDir;
   }

@@ -1,6 +1,5 @@
 package com.saucelabs.ci.sauceconnect;
 
-import com.saucelabs.ci.sauceconnect.AbstractSauceTunnelManager.SCMonitor;
 import com.saucelabs.ci.sauceconnect.SauceConnectManager.OperatingSystem;
 import com.saucelabs.saucerest.DataCenter;
 import com.saucelabs.saucerest.SauceREST;
@@ -21,18 +20,17 @@ import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.Logger;
+
 import static org.mockito.Mockito.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
@@ -86,7 +84,7 @@ class SauceConnectManagerTest {
     readyTunnel.isReady = true;
     tunnelManager.setCleanUpOnExit(cleanUpOnExit);
 
-    SCMonitor scMonitor = mock(SCMonitor.class);
+    DefaultSCMonitor scMonitor = mock(DefaultSCMonitor.class);
 
     doAnswer(new Answer<Void>() {
             @Override
@@ -97,7 +95,7 @@ class SauceConnectManagerTest {
             }
     }).when(scMonitor).setSemaphore(any(Semaphore.class));
 
-    tunnelManager.setSCMonitor(scMonitor);
+    tunnelManager.setSCMonitorFactory(new DummySCMonitorFactory(scMonitor));
 
     Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);
@@ -108,7 +106,7 @@ class SauceConnectManagerTest {
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of());
     when(mockProcess.waitFor(30, TimeUnit.SECONDS)).thenReturn(true);
 
-    SCMonitor scMonitor = mock(SCMonitor.class);
+    DefaultSCMonitor scMonitor = mock(DefaultSCMonitor.class);
 
     doAnswer(new Answer<Void>() {
             @Override
@@ -121,7 +119,7 @@ class SauceConnectManagerTest {
 
     when(scMonitor.isFailed()).thenReturn(true);
 
-    tunnelManager.setSCMonitor(scMonitor);
+    tunnelManager.setSCMonitorFactory(new DummySCMonitorFactory(scMonitor));
     assertThrows(AbstractSauceTunnelManager.SauceConnectDidNotStartException.class, () -> testOpenConnection(
             "/started_sc_closes.log"));
     verify(mockProcess).destroy();
@@ -135,7 +133,7 @@ class SauceConnectManagerTest {
     TunnelInformation readyTunnel = new TunnelInformation();
     readyTunnel.isReady = true;
 
-    SCMonitor scMonitor = mock(SCMonitor.class);
+    DefaultSCMonitor scMonitor = mock(DefaultSCMonitor.class);
 
     doAnswer(new Answer<Void>() {
             @Override
@@ -146,7 +144,7 @@ class SauceConnectManagerTest {
             }
     }).when(scMonitor).setSemaphore(any(Semaphore.class));
 
-    tunnelManager.setSCMonitor(scMonitor);
+    tunnelManager.setSCMonitorFactory(new DummySCMonitorFactory(scMonitor));
 
     testOpenConnection(STARTED_SC_LOG, " username-with-spaces-around ");
   }
@@ -190,7 +188,7 @@ class SauceConnectManagerTest {
 
     when(mockSCEndpoint.getTunnelsInformationForAUser()).thenReturn(List.of(started));
 
-    SCMonitor scMonitor = mock(SCMonitor.class);
+    DefaultSCMonitor scMonitor = mock(DefaultSCMonitor.class);
 
     doAnswer(new Answer<Void>() {
             @Override
@@ -201,7 +199,7 @@ class SauceConnectManagerTest {
             }
     }).when(scMonitor).setSemaphore(any(Semaphore.class));
 
-    tunnelManager.setSCMonitor(scMonitor);
+    tunnelManager.setSCMonitorFactory(new DummySCMonitorFactory(scMonitor));
 
     Process process = testOpenConnection(STARTED_SC_LOG);
     assertEquals(mockProcess, process);
@@ -229,7 +227,7 @@ class SauceConnectManagerTest {
 
     SauceConnectManager manager = new SauceConnectManager();
     manager.setCleanUpOnExit(cleanUpOnExit);
-    manager.extractZipFile(destination, operatingSystem);
+    manager.extractZipFile(destination, operatingSystem, mock(Logger.class));
 
     File expectedBinaryPath = new File(destination, operatingSystem.getDirectory(false));
     File expectedBinaryFile = new File(expectedBinaryPath, operatingSystem.getExecutable());
@@ -429,6 +427,18 @@ class SauceConnectManagerTest {
       currentVersion = sauceConnectManager.getCurrentVersion();
       assertEquals(version, currentVersion);
       httpClientStaticMock.verifyNoMoreInteractions();
+    }
+  }
+
+  static class DummySCMonitorFactory implements SCMonitorFactory {
+    public SCMonitor scMonitor;
+
+    public DummySCMonitorFactory(SCMonitor scMonitor) {
+      this.scMonitor = scMonitor;
+    }
+
+    public SCMonitor create(int port, Logger logger) {
+      return scMonitor;
     }
   }
 }
