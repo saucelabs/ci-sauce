@@ -140,21 +140,9 @@ public class SauceConnectManager extends AbstractSauceTunnelManager implements S
   private static final String SAUCE_CONNECT_PREFIX = "sauce-connect-";
   public static final String SAUCE_CONNECT = SAUCE_CONNECT_PREFIX + CURRENT_SC_VERSION;
 
-  private static final int DEFAULT_API_PORT = 9000;
-  private int apiPort;
-
   /** Constructs a new instance with quiet mode disabled. */
   public SauceConnectManager() {
     this(false);
-  }
-
-  /**
-   * Constructs a new instance with quiet mode disabled.
-   *
-   * @param runner System which runs SauceConnect, this info is added to '--metadata runner=' argument
-   */
-  public SauceConnectManager(String runner) {
-    this(false, runner, DEFAULT_API_PORT);
   }
 
   /**
@@ -163,7 +151,7 @@ public class SauceConnectManager extends AbstractSauceTunnelManager implements S
    * @param quietMode indicates whether Sauce Connect output should be suppressed
    */
   public SauceConnectManager(boolean quietMode) {
-    this(quietMode, "jenkins", DEFAULT_API_PORT);
+    this(quietMode, "jenkins");
   }
 
   /**
@@ -171,12 +159,10 @@ public class SauceConnectManager extends AbstractSauceTunnelManager implements S
    *
    * @param quietMode indicates whether Sauce Connect output should be suppressed
    * @param runner System which runs SauceConnect, this info is added to '--metadata runner=' argument
-   * @param apiPort Port the Sauce Connect process will listen on
    */
-  public SauceConnectManager(boolean quietMode, String runner, int apiPort) {
+  public SauceConnectManager(boolean quietMode, String runner) {
     super(quietMode);
     this.runner = runner;
-    this.apiPort = apiPort;
   }
 
   /**
@@ -241,17 +227,13 @@ public class SauceConnectManager extends AbstractSauceTunnelManager implements S
         }
       }
 
-      if ( apiPort != 0 ) {
-        this.apiPort = apiPort;
-      }
-
       // although we are setting the working directory, we need to specify the full path to the exe
       String[] args = {sauceConnectBinary.getPath()};
       if (legacy) {
-          args = generateSauceConnectArgsLegacy(args, username, accessKey, options);
+          args = generateSauceConnectArgsLegacy(args, username, accessKey, apiPort, options);
           args = addExtraInfoLegacy(args);
       } else {
-          args = generateSauceConnectArgs(args, username, accessKey, options);
+          args = generateSauceConnectArgs(args, username, accessKey, apiPort, options);
           args = addExtraInfo(args);
       }
 
@@ -342,13 +324,14 @@ public class SauceConnectManager extends AbstractSauceTunnelManager implements S
    * @param args the initial Sauce Connect command line args
    * @param username name of the user which launched Sauce Connect
    * @param accessKey the access key for the Sauce user
+   * @param apiPort specify the port the Sauce Connect API will listen on
    * @param options command line args specified by the user
    * @return String array representing the command line args to be used to launch Sauce Connect
    */
   protected String[] generateSauceConnectArgs(
-      String[] args, String username, String accessKey, String options) {
+      String[] args, String username, String accessKey, int apiPort, String options) {
     String[] result =
-        joinArgs(args, "run", "--username", username.trim(), "--access-key", accessKey.trim(), "--api-address", ":" + String.valueOf(this.apiPort));
+        joinArgs(args, "run", "--username", username.trim(), "--access-key", accessKey.trim(), "--api-address", ":" + String.valueOf(apiPort));
     result = addElement(result, options);
     return result;
   }
@@ -362,15 +345,16 @@ public class SauceConnectManager extends AbstractSauceTunnelManager implements S
    * @param args the initial Sauce Connect command line args
    * @param username name of the user which launched Sauce Connect
    * @param accessKey the access key for the Sauce user
+   * @param apiPort specify the port the Sauce Connect API will listen on
    * @param options command line args specified by the user
    * @return String array representing the command line args to be used to launch Sauce Connect
    */
   @Deprecated
   protected String[] generateSauceConnectArgsLegacy(
-      String[] args, String username, String accessKey, String options) {
+      String[] args, String username, String accessKey, int apiPort, String options) {
     String[] result;
 
-    result = joinArgs(args, "legacy", "--user", username.trim(), "--api-key", accessKey.trim(), "--status-address", "0.0.0.0:" + String.valueOf(this.apiPort));
+    result = joinArgs(args, "legacy", "--user", username.trim(), "--api-key", accessKey.trim(), "--status-address", "0.0.0.0:" + String.valueOf(apiPort));
     result = addElement(result, options);
     return result;
   }

@@ -244,6 +244,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apikey",
+            9000,
             "--access-key apiKey");
     String result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -263,6 +264,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apikey",
+            9000,
             "--api-key apiKey");
     String result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -282,6 +284,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apikey",
+            9000,
             "--auth foo:bar@host:8080");
     String result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -295,6 +298,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apikey",
+            9000,
             "-a foo:bar@host:8080");
     result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -308,6 +312,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apikey",
+            9000,
             "-a foo:bar@host:8080 -a user:pwd@host1:1234 --auth root:pass@host2:9999 --auth uucp:pass@host3:8080");
     result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -327,6 +332,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apikey",
+            9000,
             "--proxy user:pwd@host:8080");
     String result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -340,6 +346,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apikey",
+            9000,
             "--proxy user@host:8080");
     result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -353,6 +360,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apikey",
+            9000,
             "-x user@host:8080");
     result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -366,6 +374,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apikey",
+            9000,
             "--proxy-sauce user@host:8080");
     result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -385,6 +394,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apiKey",
+            9000,
             "--api-basic-auth user:pwd");
     String result = manager.hideSauceConnectCommandlineSecrets(args);
 
@@ -398,6 +408,7 @@ class SauceConnectManagerTest {
             args,
             "username",
             "apiKey",
+            9000,
             "--api-basic-auth user");
     result = manager.hideSauceConnectCommandlineSecrets(args);
 
