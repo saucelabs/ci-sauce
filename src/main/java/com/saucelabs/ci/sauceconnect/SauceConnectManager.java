@@ -441,22 +441,6 @@ public class SauceConnectManager extends AbstractSauceTunnelManager implements S
     return new File(workingDirectory, operatingSystem.getDirectory(useLatestSauceConnect));
   }
 
-  protected boolean isConnected() {
-    HttpClient client = HttpClient.newHttpClient();
-
-    HttpRequest request = HttpRequest.newBuilder()
-      .uri(URI.create(String.format("http://localhost:%d", this.apiPort)))
-      .GET()
-      .build();
-
-    try {
-      HttpResponse<Void> response = client.send(request, HttpResponse.BodyHandlers.discarding());
-      return response.statusCode() == 200;
-    } catch (IOException | InterruptedException e) {
-      return false;
-    }
-  }
-
   @Override
   protected String getCurrentVersion() {
     return getVersion(useLatestSauceConnect);
