@@ -25,7 +25,7 @@ public class DefaultSCMonitor implements SCMonitor {
     private boolean apiResponse;
 
     private HttpClient client = HttpClient.newHttpClient();
-    private static final int sleepTime = 1000;
+    private static final int sleepTime = 5000;
 
     private Exception lastHealtcheckException;
 
