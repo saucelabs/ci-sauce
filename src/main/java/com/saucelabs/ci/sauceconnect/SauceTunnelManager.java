@@ -270,4 +270,68 @@ public interface SauceTunnelManager {
       String sauceConnectPath,
       boolean legacy)
       throws IOException;
+
+    /**
+     * Creates a new process to run Sauce Connect.
+     *
+     * @param username the name of the Sauce OnDemand user
+     * @param apiKey the API Key for the Sauce OnDemand user
+     * @param dataCenter the Sauce Labs Data Center
+     * @param sauceConnectJar the Jar file containing Sauce Connect. If null, then we attempt to find
+     *     Sauce Connect from the classpath (only used by SauceConnectTwoManager)
+     * @param options the command line options to pass to Sauce Connect
+     * @param printStream A print stream in which to redirect the output from Sauce Connect to. Can be
+     *     null
+     * @param verboseLogging indicates whether verbose logging should be output
+     * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and
+     *     won't be extracted from the jar file
+     * @param legacy command line options are using SC4 CLI
+     * @return a {@link Process} instance which represents the Sauce Connect instance
+     * @throws IOException thrown if an error occurs launching Sauce Connect
+     */
+    @Deprecated
+    Process openConnection(
+        String username,
+        String apiKey,
+        DataCenter dataCenter,
+        File sauceConnectJar,
+        String options,
+        PrintStream printStream,
+        Boolean verboseLogging,
+        String sauceConnectPath,
+        boolean legacy)
+        throws IOException;
+
+    /**
+     * Creates a new process to run Sauce Connect.
+     *
+     * @param username the name of the Sauce OnDemand user
+     * @param apiKey the API Key for the Sauce OnDemand user
+     * @param dataCenter the Sauce Labs Data Center
+     * @param sauceConnectJar the Jar file containing Sauce Connect. If null, then we attempt to find
+     *     Sauce Connect from the classpath (only used by SauceConnectTwoManager)
+     * @param options the command line options to pass to Sauce Connect
+     * @param logger used for logging
+     * @param printStream A print stream in which to redirect the output from Sauce Connect to. Can be
+     *     null
+     * @param verboseLogging indicates whether verbose logging should be output
+     * @param sauceConnectPath if defined, Sauce Connect will be launched from the specified path and
+     *     won't be extracted from the jar file
+     * @param legacy command line options are using SC4 CLI
+     * @return a {@link Process} instance which represents the Sauce Connect instance
+     * @throws IOException thrown if an error occurs launching Sauce Connect
+     */
+    @Deprecated
+    Process openConnection(
+        String username,
+        String apiKey,
+        DataCenter dataCenter,
+        File sauceConnectJar,
+        String options,
+        Logger logger,
+        PrintStream printStream,
+        Boolean verboseLogging,
+        String sauceConnectPath,
+        boolean legacy)
+        throws IOException;
 }

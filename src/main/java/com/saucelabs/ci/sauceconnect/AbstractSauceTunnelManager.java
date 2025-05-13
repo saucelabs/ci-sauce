@@ -515,6 +515,35 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
         return openConnection(username, apiKey, dataCenter, apiPort, sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath, false);
   }
 
+    @Override
+    public Process openConnection(
+        String username,
+        String apiKey,
+        DataCenter dataCenter,
+        File sauceConnectJar,
+        String options,
+        PrintStream printStream,
+        Boolean verboseLogging,
+        String sauceConnectPath,
+        boolean legacy) throws IOException {
+        return openConnection(username, apiKey, dataCenter, findFreePort(), sauceConnectJar, options, printStream, verboseLogging, sauceConnectPath, legacy);
+    }
+
+    @Override
+    public Process openConnection(
+        String username,
+        String apiKey,
+        DataCenter dataCenter,
+        File sauceConnectJar,
+        String options,
+        Logger logger,
+        PrintStream printStream,
+        Boolean verboseLogging,
+        String sauceConnectPath,
+        boolean legacy) throws IOException {
+        return openConnection(username, apiKey, dataCenter, findFreePort(), sauceConnectJar, options, logger, printStream, verboseLogging, sauceConnectPath, legacy);
+    }
+
   @Override
   public Process openConnection(
       String username,
