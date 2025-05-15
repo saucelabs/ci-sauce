@@ -528,7 +528,7 @@ public abstract class AbstractSauceTunnelManager implements SauceTunnelManager {
       String sauceConnectPath,
       boolean legacy)
       throws SauceConnectException {
-        return openConnection(username, apiKey, dataCenter, apiPort, sauceConnectJar, options, null, printStream, verboseLogging, sauceConnectPath, false);
+        return openConnection(username, apiKey, dataCenter, apiPort, sauceConnectJar, options, null, printStream, verboseLogging, sauceConnectPath, legacy);
   }
 
   /**
