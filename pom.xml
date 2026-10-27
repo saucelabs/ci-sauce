@@ -70,7 +70,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.14.0</version>
+        <version>3.15.0</version>
         <configuration>
           <source>${java.level}</source>
           <target>${java.level}</target>
@@ -90,7 +90,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
-        <version>3.1.1</version>
+        <version>3.3.1</version>
         <dependencies>
           <dependency>
             <groupId>org.apache.maven.scm</groupId>
@@ -274,7 +274,7 @@
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
-      <version>20250107</version>
+      <version>20260814</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
