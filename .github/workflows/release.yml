@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-java@v6
         with:
           cache: maven
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
           server-id: central
           server-username: MAVEN_USERNAME

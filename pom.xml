@@ -18,6 +18,7 @@
     <github.global.server>github</github.global.server>
     <github.global.oauth2Token>${env.GH_TOKEN}</github.global.oauth2Token>
     <java.level>11</java.level>
+    <java.test.level>17</java.test.level>
   </properties>
 
   <licenses>
@@ -60,8 +61,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.15.0</version>
         <configuration>
-          <source>${java.level}</source>
-          <target>${java.level}</target>
+          <release>${java.level}</release>
+          <testRelease>${java.test.level}</testRelease>
         </configuration>
       </plugin>
       <plugin>
@@ -281,7 +282,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>5.12.2</version>
+      <version>6.0.2</version>
       <scope>test</scope>
     </dependency>
     <dependency>
