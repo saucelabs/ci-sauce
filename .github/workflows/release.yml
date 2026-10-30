@@ -15,14 +15,14 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
       - name: Set up Maven Central Repository
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v6
         with:
           cache: maven
           java-version: '17'
           distribution: 'temurin'
-          server-id: ossrh
+          server-id: central
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.OSSRH_GPG_PRIVATE_KEY }}
@@ -31,25 +31,24 @@ jobs:
         run: mvn -B -ntp -Dgpg.skip versions:set "-DnewVersion=${{ github.event.inputs.release_version }}" -DgenerateBackupPoms=false
       - name: Package
         run: mvn -B -ntp -Dgpg.skip package
-      - name: Deploy to OSSRH
+      - name: Deploy to Maven Central
         run: mvn -B -ntp clean deploy -DskipTests=true
         env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          MAVEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.OSSRH_GPG_PASSPHRASE }}
       - name: Generate changelog
         id: changelog
-        uses: metcalfc/changelog-generator@v4.0.1
+        uses: metcalfc/changelog-generator@v5.0.1
         with:
           myToken: ${{ secrets.GITHUB_TOKEN }}
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.inputs.release_version }}
-          release_name: ${{ github.event.inputs.release_version }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ github.event.inputs.release_version }}
           body: |
             ```
             <dependencies>

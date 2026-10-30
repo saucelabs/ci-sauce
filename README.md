@@ -19,4 +19,4 @@ To release the plugin to maven central
 mvn release:prepare release:perform
 ```
 
-http://central.sonatype.org/pages/ossrh-guide.html for more details
+https://central.sonatype.org/publish/publish-portal-maven/ for more details
