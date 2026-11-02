@@ -17,8 +17,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <github.global.server>github</github.global.server>
     <github.global.oauth2Token>${env.GH_TOKEN}</github.global.oauth2Token>
-    <java.level>11</java.level>
-    <java.test.level>17</java.test.level>
+    <java.level>17</java.level>
   </properties>
 
   <licenses>
@@ -62,7 +61,6 @@
         <version>3.16.0</version>
         <configuration>
           <release>${java.level}</release>
-          <testRelease>${java.test.level}</testRelease>
         </configuration>
       </plugin>
       <plugin>

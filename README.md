@@ -5,7 +5,7 @@ ci-sauce
 
 This folder contains the common code for the Bamboo and Jenkins Sauce OnDemand plugins.
 
-To build the plugin, you will need [Maven 2](http://maven.apache.org).
+To build the plugin, you will need JDK 17 or newer. Maven is provided by the Maven Wrapper (`./mvnw`).
 
 To build (compile,test,jar) the plugin run: 
 
